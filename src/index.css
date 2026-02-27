@@ -3,7 +3,7 @@
 @plugin "../heroui-plugin.js";
 
 @theme {
-  --font-sans: "Carlito", sans-serif;
+  --font-sans: "Quicksand", sans-serif;
   --font-display: "Bebas Neue", sans-serif;
 }
 
