@@ -11,7 +11,7 @@ Built as part of my **Final Capstone Project** before graduation.
 - **React Router DOM** — Client-side routing
 - **Tailwind CSS 4** + **HeroUI** — Styling & UI components
 - **shadcn/ui** + **Radix UI** — Additional accessible component primitives
-- **MapLibre GL** — Interactive map rendering
+- **mapcn** (shadcn/ui community component) — Interactive map rendering
 - **Framer Motion** — Animations
 - **Lucide React** — Icons
 - **ESLint 9** — Linting
