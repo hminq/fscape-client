@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@heroui/react";
 import fscapeLogo from "../../assets/fscape-logo.svg";
 
@@ -87,6 +88,7 @@ function TriangleIcon({ up, className }) {
 export default function AppNavbar() {
   const [openLoc, setOpenLoc] = useState(null);
   const navRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!openLoc) return;
@@ -160,6 +162,7 @@ export default function AppNavbar() {
               variant="bordered"
               radius="full"
               className="border-white/60 text-white font-semibold text-sm px-6 h-10"
+              onPress={() => navigate("/login")}
             >
               Đăng nhập
             </Button>
