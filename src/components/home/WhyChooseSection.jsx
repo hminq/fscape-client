@@ -6,7 +6,7 @@ import whyChooseImg from "../../assets/why_choose_fscape_img.jpg";
 export default function WhyChooseSection() {
   return (
     <section className="relative h-[100vh] min-h-[700px]">
-      {/* Background image — sticky so it stays fixed while scrolling */}
+      {/* Background image */}
       <div className="sticky top-0 h-screen overflow-hidden">
         <img
           src={whyChooseImg}
@@ -27,11 +27,11 @@ export default function WhyChooseSection() {
               transition={{ duration: 0.7 }}
             >
               {/* Title block */}
-              <div className="bg-[#011936] inline-block px-6 py-4 mb-0">
+              <div className="bg-primary inline-block px-6 py-4 mb-0">
                 <h2 className="text-3xl md:text-5xl font-bold text-white leading-tight">
                   Tại sao chọn
                   <br />
-                  <span className="font-display text-[#C0DFA1] tracking-wider">
+                  <span className="font-display text-tea tracking-wider">
                     FSCAPE
                   </span>
                   ?
@@ -39,8 +39,8 @@ export default function WhyChooseSection() {
               </div>
 
               {/* Subtitle */}
-              <div className="bg-[#C0DFA1] px-6 py-3">
-                <p className="text-[#011936] text-sm md:text-base font-bold uppercase tracking-wide">
+              <div className="bg-tea px-6 py-3">
+                <p className="text-primary text-sm md:text-base font-bold uppercase tracking-wide">
                   Nhà ở sinh viên đáng tin cậy nhất Việt Nam, xây dựng vì sự
                   thoải mái, kết nối và cộng đồng.
                 </p>
@@ -48,7 +48,7 @@ export default function WhyChooseSection() {
 
               {/* Description card */}
               <div className="bg-white px-6 py-6">
-                <p className="text-[#465362] text-sm md:text-base leading-relaxed">
+                <p className="text-secondary text-sm md:text-base leading-relaxed">
                   Tại FScape, chúng tôi giúp cuộc sống sinh viên trở nên đơn
                   giản và đầy cảm hứng. Tận hưởng phòng đầy đủ nội thất, bao
                   gồm mọi hóa đơn, Wi-Fi tốc độ cao và vị trí gần trường đại
@@ -61,7 +61,7 @@ export default function WhyChooseSection() {
                     radius="full"
                     size="lg"
                     endContent={<ArrowRight className="w-4 h-4" />}
-                    className="bg-[#9FC490] text-[#011936] font-bold text-sm px-8 h-11"
+                    className="bg-olive text-primary font-bold text-sm px-8 h-11"
                   >
                     Tìm phòng phù hợp
                   </Button>
@@ -69,7 +69,7 @@ export default function WhyChooseSection() {
                     variant="bordered"
                     radius="full"
                     size="lg"
-                    className="border-[#011936] text-[#011936] font-semibold text-sm px-8 h-11 hover:bg-[#011936] hover:text-white transition-colors"
+                    className="border-primary text-primary font-semibold text-sm px-8 h-11 hover:bg-primary hover:text-white transition-colors"
                   >
                     Đặt phòng ngay
                   </Button>

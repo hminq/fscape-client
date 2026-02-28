@@ -5,6 +5,12 @@
 @theme {
   --font-sans: "Quicksand", sans-serif;
   --font-display: "Bebas Neue", sans-serif;
+  
+  --color-primary:   #011936;
+  --color-secondary: #465362;
+  --color-muted:     #82A3A1;
+  --color-olive:     #9FC490;
+  --color-tea:       #C0DFA1;
 }
 
 @layer base {

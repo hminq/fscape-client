@@ -52,7 +52,7 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("login");
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-[#011936] via-[#011936]/95 to-[#465362]">
+    <div className="flex min-h-screen bg-gradient-to-br from-primary via-primary/95 to-secondary">
       {/* Left Panel */}
       <Motion.div
         className="hidden lg:flex flex-col w-1/2 p-12 xl:p-16 justify-center"
@@ -69,7 +69,7 @@ export default function AuthPage() {
               <img src={fscapeLogo} alt="FScape" className="w-14 h-14" />
               <span className="text-4xl text-white font-display tracking-wide leading-none translate-y-px">FSCAPE</span>
             </div>
-            <p className="text-lg text-[#C0DFA1] leading-relaxed">
+            <p className="text-lg text-tea leading-relaxed">
               Nền tảng hiện đại để quản lý<br />nhà ở sinh viên một cách liền mạch.
             </p>
           </Motion.div>
@@ -91,8 +91,8 @@ export default function AuthPage() {
                 key={i}
                 className="flex items-start gap-4 bg-white/5 backdrop-blur-sm rounded-xl px-5 py-4 border border-white/10 hover:bg-white/10 transition-colors"
               >
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#9FC490] shrink-0">
-                  <f.icon className="size-5 text-[#011936]" />
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-olive shrink-0">
+                  <f.icon className="size-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">{f.title}</p>
@@ -106,7 +106,7 @@ export default function AuthPage() {
             <div className="flex items-center">
               <div className="flex -space-x-2.5">
                 {["#9FC490", "#82A3A1", "#C0DFA1", "#465362"].map((bg, i) => (
-                  <div key={i} className="w-8 h-8 rounded-full border-2 border-[#011936] flex items-center justify-center text-xs font-bold text-white" style={{ background: bg }}>
+                  <div key={i} className="w-8 h-8 rounded-full border-2 border-primary flex items-center justify-center text-xs font-bold text-white" style={{ background: bg }}>
                     {String.fromCharCode(65 + i)}
                   </div>
                 ))}
@@ -134,7 +134,7 @@ export default function AuthPage() {
       {/* Center divider */}
       <div className="hidden lg:flex items-center py-16">
         <Motion.div
-          className="w-px h-full bg-gradient-to-b from-transparent via-[#9FC490]/40 to-transparent origin-top"
+          className="w-px h-full bg-gradient-to-b from-transparent via-olive/40 to-transparent origin-top"
           initial="hidden"
           animate="visible"
           variants={drawLine}
@@ -152,7 +152,7 @@ export default function AuthPage() {
           {/* Logo mobile */}
           <div className="flex items-center justify-center gap-2.5 mb-6 lg:hidden">
             <img src={fscapeLogo} alt="FScape" className="w-10 h-10" />
-            <span className="text-2xl text-[#011936] font-display tracking-wide leading-none translate-y-px">FSCAPE</span>
+            <span className="text-2xl text-primary font-display tracking-wide leading-none translate-y-px">FSCAPE</span>
           </div>
 
           <Motion.div
@@ -161,17 +161,17 @@ export default function AuthPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
           >
-            <h2 className="text-center text-2xl font-bold text-[#011936] mb-1">
+            <h2 className="text-center text-2xl font-bold text-primary mb-1">
               {activeTab === "login" ? "Chào mừng trở lại" : "Tạo tài khoản mới"}
             </h2>
-            <p className="text-center text-sm text-[#82A3A1] mb-6">
+            <p className="text-center text-sm text-muted mb-6">
               {activeTab === "login"
                 ? "Đăng nhập để tiếp tục với FScape"
                 : "Tham gia cộng đồng sinh viên FScape"}
             </p>
 
             {/* Tab switcher */}
-            <div className="flex bg-[#011936]/5 rounded-xl p-1 gap-1 mb-6">
+            <div className="flex bg-primary/5 rounded-xl p-1 gap-1 mb-6">
               {[
                 { key: "login", label: "Đăng Nhập" },
                 { key: "signup", label: "Đăng Ký" },
@@ -181,8 +181,8 @@ export default function AuthPage() {
                   onClick={() => setActiveTab(tab.key)}
                   className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                     activeTab === tab.key
-                      ? "bg-white text-[#011936] shadow-md"
-                      : "text-[#82A3A1] hover:text-[#465362]"
+                      ? "bg-white text-primary shadow-md"
+                      : "text-muted hover:text-secondary"
                   }`}
                 >
                   {tab.label}

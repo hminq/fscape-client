@@ -11,7 +11,7 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const inputClasses = { inputWrapper: "border-[#82A3A1]/30 hover:border-[#82A3A1] focus-within:border-[#9FC490]" };
+const inputClasses = { inputWrapper: "border-muted/30 hover:border-muted focus-within:border-olive" };
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -26,7 +26,7 @@ export default function SignUpForm() {
       <Input
         label="Họ và Tên"
         placeholder="Họ và tên đầy đủ"
-        startContent={<User className="size-4 text-[#82A3A1]" />}
+        startContent={<User className="size-4 text-muted" />}
         variant="bordered"
         classNames={inputClasses}
         isRequired
@@ -35,7 +35,7 @@ export default function SignUpForm() {
         label="Email"
         placeholder="sinhvien@truonghoc.edu.vn"
         type="email"
-        startContent={<Mail className="size-4 text-[#82A3A1]" />}
+        startContent={<Mail className="size-4 text-muted" />}
         variant="bordered"
         classNames={inputClasses}
         isRequired
@@ -44,9 +44,9 @@ export default function SignUpForm() {
         label="Mật khẩu"
         placeholder="Tạo mật khẩu"
         type={showPassword ? "text" : "password"}
-        startContent={<Lock className="size-4 text-[#82A3A1]" />}
+        startContent={<Lock className="size-4 text-muted" />}
         endContent={
-          <button type="button" className="text-[#82A3A1] hover:text-[#465362]" onClick={() => setShowPassword(!showPassword)}>
+          <button type="button" className="text-muted hover:text-secondary" onClick={() => setShowPassword(!showPassword)}>
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         }
@@ -58,9 +58,9 @@ export default function SignUpForm() {
         label="Xác nhận mật khẩu"
         placeholder="Xác nhận mật khẩu"
         type={showConfirm ? "text" : "password"}
-        startContent={<Lock className="size-4 text-[#82A3A1]" />}
+        startContent={<Lock className="size-4 text-muted" />}
         endContent={
-          <button type="button" className="text-[#82A3A1] hover:text-[#465362]" onClick={() => setShowConfirm(!showConfirm)}>
+          <button type="button" className="text-muted hover:text-secondary" onClick={() => setShowConfirm(!showConfirm)}>
             {showConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         }
@@ -72,21 +72,21 @@ export default function SignUpForm() {
       <Button
         type="submit"
         radius="lg"
-        className="bg-[#9FC490] text-[#011936] font-bold text-base h-12 mt-1 shadow-lg shadow-[#9FC490]/30"
+        className="bg-olive text-primary font-bold text-base h-12 mt-1 shadow-lg shadow-olive/30"
       >
         Tạo Tài Khoản
       </Button>
 
-      <div className="flex items-center gap-3 text-[#82A3A1] text-sm">
-        <div className="flex-1 h-px bg-[#82A3A1]/20" />
+      <div className="flex items-center gap-3 text-muted text-sm">
+        <div className="flex-1 h-px bg-muted/20" />
         <span>Hoặc tiếp tục với</span>
-        <div className="flex-1 h-px bg-[#82A3A1]/20" />
+        <div className="flex-1 h-px bg-muted/20" />
       </div>
 
       <Button
         variant="bordered"
         radius="lg"
-        className="border-[#82A3A1]/30 text-[#465362] font-medium h-12 hover:bg-[#82A3A1]/5"
+        className="border-muted/30 text-secondary font-medium h-12 hover:bg-muted/5"
         startContent={<GoogleIcon />}
       >
         Google
