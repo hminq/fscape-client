@@ -33,14 +33,6 @@ const locationBuildings = [
       "FScape Ngũ Hành Sơn",
     ],
   },
-  {
-    city: "Cần Thơ",
-    buildings: [
-      "FScape Ninh Kiều",
-      "FScape Cái Răng",
-      "FScape Bình Thủy",
-    ],
-  },
 ];
 
 function FacebookIcon({ className }) {
@@ -161,14 +153,14 @@ export default function Footer() {
 
       {/* Bottom section — Location buildings grid */}
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-10 md:py-14">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
-          {locationBuildings.map((loc) => (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 lg:gap-8">
+          {locationBuildings.slice(0, 4).map((loc) => (
             <div key={loc.city}>
               <p className="inline-block text-sm font-bold uppercase tracking-wider text-[#011936] bg-[#9FC490] px-2 py-0.5 mb-5">
                 {loc.city}
               </p>
               <ul className="flex flex-col gap-2.5">
-                {loc.buildings.map((b) => (
+                {loc.buildings.slice(0, 5).map((b) => (
                   <li key={b}>
                     <a
                       href="#"

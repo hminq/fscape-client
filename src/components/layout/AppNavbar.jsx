@@ -55,19 +55,6 @@ const locations = [
       "ĐH FPT Đà Nẵng",
     ],
   },
-  {
-    name: "Cần Thơ",
-    buildings: [
-      "FScape Ninh Kiều",
-      "FScape Cái Răng",
-      "FScape Bình Thủy",
-    ],
-    universities: [
-      "ĐH Cần Thơ",
-      "ĐH FPT Cần Thơ",
-      "ĐH Y Dược Cần Thơ",
-    ],
-  },
 ];
 
 function TriangleIcon({ up, className }) {
@@ -146,7 +133,7 @@ export default function AppNavbar() {
                   : "opacity-100 max-w-2xl"
               }`}
             >
-              {locations.map((loc) => {
+              {locations.slice(0, 4).map((loc) => {
                 const isActive = openLoc === loc.name;
                 return (
                   <button
@@ -206,7 +193,7 @@ export default function AppNavbar() {
                   FSCAPE {activeLoc.name.toUpperCase()}
                 </p>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-3">
-                  {activeLoc.buildings.map((b) => (
+                  {activeLoc.buildings.slice(0, 5).map((b) => (
                     <a
                       key={b}
                       href="#"
@@ -224,7 +211,7 @@ export default function AppNavbar() {
                   TRƯỜNG ĐẠI HỌC TẠI {activeLoc.name.toUpperCase()}
                 </p>
                 <div className="flex flex-col gap-3">
-                  {activeLoc.universities.map((u) => (
+                  {activeLoc.universities.slice(0, 5).map((u) => (
                     <a
                       key={u}
                       href="#"
