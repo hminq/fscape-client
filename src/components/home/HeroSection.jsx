@@ -48,9 +48,9 @@ export default function HeroSection() {
       {/* Content */}
       <div className="relative z-10 h-full flex items-end pb-20 md:pb-28">
         <div className="w-full max-w-7xl mx-auto px-6 md:px-12">
-          <div className="max-w-2xl bg-[#011936]/60 backdrop-blur-sm rounded-2xl p-8 md:p-10">
+          <div className="max-w-2xl bg-primary/60 backdrop-blur-sm rounded-2xl p-8 md:p-10">
             <Motion.p
-              className="text-[#C0DFA1] text-sm font-semibold tracking-widest uppercase mb-3"
+              className="text-tea text-sm font-semibold tracking-widest uppercase mb-3"
               initial="hidden"
               animate="visible"
               variants={fadeUp}
@@ -78,7 +78,7 @@ export default function HeroSection() {
               variants={fadeUp}
               custom={2}
             >
-              Không cần mô tả. Hãy trải nghiệm. Đừng bỏ lỡ. Đặt phòng ngay.
+              Hãy trải nghiệm. Đừng bỏ lỡ. Đặt phòng ngay.
             </Motion.p>
 
             <Motion.div
@@ -91,7 +91,7 @@ export default function HeroSection() {
                 radius="full"
                 size="lg"
                 endContent={<ArrowRight className="w-5 h-5" />}
-                className="bg-[#9FC490] text-[#011936] font-bold text-base px-10 h-12"
+                className="bg-olive text-primary font-bold text-base px-10 h-12"
               >
                 Khám phá ngay
               </Button>
@@ -112,7 +112,7 @@ export default function HeroSection() {
                 onClick={() => setCurrent(i)}
                 className={`h-1 rounded-full transition-all duration-500 ${
                   i === current
-                    ? "w-8 bg-[#9FC490]"
+                    ? "w-8 bg-olive"
                     : "w-4 bg-white/40 hover:bg-white/60"
                 }`}
                 aria-label={`Slide ${i + 1}`}

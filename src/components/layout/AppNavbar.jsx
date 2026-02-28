@@ -55,19 +55,6 @@ const locations = [
       "ĐH FPT Đà Nẵng",
     ],
   },
-  {
-    name: "Cần Thơ",
-    buildings: [
-      "FScape Ninh Kiều",
-      "FScape Cái Răng",
-      "FScape Bình Thủy",
-    ],
-    universities: [
-      "ĐH Cần Thơ",
-      "ĐH FPT Cần Thơ",
-      "ĐH Y Dược Cần Thơ",
-    ],
-  },
 ];
 
 function TriangleIcon({ up, className }) {
@@ -118,7 +105,7 @@ export default function AppNavbar() {
 
   return (
     <div ref={navRef} className="sticky top-0 z-50">
-      <nav className="bg-[#011936]">
+      <nav className="bg-primary">
         <div
           className={`flex items-center px-5 md:px-10 py-3 transition-all duration-500 ${
             scrolled ? "justify-center" : ""
@@ -146,7 +133,7 @@ export default function AppNavbar() {
                   : "opacity-100 max-w-2xl"
               }`}
             >
-              {locations.map((loc) => {
+              {locations.slice(0, 4).map((loc) => {
                 const isActive = openLoc === loc.name;
                 return (
                   <button
@@ -161,7 +148,7 @@ export default function AppNavbar() {
                     {loc.name}
                     <TriangleIcon
                       up={isActive}
-                      className="w-2.5 h-2.5 text-[#9FC490]"
+                      className="w-2.5 h-2.5 text-olive"
                     />
                   </button>
                 );
@@ -179,7 +166,7 @@ export default function AppNavbar() {
           >
             <Button
               radius="full"
-              className="bg-[#9FC490] text-[#011936] font-semibold text-sm px-6 h-10"
+              className="bg-olive text-primary font-semibold text-sm px-6 h-10"
             >
               Đặt phòng
             </Button>
@@ -197,16 +184,16 @@ export default function AppNavbar() {
 
       {/* Mega-menu */}
       {activeLoc && (
-        <div className="bg-[#011936] border-t border-white/10">
+        <div className="bg-primary border-t border-white/10">
           <div className="max-w-6xl mx-auto px-10 py-10">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {/* Buildings */}
               <div className="md:col-span-2">
-                <p className="inline-block text-sm font-bold uppercase tracking-wider text-[#011936] bg-[#9FC490] px-2 py-0.5 mb-5">
+                <p className="inline-block text-sm font-bold uppercase tracking-wider text-primary bg-olive px-2 py-0.5 mb-5">
                   FSCAPE {activeLoc.name.toUpperCase()}
                 </p>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-3">
-                  {activeLoc.buildings.map((b) => (
+                  {activeLoc.buildings.slice(0, 5).map((b) => (
                     <a
                       key={b}
                       href="#"
@@ -220,11 +207,11 @@ export default function AppNavbar() {
 
               {/* Universities */}
               <div>
-                <p className="inline-block text-sm font-bold uppercase tracking-wider text-[#011936] bg-[#9FC490] px-2 py-0.5 mb-5">
+                <p className="inline-block text-sm font-bold uppercase tracking-wider text-primary bg-olive px-2 py-0.5 mb-5">
                   TRƯỜNG ĐẠI HỌC TẠI {activeLoc.name.toUpperCase()}
                 </p>
                 <div className="flex flex-col gap-3">
-                  {activeLoc.universities.map((u) => (
+                  {activeLoc.universities.slice(0, 5).map((u) => (
                     <a
                       key={u}
                       href="#"

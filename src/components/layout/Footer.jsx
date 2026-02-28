@@ -33,14 +33,6 @@ const locationBuildings = [
       "FScape Ngũ Hành Sơn",
     ],
   },
-  {
-    city: "Cần Thơ",
-    buildings: [
-      "FScape Ninh Kiều",
-      "FScape Cái Răng",
-      "FScape Bình Thủy",
-    ],
-  },
 ];
 
 function FacebookIcon({ className }) {
@@ -75,7 +67,7 @@ const socials = [
 
 export default function Footer() {
   return (
-    <footer className="bg-[#011936] text-white">
+    <footer className="bg-primary text-white">
       {/* Top section — Brand + links + socials */}
       <div className="max-w-7xl mx-auto px-6 md:px-12 pt-14 md:pt-20 pb-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8">
@@ -97,7 +89,7 @@ export default function Footer() {
                   key={s.label}
                   href={s.href}
                   aria-label={s.label}
-                  className="flex items-center justify-center w-10 h-10 rounded-full border border-white/20 text-white/60 hover:bg-[#9FC490] hover:border-[#9FC490] hover:text-[#011936] transition-colors"
+                  className="flex items-center justify-center w-10 h-10 rounded-full border border-white/20 text-white/60 hover:bg-olive hover:border-olive hover:text-primary transition-colors"
                 >
                   <s.icon className="w-4.5 h-4.5" />
                 </a>
@@ -107,7 +99,7 @@ export default function Footer() {
 
           {/* Link columns */}
           <div>
-            <p className="inline-block text-sm font-bold uppercase tracking-wider text-[#011936] bg-[#9FC490] px-2 py-0.5 mb-4">
+            <p className="inline-block text-sm font-bold uppercase tracking-wider text-primary bg-olive px-2 py-0.5 mb-4">
               Về FScape
             </p>
             <ul className="flex flex-col gap-2.5">
@@ -120,7 +112,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <p className="inline-block text-sm font-bold uppercase tracking-wider text-[#011936] bg-[#9FC490] px-2 py-0.5 mb-4">
+            <p className="inline-block text-sm font-bold uppercase tracking-wider text-primary bg-olive px-2 py-0.5 mb-4">
               Hỗ trợ
             </p>
             <ul className="flex flex-col gap-2.5">
@@ -133,19 +125,19 @@ export default function Footer() {
           </div>
 
           <div>
-            <p className="inline-block text-sm font-bold uppercase tracking-wider text-[#011936] bg-[#9FC490] px-2 py-0.5 mb-4">
+            <p className="inline-block text-sm font-bold uppercase tracking-wider text-primary bg-olive px-2 py-0.5 mb-4">
               Liên hệ
             </p>
             <ul className="flex flex-col gap-2.5">
               <li>
                 <a href="tel:+84852325683" className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
-                  <Phone className="w-3.5 h-3.5 text-[#9FC490] shrink-0" />
+                  <Phone className="w-3.5 h-3.5 text-olive shrink-0" />
                   +84 852 325 683
                 </a>
               </li>
               <li>
                 <a href="mailto:hminh250104@gmail.com" className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
-                  <Mail className="w-3.5 h-3.5 text-[#9FC490] shrink-0" />
+                  <Mail className="w-3.5 h-3.5 text-olive shrink-0" />
                   hminh250104@gmail.com
                 </a>
               </li>
@@ -161,14 +153,14 @@ export default function Footer() {
 
       {/* Bottom section — Location buildings grid */}
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-10 md:py-14">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
-          {locationBuildings.map((loc) => (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 lg:gap-8">
+          {locationBuildings.slice(0, 4).map((loc) => (
             <div key={loc.city}>
-              <p className="inline-block text-sm font-bold uppercase tracking-wider text-[#011936] bg-[#9FC490] px-2 py-0.5 mb-5">
+              <p className="inline-block text-sm font-bold uppercase tracking-wider text-primary bg-olive px-2 py-0.5 mb-5">
                 {loc.city}
               </p>
               <ul className="flex flex-col gap-2.5">
-                {loc.buildings.map((b) => (
+                {loc.buildings.slice(0, 5).map((b) => (
                   <li key={b}>
                     <a
                       href="#"

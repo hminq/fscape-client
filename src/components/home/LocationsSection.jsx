@@ -69,12 +69,12 @@ export default function LocationsSection() {
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[#011936] leading-tight tracking-tight">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary leading-tight tracking-tight">
             Phòng sẵn sàng
             <br />
             tại mọi thành phố lớn
           </h2>
-          <p className="text-[#465362] text-base md:text-lg mt-4 max-w-lg mx-auto">
+          <p className="text-secondary text-base md:text-lg mt-4 max-w-lg mx-auto">
             Chúng tôi giúp việc chuyển đến trở nên đơn giản, an toàn và dễ
             dàng.
           </p>
@@ -88,15 +88,15 @@ export default function LocationsSection() {
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <div className="flex items-center gap-1 bg-[#011936]/5 rounded-full p-1">
+          <div className="flex items-center gap-1 bg-primary/5 rounded-full p-1">
             {locations.map((loc, i) => (
               <button
                 key={loc.name}
                 onClick={() => setActiveIndex(i)}
                 className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
                   i === activeIndex
-                    ? "bg-[#9FC490] text-[#011936] shadow-md"
-                    : "text-[#465362] hover:text-[#011936]"
+                    ? "bg-olive text-primary shadow-md"
+                    : "text-secondary hover:text-primary"
                 }`}
               >
                 {loc.name}
@@ -106,7 +106,7 @@ export default function LocationsSection() {
 
           <button
             onClick={scrollRight}
-            className="hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-[#C0DFA1] hover:bg-[#9FC490] text-[#011936] transition-colors shadow-md"
+            className="hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-tea hover:bg-olive text-primary transition-colors shadow-md"
             aria-label="Cuộn sang phải"
           >
             <ArrowRight className="w-5 h-5" />
@@ -136,10 +136,10 @@ export default function LocationsSection() {
                 />
 
                 {/* Panel — anchored to bottom, slides up on hover */}
-                <div className="absolute bottom-0 left-0 right-0 bg-[#011936] px-5 pt-4 pb-4 transition-all duration-300">
+                <div className="absolute bottom-0 left-0 right-0 bg-primary px-5 pt-4 pb-4 transition-all duration-300">
                   {/* Name */}
                   <p className="leading-tight">
-                    <span className="font-display text-xl md:text-2xl text-[#C0DFA1] tracking-wider">
+                    <span className="font-display text-xl md:text-2xl text-tea tracking-wider">
                       FSCAPE
                     </span>
                     <span className="text-lg md:text-xl font-bold text-white ml-1.5">
@@ -160,14 +160,14 @@ export default function LocationsSection() {
                           variant="bordered"
                           radius="full"
                           size="sm"
-                          className="border-white/60 text-white font-semibold text-xs px-5 h-9 hover:bg-white hover:text-[#011936]"
+                          className="border-white/60 text-white font-semibold text-xs px-5 h-9 hover:bg-white hover:text-primary"
                         >
                           Khám phá
                         </Button>
                         <Button
                           radius="full"
                           size="sm"
-                          className="bg-[#9FC490] text-[#011936] font-semibold text-xs px-5 h-9 hover:bg-[#C0DFA1]"
+                          className="bg-olive text-primary font-semibold text-xs px-5 h-9 hover:bg-tea"
                         >
                           Đặt phòng
                         </Button>
@@ -193,7 +193,7 @@ export default function LocationsSection() {
             radius="full"
             size="lg"
             endContent={<ArrowRight className="w-4 h-4" />}
-            className="border-[#011936] text-[#011936] font-semibold text-sm px-8 h-12 hover:bg-[#011936] hover:text-white transition-colors"
+            className="border-primary text-primary font-semibold text-sm px-8 h-12 hover:bg-primary hover:text-white transition-colors"
           >
             Xem tất cả tại {activeLocation.name}
           </Button>

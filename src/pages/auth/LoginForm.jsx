@@ -11,7 +11,7 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const inputClasses = { inputWrapper: "border-[#82A3A1]/30 hover:border-[#82A3A1] focus-within:border-[#9FC490]" };
+const inputClasses = { inputWrapper: "border-muted/30 hover:border-muted focus-within:border-olive" };
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -37,7 +37,7 @@ export default function LoginForm() {
         placeholder="sinhvien@truonghoc.edu.vn"
         value={email}
         onValueChange={setEmail}
-        startContent={<Mail className="size-4 text-[#82A3A1]" />}
+        startContent={<Mail className="size-4 text-muted" />}
         variant="bordered"
         classNames={inputClasses}
         isRequired
@@ -48,9 +48,9 @@ export default function LoginForm() {
         value={password}
         onValueChange={setPassword}
         type={showPassword ? "text" : "password"}
-        startContent={<Lock className="size-4 text-[#82A3A1]" />}
+        startContent={<Lock className="size-4 text-muted" />}
         endContent={
-          <button type="button" className="text-[#82A3A1] hover:text-[#465362]" onClick={() => setShowPassword(!showPassword)}>
+          <button type="button" className="text-muted hover:text-secondary" onClick={() => setShowPassword(!showPassword)}>
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         }
@@ -64,11 +64,11 @@ export default function LoginForm() {
       )}
 
       <div className="flex items-center justify-between text-sm">
-        <label className="flex items-center gap-2 cursor-pointer text-[#465362]">
-          <input type="checkbox" className="accent-[#9FC490] w-4 h-4" />
+        <label className="flex items-center gap-2 cursor-pointer text-secondary">
+          <input type="checkbox" className="accent-olive w-4 h-4" />
           Ghi nhớ tôi
         </label>
-        <a href="#" className="font-semibold text-[#9FC490] hover:text-[#82A3A1] transition-colors">
+        <a href="#" className="font-semibold text-olive hover:text-muted transition-colors">
           Quên mật khẩu?
         </a>
       </div>
@@ -77,21 +77,21 @@ export default function LoginForm() {
         type="submit"
         radius="lg"
         isLoading={loading}
-        className="bg-[#9FC490] text-[#011936] font-bold text-base h-12 mt-1 shadow-lg shadow-[#9FC490]/30 hover:shadow-[#9FC490]/50"
+        className="bg-olive text-primary font-bold text-base h-12 mt-1 shadow-lg shadow-olive/30 hover:shadow-olive/50"
       >
         {loading ? "Đang đăng nhập..." : "Đăng Nhập"}
       </Button>
 
-      <div className="flex items-center gap-3 text-[#82A3A1] text-sm">
-        <div className="flex-1 h-px bg-[#82A3A1]/20" />
+      <div className="flex items-center gap-3 text-muted text-sm">
+        <div className="flex-1 h-px bg-muted/20" />
         <span>Hoặc tiếp tục với</span>
-        <div className="flex-1 h-px bg-[#82A3A1]/20" />
+        <div className="flex-1 h-px bg-muted/20" />
       </div>
 
       <Button
         variant="bordered"
         radius="lg"
-        className="border-[#82A3A1]/30 text-[#465362] font-medium h-12 hover:bg-[#82A3A1]/5"
+        className="border-muted/30 text-secondary font-medium h-12 hover:bg-muted/5"
         startContent={<GoogleIcon />}
       >
         Google
