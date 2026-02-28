@@ -2,13 +2,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@heroui/react";
 import { motion as Motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import slide1 from "../../assets/slideshow/slideshow_1.webp";
+import slide2 from "../../assets/slideshow/slideshow_2.jpg";
+import slide3 from "../../assets/slideshow/slideshow_3.jpg";
+import slide4 from "../../assets/slideshow/slideshow_4.webp";
 
-const slides = [
-  "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=1920&q=80",
-  "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1920&q=80",
-  "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1920&q=80",
-  "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1920&q=80",
-];
+const slides = [slide1, slide2, slide3, slide4];
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
