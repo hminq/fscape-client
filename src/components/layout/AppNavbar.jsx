@@ -87,9 +87,11 @@ function TriangleIcon({ up, className }) {
 
 export default function AppNavbar() {
   const [openLoc, setOpenLoc] = useState(null);
+  const [scrolled, setScrolled] = useState(false);
   const navRef = useRef(null);
   const navigate = useNavigate();
 
+  // Outside-click to close mega-menu
   useEffect(() => {
     if (!openLoc) return;
     function handleClick(e) {
@@ -101,31 +103,56 @@ export default function AppNavbar() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [openLoc]);
 
+  // Scroll detection
+  useEffect(() => {
+    const onScroll = () => {
+      const isScrolled = window.scrollY > 60;
+      setScrolled(isScrolled);
+      if (isScrolled) setOpenLoc(null);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const activeLoc = locations.find((l) => l.name === openLoc);
 
   return (
     <div ref={navRef} className="sticky top-0 z-50">
       <nav className="bg-[#011936]">
-        <div className="flex items-center px-5 md:px-10 py-3">
+        <div
+          className={`flex items-center px-5 md:px-10 py-3 transition-all duration-500 ${
+            scrolled ? "justify-center" : ""
+          }`}
+        >
           {/* Left group */}
-          <div className="flex items-center gap-6 flex-1 min-w-0">
+          <div
+            className={`flex items-center gap-6 transition-all duration-500 ${
+              scrolled ? "flex-none" : "flex-1 min-w-0"
+            }`}
+          >
             {/* Logo */}
             <a href="/" className="flex items-center gap-2.5 shrink-0">
               <img src={fscapeLogo} alt="FScape" className="w-12 h-12" />
-              <span className="text-3xl text-white font-display tracking-wide">
+              <span className="text-3xl text-white font-display tracking-wide leading-none translate-y-px">
                 FSCAPE
               </span>
             </a>
 
-            {/* Locations */}
-            <div className="hidden lg:flex items-center gap-1">
+            {/* Locations — hidden when scrolled */}
+            <div
+              className={`hidden lg:flex items-center gap-1 transition-all duration-500 ${
+                scrolled
+                  ? "opacity-0 max-w-0 overflow-hidden pointer-events-none"
+                  : "opacity-100 max-w-2xl"
+              }`}
+            >
               {locations.map((loc) => {
                 const isActive = openLoc === loc.name;
                 return (
                   <button
                     key={loc.name}
                     onClick={() => setOpenLoc(isActive ? null : loc.name)}
-                    className={`nav-underline flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide px-3 pb-1 pt-0.5 transition-colors ${
+                    className={`nav-underline flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide px-3 pb-1 pt-0.5 transition-colors whitespace-nowrap ${
                       isActive
                         ? "text-white"
                         : "text-white/75 hover:text-white"
@@ -140,18 +167,16 @@ export default function AppNavbar() {
                 );
               })}
             </div>
-
-            {/* Contact */}
-            <a
-              href="#"
-              className="nav-underline hidden lg:inline-block text-white/75 hover:text-white text-sm font-bold uppercase tracking-wide px-3 pb-1 pt-0.5 transition-colors"
-            >
-              Liên hệ
-            </a>
           </div>
 
-          {/* Right group */}
-          <div className="flex items-center gap-3 shrink-0">
+          {/* Right group — hidden when scrolled */}
+          <div
+            className={`flex items-center gap-3 shrink-0 transition-all duration-500 ${
+              scrolled
+                ? "opacity-0 max-w-0 overflow-hidden pointer-events-none"
+                : "opacity-100 max-w-xs"
+            }`}
+          >
             <Button
               radius="full"
               className="bg-[#9FC490] text-[#011936] font-semibold text-sm px-6 h-10"
