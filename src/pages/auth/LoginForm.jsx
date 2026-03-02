@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button, Input } from "@heroui/react";
 import { Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { api } from "@/lib/api";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20">
@@ -14,20 +16,45 @@ const GoogleIcon = () => (
 const inputClasses = { inputWrapper: "border-muted/30 hover:border-muted focus-within:border-olive" };
 
 export default function LoginForm() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-    setTimeout(() => {
+
+    try {
+      let res;
+      try {
+        res = await api.post("/auth/login", { email, password });
+      } catch {
+        // Backward compatibility if backend still exposes /api/auth/login
+        res = await api.post("/api/auth/login", { email, password });
+      }
+
+      const accessToken = res?.access_token;
+      const user = res?.user;
+
+      if (!accessToken) {
+        throw new Error("Phản hồi đăng nhập không có access token.");
+      }
+
+      localStorage.setItem("token", accessToken);
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      }
+
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(err.message || "Đăng nhập thất bại.");
+    } finally {
       setLoading(false);
-      setError("Tính năng đang được phát triển.");
-    }, 600);
+    }
   };
 
   return (

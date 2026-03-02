@@ -1,12 +1,14 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import AuthPage from "./pages/auth/AuthPage";
+import BuildingDetailPage from "./pages/BuildingDetailPage";
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<AuthPage />} />
+      <Route path="/buildings/:buildingId" element={<BuildingDetailPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

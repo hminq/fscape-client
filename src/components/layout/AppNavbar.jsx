@@ -1,61 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@heroui/react";
+import { useLocations } from "@/contexts/LocationsContext";
 import fscapeLogo from "../../assets/fscape-logo.svg";
-
-const locations = [
-  {
-    name: "Hà Nội",
-    buildings: [
-      "FScape Cầu Giấy",
-      "FScape Đống Đa",
-      "FScape Hai Bà Trưng",
-      "FScape Hoàn Kiếm",
-      "FScape Thanh Xuân",
-      "FScape Ba Đình",
-    ],
-    universities: [
-      "ĐH Bách khoa Hà Nội",
-      "ĐH Quốc gia Hà Nội",
-      "ĐH Kinh tế Quốc dân",
-      "ĐH Ngoại thương",
-      "ĐH FPT Hà Nội",
-    ],
-  },
-  {
-    name: "TP.HCM",
-    buildings: [
-      "FScape Quận 1",
-      "FScape Quận 7",
-      "FScape Thủ Đức",
-      "FScape Bình Thạnh",
-      "FScape Phú Nhuận",
-      "FScape Tân Bình",
-    ],
-    universities: [
-      "ĐH Bách khoa TP.HCM",
-      "ĐH Quốc gia TP.HCM",
-      "ĐH Kinh tế TP.HCM",
-      "ĐH RMIT Việt Nam",
-      "ĐH FPT TP.HCM",
-    ],
-  },
-  {
-    name: "Đà Nẵng",
-    buildings: [
-      "FScape Hải Châu",
-      "FScape Thanh Khê",
-      "FScape Sơn Trà",
-      "FScape Ngũ Hành Sơn",
-    ],
-    universities: [
-      "ĐH Đà Nẵng",
-      "ĐH Bách khoa Đà Nẵng",
-      "ĐH Kinh tế Đà Nẵng",
-      "ĐH FPT Đà Nẵng",
-    ],
-  },
-];
+import defaultAvatar from "../../assets/default_room_img.jpg";
 
 function TriangleIcon({ up, className }) {
   return (
@@ -73,35 +21,46 @@ function TriangleIcon({ up, className }) {
 }
 
 export default function AppNavbar() {
-  const [openLoc, setOpenLoc] = useState(null);
+  const { locations } = useLocations();
+  const [openLocId, setOpenLocId] = useState(null);
   const [scrolled, setScrolled] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem("token")));
   const navRef = useRef(null);
   const navigate = useNavigate();
 
-  // Outside-click to close mega-menu
   useEffect(() => {
-    if (!openLoc) return;
+    if (!openLocId) return;
     function handleClick(e) {
       if (navRef.current && !navRef.current.contains(e.target)) {
-        setOpenLoc(null);
+        setOpenLocId(null);
       }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [openLoc]);
+  }, [openLocId]);
 
-  // Scroll detection
   useEffect(() => {
     const onScroll = () => {
       const isScrolled = window.scrollY > 60;
       setScrolled(isScrolled);
-      if (isScrolled) setOpenLoc(null);
+      if (isScrolled) setOpenLocId(null);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const activeLoc = locations.find((l) => l.name === openLoc);
+  useEffect(() => {
+    const onStorage = () => setIsLoggedIn(Boolean(localStorage.getItem("token")));
+    window.addEventListener("storage", onStorage);
+    onStorage();
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  const activeLoc = locations.find((l) => l.id === openLocId);
+  const handleBuildingSelect = (buildingId) => {
+    setOpenLocId(null);
+    navigate(`/buildings/${buildingId}`);
+  };
 
   return (
     <div ref={navRef} className="sticky top-0 z-50">
@@ -118,12 +77,12 @@ export default function AppNavbar() {
             }`}
           >
             {/* Logo */}
-            <a href="/" className="flex items-center gap-2.5 shrink-0">
+            <Link to="/" className="flex items-center gap-2.5 shrink-0">
               <img src={fscapeLogo} alt="FScape" className="w-12 h-12" />
               <span className="text-3xl text-white font-display tracking-wide leading-none translate-y-px">
                 FSCAPE
               </span>
-            </a>
+            </Link>
 
             {/* Locations — hidden when scrolled */}
             <div
@@ -133,12 +92,12 @@ export default function AppNavbar() {
                   : "opacity-100 max-w-2xl"
               }`}
             >
-              {locations.slice(0, 4).map((loc) => {
-                const isActive = openLoc === loc.name;
+              {locations.map((loc) => {
+                const isActive = openLocId === loc.id;
                 return (
                   <button
-                    key={loc.name}
-                    onClick={() => setOpenLoc(isActive ? null : loc.name)}
+                    key={loc.id}
+                    onClick={() => setOpenLocId(isActive ? null : loc.id)}
                     className={`nav-underline flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide px-3 pb-1 pt-0.5 transition-colors whitespace-nowrap ${
                       isActive
                         ? "text-white"
@@ -170,14 +129,22 @@ export default function AppNavbar() {
             >
               Đặt phòng
             </Button>
-            <Button
-              variant="bordered"
-              radius="full"
-              className="border-white/60 text-white font-semibold text-sm px-6 h-10"
-              onPress={() => navigate("/login")}
-            >
-              Đăng nhập
-            </Button>
+            {isLoggedIn ? (
+              <img
+                src={defaultAvatar}
+                alt="User avatar"
+                className="h-10 w-10 rounded-full border border-white/60 object-cover"
+              />
+            ) : (
+              <Button
+                variant="bordered"
+                radius="full"
+                className="border-white/60 text-white font-semibold text-sm px-6 h-10"
+                onPress={() => navigate("/login")}
+              >
+                Đăng nhập
+              </Button>
+            )}
           </div>
         </div>
       </nav>
@@ -192,15 +159,16 @@ export default function AppNavbar() {
                 <p className="inline-block text-sm font-bold uppercase tracking-wider text-primary bg-olive px-2 py-0.5 mb-5">
                   FSCAPE {activeLoc.name.toUpperCase()}
                 </p>
-                <div className="grid grid-cols-2 gap-x-8 gap-y-3">
-                  {activeLoc.buildings.slice(0, 5).map((b) => (
-                    <a
-                      key={b}
-                      href="#"
-                      className="text-white/75 hover:text-white text-sm transition-colors"
+                <div className="grid grid-cols-2 gap-x-8 gap-y-3 justify-items-start">
+                  {(activeLoc.buildings || []).slice(0, 5).map((b) => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => handleBuildingSelect(b.id)}
+                      className="w-fit text-left text-white/75 hover:text-white text-sm transition-colors"
                     >
-                      {b}
-                    </a>
+                      {b.name}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -211,13 +179,13 @@ export default function AppNavbar() {
                   TRƯỜNG ĐẠI HỌC TẠI {activeLoc.name.toUpperCase()}
                 </p>
                 <div className="flex flex-col gap-3">
-                  {activeLoc.universities.slice(0, 5).map((u) => (
+                  {(activeLoc.universities || []).slice(0, 5).map((u) => (
                     <a
-                      key={u}
+                      key={u.id}
                       href="#"
                       className="text-white/75 hover:text-white text-sm transition-colors"
                     >
-                      {u}
+                      {u.name}
                     </a>
                   ))}
                 </div>
