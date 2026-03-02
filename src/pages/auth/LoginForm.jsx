@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Input } from "@heroui/react";
 import { Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { api } from "@/lib/api";
@@ -17,6 +17,7 @@ const inputClasses = { inputWrapper: "border-muted/30 hover:border-muted focus-w
 
 export default function LoginForm() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -49,7 +50,9 @@ export default function LoginForm() {
         localStorage.setItem("user", JSON.stringify(user));
       }
 
-      navigate("/", { replace: true });
+      const params = new URLSearchParams(location.search);
+      const returnTo = params.get("returnTo");
+      navigate(returnTo || "/", { replace: true });
     } catch (err) {
       setError(err.message || "Đăng nhập thất bại.");
     } finally {

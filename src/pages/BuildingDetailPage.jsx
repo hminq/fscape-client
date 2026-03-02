@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Bath, BedDouble, Loader2, MapPin, Ruler, Users } from "lucide-react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { LocationsProvider, useLocations } from "@/contexts/LocationsContext";
@@ -89,6 +89,7 @@ function BuildingHero({ building, activeTab, onTabChange }) {
 
 function BuildingDetailContent() {
   const { buildingId } = useParams();
+  const navigate = useNavigate();
   const { locations, loading: locationsLoading } = useLocations();
   const [building, setBuilding] = useState(null);
   const [facilities, setFacilities] = useState([]);
@@ -539,9 +540,14 @@ function BuildingDetailContent() {
 
                                 <button
                                   type="button"
+                                  onClick={() =>
+                                    navigate(
+                                      `/buildings/${buildingId}/rooms?roomTypeId=${slide.tab.id}`
+                                    )
+                                  }
                                   className="mt-5 h-11 w-full rounded-full bg-olive px-8 text-sm font-semibold text-primary transition-colors hover:bg-tea"
                                 >
-                                  Đặt ngay
+                                  Xem tất cả phòng loại này
                                 </button>
                               </div>
                             </article>

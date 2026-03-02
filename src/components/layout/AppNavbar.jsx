@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@heroui/react";
 import { useLocations } from "@/contexts/LocationsContext";
 import fscapeLogo from "../../assets/fscape-logo.svg";
@@ -27,6 +27,7 @@ export default function AppNavbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem("token")));
   const navRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!openLocId) return;
@@ -57,6 +58,20 @@ export default function AppNavbar() {
   }, []);
 
   const activeLoc = locations.find((l) => l.id === openLocId);
+  const currentBuildingId = useMemo(() => {
+    const match = location.pathname.match(/^\/buildings\/([^/]+)/);
+    return match?.[1] || null;
+  }, [location.pathname]);
+
+  const currentBuildingName = useMemo(() => {
+    if (!currentBuildingId) return "";
+    for (const loc of locations) {
+      const found = (loc?.buildings || []).find((b) => String(b?.id) === String(currentBuildingId));
+      if (found?.name) return found.name;
+    }
+    return "";
+  }, [locations, currentBuildingId]);
+
   const handleBuildingSelect = (buildingId) => {
     setOpenLocId(null);
     navigate(`/buildings/${buildingId}`);
@@ -82,6 +97,14 @@ export default function AppNavbar() {
               <span className="text-3xl text-white font-display tracking-wide leading-none translate-y-px">
                 FSCAPE
               </span>
+              {scrolled && currentBuildingName && (
+                <>
+                  <span className="mx-1 h-5 w-px bg-white/35" />
+                  <span className="text-[13px] font-semibold uppercase tracking-[0.08em] text-white/80">
+                    {currentBuildingName}
+                  </span>
+                </>
+              )}
             </Link>
 
             {/* Locations — hidden when scrolled */}
