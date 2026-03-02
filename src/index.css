@@ -56,6 +56,14 @@
   transform: scaleX(1);
 }
 
+.nav-underline-olive::after {
+  background: var(--color-olive);
+}
+
+.nav-underline-active::after {
+  transform: scaleX(1);
+}
+
 @keyframes marquee {
   0% {
     transform: translateX(0);

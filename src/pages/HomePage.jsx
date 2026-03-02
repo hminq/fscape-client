@@ -4,21 +4,23 @@ import HeroSection from "../components/home/HeroSection";
 import LocationsSection from "../components/home/LocationsSection";
 import WhyChooseSection from "../components/home/WhyChooseSection";
 import Footer from "../components/layout/Footer";
+import { LocationsProvider } from "../contexts/LocationsContext";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
-      <AppNavbar />
-      <AnnouncementBar />
-      <HeroSection />
-      {/* Sections with solid bg sit above the sticky WhyChoose image */}
-      <div className="relative z-10 bg-white">
-        <LocationsSection />
+    <LocationsProvider>
+      <div className="min-h-screen">
+        <AppNavbar />
+        <AnnouncementBar />
+        <HeroSection />
+        <div className="relative z-10 bg-white">
+          <LocationsSection />
+        </div>
+        <WhyChooseSection />
+        <div className="relative z-10">
+          <Footer />
+        </div>
       </div>
-      <WhyChooseSection />
-      <div className="relative z-10">
-        <Footer />
-      </div>
-    </div>
+    </LocationsProvider>
   );
 }
