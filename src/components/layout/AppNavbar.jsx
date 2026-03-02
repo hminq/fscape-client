@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@heroui/react";
 import { useLocations } from "@/contexts/LocationsContext";
+import { useAuth } from "@/contexts/AuthContext";
 import fscapeLogo from "../../assets/fscape-logo.svg";
 import defaultAvatar from "../../assets/default_room_img.jpg";
 
@@ -22,9 +23,9 @@ function TriangleIcon({ up, className }) {
 
 export default function AppNavbar() {
   const { locations } = useLocations();
+  const { isLoggedIn } = useAuth();
   const [openLocId, setOpenLocId] = useState(null);
   const [scrolled, setScrolled] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem("token")));
   const navRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,13 +49,6 @@ export default function AppNavbar() {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    const onStorage = () => setIsLoggedIn(Boolean(localStorage.getItem("token")));
-    window.addEventListener("storage", onStorage);
-    onStorage();
-    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   const activeLoc = locations.find((l) => l.id === openLocId);
@@ -220,6 +214,13 @@ export default function AppNavbar() {
                 variant="bordered"
                 radius="full"
                 className="border-white/60 text-white font-semibold uppercase text-sm px-8 h-10"
+                onPress={() => {
+                  const firstBuilding = (activeLoc.buildings || [])[0];
+                  if (firstBuilding) {
+                    setOpenLocId(null);
+                    navigate(`/buildings/${firstBuilding.id}/rooms`);
+                  }
+                }}
               >
                 Xem tất cả tại {activeLoc.name}
               </Button>

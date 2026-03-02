@@ -4,6 +4,8 @@ import { CreditCard, Landmark, Loader2, Wallet } from "lucide-react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 import { api } from "@/lib/api";
+import { formatVnd, formatDisplayDate } from "@/lib/formatters";
+import { useAuth } from "@/contexts/AuthContext";
 import defaultRoomImg from "@/assets/default_room_img.jpg";
 
 const STEPS = [
@@ -12,27 +14,13 @@ const STEPS = [
   { id: 3, label: "Thanh toán" },
 ];
 
-const moneyFormatter = new Intl.NumberFormat("vi-VN");
-
-function formatVnd(value) {
-  if (value == null || Number.isNaN(Number(value))) return "Liên hệ";
-  return `${moneyFormatter.format(Number(value))}đ`;
-}
-
-function formatDisplayDate(dateStr) {
-  if (!dateStr) return "-";
-  const [year, month, day] = dateStr.split("-");
-  if (!year || !month || !day) return "-";
-  return `${day}/${month}/${year.slice(-2)}`;
-}
-
 function RoomCheckoutContent() {
   const { buildingId, roomId } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const checkInDate = searchParams.get("checkInDate") || "";
   const rentalTerm = searchParams.get("term") || "";
-  const token = localStorage.getItem("token");
+  const { token, user: authUser } = useAuth();
 
   const [room, setRoom] = useState(null);
   const [roomType, setRoomType] = useState(null);
@@ -42,21 +30,16 @@ function RoomCheckoutContent() {
   const [agreed, setAgreed] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [form, setForm] = useState(() => {
-    let user = {};
-    try {
-      user = JSON.parse(localStorage.getItem("user") || "{}");
-    } catch {
-      user = {};
-    }
+    const u = authUser || {};
     return {
-      email: user.email || "",
-      firstName: user.first_name || "",
-      lastName: user.last_name || "",
-      gender: user.gender || "",
+      email: u.email || "",
+      firstName: u.first_name || "",
+      lastName: u.last_name || "",
+      gender: u.gender || "",
       dateOfBirth: "",
-      permanentAddress: user.permanent_address || "",
-      emergencyContactName: user.emergency_contact_name || "",
-      emergencyContactPhone: user.emergency_contact_phone || "",
+      permanentAddress: u.permanent_address || "",
+      emergencyContactName: u.emergency_contact_name || "",
+      emergencyContactPhone: u.emergency_contact_phone || "",
     };
   });
 

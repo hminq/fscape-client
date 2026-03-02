@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Bath, BedDouble, Loader2, MapPin, Ruler, Users } from "lucide-react";
 import AppNavbar from "@/components/layout/AppNavbar";
+import Footer from "@/components/layout/Footer";
 import { LocationsProvider, useLocations } from "@/contexts/LocationsContext";
 import { api } from "@/lib/api";
+import { formatVnd } from "@/lib/formatters";
 import defaultBuildingImg from "@/assets/default_room_img.jpg";
 
 const DETAIL_TABS = [
@@ -11,13 +13,6 @@ const DETAIL_TABS = [
   { label: "Tiện ích", sectionId: "building-facilities" },
   { label: "Phòng", sectionId: "building-rooms" },
 ];
-
-const moneyFormatter = new Intl.NumberFormat("vi-VN");
-
-function formatVnd(value) {
-  if (value == null || Number.isNaN(Number(value))) return "Liên hệ";
-  return `${moneyFormatter.format(Number(value))}đ`;
-}
 
 function BuildingHero({ building, activeTab, onTabChange }) {
   const heroImage = useMemo(() => {
@@ -324,38 +319,23 @@ function BuildingDetailContent() {
   useEffect(() => {
     if (!activeRoomTypeId) return;
 
-    const centerToActive = () => {
-      const tabContainer = roomTypeScrollRef.current;
-      const activeTab = roomTypeTabRefs.current[activeRoomTypeId];
-      const showcaseContainer = roomShowcaseScrollRef.current;
-      const activeSlide = roomSlideRefs.current[activeRoomTypeId];
+    const centerToActive = (smooth) => {
+      const activeTabEl = roomTypeTabRefs.current[activeRoomTypeId];
+      const activeSlideEl = roomSlideRefs.current[activeRoomTypeId];
+      const behavior = smooth ? "smooth" : "instant";
 
-      if (tabContainer && activeTab) {
-        const maxTabScroll = Math.max(0, tabContainer.scrollWidth - tabContainer.clientWidth);
-        const tabLeft = Math.min(
-          maxTabScroll,
-          Math.max(0, activeTab.offsetLeft - (tabContainer.clientWidth - activeTab.offsetWidth) / 2)
-        );
-        tabContainer.scrollTo({ left: tabLeft, behavior: "smooth" });
+      if (activeTabEl) {
+        activeTabEl.scrollIntoView({ inline: "center", block: "nearest", behavior });
       }
-
-      if (showcaseContainer && activeSlide) {
-        const maxShowcaseScroll = Math.max(
-          0,
-          showcaseContainer.scrollWidth - showcaseContainer.clientWidth
-        );
-        const showcaseLeft = Math.min(
-          maxShowcaseScroll,
-          Math.max(
-            0,
-            activeSlide.offsetLeft - (showcaseContainer.clientWidth - activeSlide.clientWidth) / 2
-          )
-        );
-        showcaseContainer.scrollTo({ left: showcaseLeft, behavior: "smooth" });
+      if (activeSlideEl) {
+        activeSlideEl.scrollIntoView({ inline: "center", block: "nearest", behavior });
       }
     };
 
-    const raf = requestAnimationFrame(centerToActive);
+    // Double-rAF ensures layout is fully resolved after state changes
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => centerToActive(true));
+    });
     return () => cancelAnimationFrame(raf);
   }, [activeRoomTypeId, roomSlides.length]);
 
@@ -489,66 +469,68 @@ function BuildingDetailContent() {
                               ref={(node) => {
                                 roomSlideRefs.current[slide.tab.id] = node;
                               }}
-                              className="relative w-[78vw] min-w-[760px] max-w-[980px] shrink-0 snap-center overflow-hidden rounded-3xl bg-primary/5"
+                              className="relative w-[78vw] min-w-[760px] max-w-[980px] shrink-0 snap-center pb-10"
                             >
-                              <img
-                                src={
-                                  slide.room.thumbnail_url ||
-                                  slide.room.images?.[0]?.image_url ||
-                                  defaultBuildingImg
-                                }
-                                alt={slide.roomType?.name || slide.room.room_number}
-                                onError={(e) => {
-                                  e.target.onerror = null;
-                                  e.target.src = defaultBuildingImg;
-                                }}
-                                className="h-[520px] w-full object-cover"
-                              />
+                              <div className="relative overflow-hidden rounded-3xl">
+                                <img
+                                  src={
+                                    slide.room.thumbnail_url ||
+                                    slide.room.images?.[0]?.image_url ||
+                                    defaultBuildingImg
+                                  }
+                                  alt={slide.roomType?.name || slide.room.room_number}
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = defaultBuildingImg;
+                                  }}
+                                  className="h-[520px] w-full object-cover"
+                                />
+                              </div>
 
-                              <div className="absolute inset-0 bg-gradient-to-t from-primary/45 via-transparent to-transparent" />
-
-                              <div className="absolute bottom-6 right-6 w-full max-w-md rounded-3xl bg-white/95 p-6 shadow-xl backdrop-blur-sm">
-                                <p className="text-3xl font-bold leading-tight text-primary">
-                                  {slide.roomType?.name || "Phòng tiêu chuẩn"}
-                                </p>
-                                <p className="mt-1 text-sm text-secondary">{building.name}</p>
-
-                                <p className="mt-4 text-sm text-muted">Giá từ</p>
-                                <p className="text-4xl font-bold text-primary">
-                                  {formatVnd(slide.roomType?.base_price || slide.room.room_type?.base_price)}
-                                  <span className="ml-1 text-base font-medium text-secondary">/tháng</span>
-                                </p>
-
-                                <div className="mt-5 grid grid-cols-2 gap-2 text-sm">
-                                  <span className="flex items-center gap-1.5 rounded-full bg-tea/60 px-3 py-1.5 font-medium text-primary">
-                                    <Users className="h-3.5 w-3.5" />
-                                    {slide.roomType?.capacity_min ?? "N/A"}-{slide.roomType?.capacity_max ?? "N/A"} người
-                                  </span>
-                                  <span className="flex items-center gap-1.5 rounded-full bg-olive/30 px-3 py-1.5 font-medium text-primary">
-                                    <Ruler className="h-3.5 w-3.5" />
-                                    {slide.roomType?.area_sqm ?? "N/A"} m²
-                                  </span>
-                                  <span className="flex items-center gap-1.5 rounded-full bg-muted/25 px-3 py-1.5 font-medium text-secondary">
-                                    <BedDouble className="h-3.5 w-3.5" />
-                                    {slide.roomType?.bedrooms ?? "N/A"} phòng ngủ
-                                  </span>
-                                  <span className="flex items-center gap-1.5 rounded-full bg-muted/25 px-3 py-1.5 font-medium text-secondary">
-                                    <Bath className="h-3.5 w-3.5" />
-                                    {slide.roomType?.bathrooms ?? "N/A"} phòng tắm
-                                  </span>
+                              <div className="absolute bottom-0 right-6 max-w-lg rounded-2xl border border-muted/20 bg-white/95 px-6 py-5 backdrop-blur-sm">
+                                <div className="flex items-start justify-between gap-6">
+                                  <div>
+                                    <p className="text-2xl font-bold leading-tight text-primary">
+                                      {slide.roomType?.name || "Phòng tiêu chuẩn"}
+                                    </p>
+                                    <p className="mt-0.5 text-sm text-secondary">{building.name}</p>
+                                  </div>
+                                  <div className="text-right shrink-0">
+                                    <p className="text-xs text-muted">Giá từ</p>
+                                    <p className="text-2xl font-bold text-primary">
+                                      {formatVnd(slide.roomType?.base_price || slide.room.room_type?.base_price)}
+                                      <span className="text-xs font-medium text-secondary">/tháng</span>
+                                    </p>
+                                  </div>
                                 </div>
 
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    navigate(
-                                      `/buildings/${buildingId}/rooms?roomTypeId=${slide.tab.id}`
-                                    )
-                                  }
-                                  className="mt-5 h-11 w-full rounded-full bg-olive px-8 text-sm font-semibold text-primary transition-colors hover:bg-tea"
-                                >
-                                  Xem tất cả phòng loại này
-                                </button>
+                                <div className="mt-3 flex items-center justify-between gap-4">
+                                  <div className="flex items-center gap-4 text-sm text-secondary">
+                                    <span className="flex items-center gap-1.5">
+                                      <Users className="h-4 w-4 text-olive" />
+                                      {slide.roomType?.capacity_min ?? "N/A"}-{slide.roomType?.capacity_max ?? "N/A"} người
+                                    </span>
+                                    <span className="flex items-center gap-1.5">
+                                      <Bath className="h-4 w-4 text-olive" />
+                                      {slide.roomType?.bathrooms ?? "N/A"} WC
+                                    </span>
+                                    <span className="flex items-center gap-1.5">
+                                      <Ruler className="h-4 w-4 text-olive" />
+                                      {slide.roomType?.area_sqm ?? "N/A"} m²
+                                    </span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      navigate(
+                                        `/buildings/${buildingId}/rooms?roomTypeId=${slide.tab.id}`
+                                      )
+                                    }
+                                    className="shrink-0 h-10 rounded-full bg-olive px-6 text-sm font-semibold text-primary transition-colors hover:bg-tea"
+                                  >
+                                    Xem phòng
+                                  </button>
+                                </div>
                               </div>
                             </article>
                           ))}
@@ -562,6 +544,7 @@ function BuildingDetailContent() {
           </section>
         </>
       )}
+      <Footer />
     </div>
   );
 }

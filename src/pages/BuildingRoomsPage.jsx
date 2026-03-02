@@ -1,18 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Bath, BedDouble, Loader2, Ruler, Users } from "lucide-react";
+import { Bath, BedDouble, ChevronLeft, ChevronRight, Loader2, Ruler, Users } from "lucide-react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 import { api } from "@/lib/api";
+import { formatVnd } from "@/lib/formatters";
 import defaultRoomImg from "@/assets/default_room_img.jpg";
 
-const moneyFormatter = new Intl.NumberFormat("vi-VN");
-
-function formatVnd(value) {
-  if (value == null || Number.isNaN(Number(value))) return "Liên hệ";
-  return `${moneyFormatter.format(Number(value))}đ`;
-}
+const PAGE_SIZE = 10;
 
 function BuildingRoomsContent() {
   const { buildingId } = useParams();
@@ -34,6 +30,8 @@ function BuildingRoomsContent() {
   const [error, setError] = useState("");
   const [selectedTypeIds, setSelectedTypeIds] = useState(initialTypeIds);
   const [sortOrder, setSortOrder] = useState("asc");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     let mounted = true;
@@ -42,10 +40,17 @@ function BuildingRoomsContent() {
       try {
         setLoading(true);
         setError("");
-        const res = await api.get(`/api/rooms?building_id=${buildingId}&limit=200`);
+        const res = await api.get(`/api/rooms?building_id=${buildingId}&limit=${PAGE_SIZE}&page=${page}`);
         if (!mounted) return;
         const roomList = res?.data || [];
         setRooms(roomList);
+
+        const pagination = res?.pagination || res?.meta;
+        if (pagination) {
+          setTotalPages(pagination.totalPages || pagination.total_pages || Math.ceil((pagination.total || roomList.length) / PAGE_SIZE));
+        } else {
+          setTotalPages(1);
+        }
 
         const uniqueTypeIds = [...new Set(roomList.map((room) => room.room_type?.id).filter(Boolean))];
         if (uniqueTypeIds.length === 0) {
@@ -82,7 +87,7 @@ function BuildingRoomsContent() {
     return () => {
       mounted = false;
     };
-  }, [buildingId]);
+  }, [buildingId, page]);
 
   const roomTypeFilters = useMemo(() => {
     const map = new Map();
@@ -152,14 +157,18 @@ function BuildingRoomsContent() {
       <AppNavbar />
 
       <section className="mx-auto max-w-7xl px-6 py-12 md:px-12">
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold text-primary md:text-4xl">Danh sách phòng</h1>
             <p className="mt-2 text-secondary">
               {filteredRooms.length} phòng tại <span className="font-semibold text-primary">{buildingName}</span>
             </p>
           </div>
-          <Link to={`/buildings/${buildingId}`} className="text-sm font-semibold text-primary hover:text-secondary">
+          <Link
+            to={`/buildings/${buildingId}`}
+            className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white"
+          >
+            <ChevronLeft className="h-4 w-4" />
             Quay lại
           </Link>
         </div>
@@ -172,20 +181,20 @@ function BuildingRoomsContent() {
           <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</p>
         ) : (
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr]">
-            <aside className="h-fit self-start rounded-2xl border border-muted/20 bg-white p-5">
-              <h2 className="text-2xl font-bold text-primary">Loại phòng</h2>
-              <div className="mt-4 space-y-3">
+            <aside className="h-fit self-start rounded-2xl border border-muted/20 bg-white p-4">
+              <h2 className="text-lg font-bold text-primary">Loại phòng</h2>
+              <div className="mt-3 space-y-0.5">
                 <button
                   type="button"
                   onClick={() => handleToggleType("all")}
-                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left transition-colors ${
+                  className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors ${
                     selectedTypeIds.length === 0
                       ? "bg-primary text-white"
                       : "text-secondary hover:bg-primary/5 hover:text-primary"
                   }`}
                 >
                   <span className="flex items-center gap-2">
-                    <input type="checkbox" checked={selectedTypeIds.length === 0} onChange={() => {}} />
+                    <input type="checkbox" checked={selectedTypeIds.length === 0} onChange={() => {}} className="h-3.5 w-3.5" />
                     Tất cả loại phòng
                   </span>
                   <span className="font-semibold">{rooms.length}</span>
@@ -195,7 +204,7 @@ function BuildingRoomsContent() {
                     key={type.id}
                     type="button"
                     onClick={() => handleToggleType(type.id)}
-                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left transition-colors ${
+                    className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors ${
                       selectedTypeIds.includes(type.id)
                         ? "bg-primary text-white"
                         : "text-secondary hover:bg-primary/5 hover:text-primary"
@@ -206,6 +215,7 @@ function BuildingRoomsContent() {
                         type="checkbox"
                         checked={selectedTypeIds.includes(type.id)}
                         onChange={() => {}}
+                        className="h-3.5 w-3.5"
                       />
                       {type.name}
                     </span>
@@ -227,13 +237,15 @@ function BuildingRoomsContent() {
                 </select>
               </div>
 
-              {filteredRooms.map((room) => (
+              {filteredRooms.length === 0 ? (
+                <p className="py-16 text-center text-secondary">Không có phòng nào phù hợp.</p>
+              ) : filteredRooms.map((room) => (
                 (() => {
                   const detailType = roomTypeDetails[room.room_type?.id] || room.room_type || {};
                   return (
                 <article
                   key={room.id}
-                  className="grid grid-cols-1 gap-4 rounded-3xl border border-muted/20 bg-white p-5 shadow-sm md:grid-cols-[220px_1fr_180px]"
+                  className="group grid grid-cols-1 overflow-hidden rounded-2xl border border-muted/20 bg-white md:grid-cols-[200px_1fr]"
                 >
                   <img
                     src={room.thumbnail_url || room.images?.[0]?.image_url || defaultRoomImg}
@@ -242,53 +254,93 @@ function BuildingRoomsContent() {
                       e.target.onerror = null;
                       e.target.src = defaultRoomImg;
                     }}
-                    className="h-52 w-full rounded-2xl object-cover"
+                    className="h-48 w-full object-cover md:h-full"
                   />
 
-                  <div>
-                    <h3 className="text-3xl font-bold leading-tight text-primary">{detailType.name || "Phòng"}</h3>
-                    <p className="mt-1 text-sm text-secondary">
-                      {room.building?.name} - Phòng {room.room_number}
-                    </p>
-
-                    <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                      <span className="flex items-center gap-1.5 rounded-full bg-tea/60 px-3 py-1.5 font-medium text-primary">
-                        <Users className="h-3.5 w-3.5" />
-                        {detailType.capacity_min ?? "N/A"}-{detailType.capacity_max ?? "N/A"} người
-                      </span>
-                      <span className="flex items-center gap-1.5 rounded-full bg-olive/30 px-3 py-1.5 font-medium text-primary">
-                        <Ruler className="h-3.5 w-3.5" />
-                        {detailType.area_sqm ?? "N/A"} m²
-                      </span>
-                      <span className="flex items-center gap-1.5 rounded-full bg-muted/25 px-3 py-1.5 font-medium text-secondary">
-                        <BedDouble className="h-3.5 w-3.5" />
-                        {detailType.bedrooms ?? "N/A"} phòng ngủ
-                      </span>
-                      <span className="flex items-center gap-1.5 rounded-full bg-muted/25 px-3 py-1.5 font-medium text-secondary">
-                        <Bath className="h-3.5 w-3.5" />
-                        {detailType.bathrooms ?? "N/A"} phòng tắm
-                      </span>
+                  <div className="flex flex-col p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-xl font-bold leading-tight text-primary">{detailType.name || "Phòng"}</h3>
+                        <p className="mt-0.5 text-sm text-secondary">Phòng {room.room_number}</p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-xs text-muted">Giá từ</p>
+                        <p className="text-2xl font-bold text-primary">{formatVnd(detailType.base_price)}</p>
+                        <p className="text-xs text-secondary">/tháng</p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex flex-col items-end justify-between">
-                    <div className="text-right">
-                      <p className="text-sm text-secondary">Giá từ</p>
-                      <p className="text-4xl font-bold text-primary">{formatVnd(detailType.base_price)}</p>
-                      <p className="text-sm text-secondary">/tháng</p>
+                    <div className="mt-auto flex items-center justify-between gap-4 pt-3">
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-secondary">
+                        <span className="flex items-center gap-1.5">
+                          <Users className="h-4 w-4 text-olive" />
+                          {detailType.capacity_min ?? "N/A"}-{detailType.capacity_max ?? "N/A"} người
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Ruler className="h-4 w-4 text-olive" />
+                          {detailType.area_sqm ?? "N/A"} m²
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <BedDouble className="h-4 w-4 text-olive" />
+                          {detailType.bedrooms ?? "N/A"} phòng ngủ
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Bath className="h-4 w-4 text-olive" />
+                          {detailType.bathrooms ?? "N/A"} phòng tắm
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/buildings/${buildingId}/rooms/${room.id}`)}
+                        className="shrink-0 h-9 rounded-full bg-olive px-5 text-sm font-semibold text-primary transition-colors hover:bg-tea"
+                      >
+                        Xem thêm
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/buildings/${buildingId}/rooms/${room.id}`)}
-                      className="h-11 rounded-full bg-olive px-6 text-sm font-semibold text-primary transition-colors hover:bg-tea"
-                    >
-                      Xem thêm
-                    </button>
                   </div>
                 </article>
                   );
                 })()
               ))}
+
+              {totalPages > 1 && (
+                <div className="mt-8 flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className={`inline-flex h-10 w-10 items-center justify-center rounded-full border border-muted/30 transition-colors ${
+                      page <= 1 ? "cursor-not-allowed text-secondary/30" : "text-secondary hover:bg-primary/5 hover:text-primary"
+                    }`}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPage(p)}
+                      className={`h-10 w-10 rounded-full text-sm font-semibold transition-colors ${
+                        p === page
+                          ? "bg-primary text-white"
+                          : "text-secondary hover:bg-primary/5 hover:text-primary"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    className={`inline-flex h-10 w-10 items-center justify-center rounded-full border border-muted/30 transition-colors ${
+                      page >= totalPages ? "cursor-not-allowed text-secondary/30" : "text-secondary hover:bg-primary/5 hover:text-primary"
+                    }`}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

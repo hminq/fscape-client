@@ -4,14 +4,8 @@ import { Loader2 } from "lucide-react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 import { api } from "@/lib/api";
+import { formatVnd } from "@/lib/formatters";
 import defaultRoomImg from "@/assets/default_room_img.jpg";
-
-const moneyFormatter = new Intl.NumberFormat("vi-VN");
-
-function formatVnd(value) {
-  if (value == null || Number.isNaN(Number(value))) return "Liên hệ";
-  return `${moneyFormatter.format(Number(value))}đ`;
-}
 
 function RoomPaymentContent() {
   const { buildingId, roomId } = useParams();

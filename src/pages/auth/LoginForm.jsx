@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Input } from "@heroui/react";
 import { Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20">
@@ -18,6 +19,7 @@ const inputClasses = { inputWrapper: "border-muted/30 hover:border-muted focus-w
 export default function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,10 +47,7 @@ export default function LoginForm() {
         throw new Error("Phản hồi đăng nhập không có access token.");
       }
 
-      localStorage.setItem("token", accessToken);
-      if (user) {
-        localStorage.setItem("user", JSON.stringify(user));
-      }
+      login(accessToken, user);
 
       const params = new URLSearchParams(location.search);
       const returnTo = params.get("returnTo");

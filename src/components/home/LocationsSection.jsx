@@ -154,6 +154,7 @@ export default function LocationsSection() {
                                 radius="full"
                                 size="sm"
                                 className="bg-olive text-primary font-semibold text-xs px-5 h-9 hover:bg-tea"
+                                onPress={() => navigate(`/buildings/${building.id}/rooms`)}
                               >
                                 Đặt phòng
                               </Button>
@@ -181,6 +182,10 @@ export default function LocationsSection() {
                 size="lg"
                 endContent={<ArrowRight className="w-4 h-4" />}
                 className="border-primary text-primary font-semibold text-sm px-8 h-12 hover:bg-primary hover:text-white transition-colors"
+                onPress={() => {
+                  const firstBuilding = buildings[0];
+                  if (firstBuilding) navigate(`/buildings/${firstBuilding.id}/rooms`);
+                }}
               >
                 Xem tất cả tại {activeLocation?.name}
               </Button>
