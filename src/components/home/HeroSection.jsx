@@ -92,6 +92,10 @@ export default function HeroSection() {
                 size="lg"
                 endContent={<ArrowRight className="w-5 h-5" />}
                 className="bg-olive text-primary font-bold text-base px-10 h-12"
+                onPress={() => {
+                  const section = document.getElementById("hero-locations-section");
+                  if (section) section.scrollIntoView({ behavior: 'smooth' });
+                }}
               >
                 Khám phá ngay
               </Button>
@@ -110,11 +114,10 @@ export default function HeroSection() {
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
-                className={`h-1 rounded-full transition-all duration-500 ${
-                  i === current
-                    ? "w-8 bg-olive"
-                    : "w-4 bg-white/40 hover:bg-white/60"
-                }`}
+                className={`h-1 rounded-full transition-all duration-500 ${i === current
+                  ? "w-8 bg-olive"
+                  : "w-4 bg-white/40 hover:bg-white/60"
+                  }`}
                 aria-label={`Slide ${i + 1}`}
               />
             ))}

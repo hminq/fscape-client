@@ -22,7 +22,7 @@ export default function LocationsSection() {
   };
 
   return (
-    <section className="py-16 md:py-24 bg-white">
+    <section id="hero-locations-section" className="py-16 md:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
         {/* Heading */}
         <Motion.div
@@ -66,11 +66,10 @@ export default function LocationsSection() {
                   <button
                     key={loc.id}
                     onClick={() => setActiveIndex(i)}
-                    className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
-                      i === activeIndex
+                    className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${i === activeIndex
                         ? "bg-olive text-primary shadow-md"
                         : "text-secondary hover:text-primary"
-                    }`}
+                      }`}
                   >
                     {loc.name}
                   </button>

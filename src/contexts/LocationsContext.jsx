@@ -18,7 +18,7 @@ export function LocationsProvider({ children }) {
           locs.map((loc) =>
             api
               .get(`/api/locations/${loc.id}`)
-              .then((r) => r.data)
+              .then((r) => r?.data)
               .catch(() => loc)
           )
         );

@@ -75,15 +75,13 @@ export default function AppNavbar() {
     <div ref={navRef} className="sticky top-0 z-50">
       <nav className="bg-primary">
         <div
-          className={`flex items-center px-5 md:px-10 py-3 transition-all duration-500 ${
-            scrolled ? "justify-center" : ""
-          }`}
+          className={`flex items-center px-5 md:px-10 py-3 transition-all duration-500 ${scrolled ? "justify-center" : ""
+            }`}
         >
           {/* Left group */}
           <div
-            className={`flex items-center gap-6 transition-all duration-500 ${
-              scrolled ? "flex-none" : "flex-1 min-w-0"
-            }`}
+            className={`flex items-center gap-6 transition-all duration-500 ${scrolled ? "flex-none" : "flex-1 min-w-0"
+              }`}
           >
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0">
@@ -103,11 +101,10 @@ export default function AppNavbar() {
 
             {/* Locations — hidden when scrolled */}
             <div
-              className={`hidden lg:flex items-center gap-1 transition-all duration-500 ${
-                scrolled
-                  ? "opacity-0 max-w-0 overflow-hidden pointer-events-none"
-                  : "opacity-100 max-w-2xl"
-              }`}
+              className={`hidden lg:flex items-center gap-1 transition-all duration-500 ${scrolled
+                ? "opacity-0 max-w-0 overflow-hidden pointer-events-none"
+                : "opacity-100 max-w-2xl"
+                }`}
             >
               {locations.map((loc) => {
                 const isActive = openLocId === loc.id;
@@ -115,11 +112,10 @@ export default function AppNavbar() {
                   <button
                     key={loc.id}
                     onClick={() => setOpenLocId(isActive ? null : loc.id)}
-                    className={`nav-underline flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide px-3 pb-1 pt-0.5 transition-colors whitespace-nowrap ${
-                      isActive
-                        ? "text-white"
-                        : "text-white/75 hover:text-white"
-                    }`}
+                    className={`nav-underline flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide px-3 pb-1 pt-0.5 transition-colors whitespace-nowrap ${isActive
+                      ? "text-white"
+                      : "text-white/75 hover:text-white"
+                      }`}
                   >
                     {loc.name}
                     <TriangleIcon
@@ -134,15 +130,23 @@ export default function AppNavbar() {
 
           {/* Right group — hidden when scrolled */}
           <div
-            className={`flex items-center gap-3 shrink-0 transition-all duration-500 ${
-              scrolled
-                ? "opacity-0 max-w-0 overflow-hidden pointer-events-none"
-                : "opacity-100 max-w-xs"
-            }`}
+            className={`flex items-center gap-3 shrink-0 transition-all duration-500 ${scrolled
+              ? "opacity-0 max-w-0 overflow-hidden pointer-events-none"
+              : "opacity-100 max-w-xs"
+              }`}
           >
             <Button
               radius="full"
               className="bg-olive text-primary font-semibold text-sm px-6 h-10"
+              onPress={() => {
+                const section = document.getElementById("hero-locations-section");
+                if (section) {
+                  section.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  // Nếu không tìm thấy section (ví dụ đang ở page khác), về Home
+                  navigate("/");
+                }
+              }}
             >
               Đặt phòng
             </Button>

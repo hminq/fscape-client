@@ -106,17 +106,71 @@ function RoomCheckoutContent() {
 
   const canStepNext = true;
 
-  const handleNext = () => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const [errors, setErrors] = useState({});
+
+  const validateStep1 = () => {
+    const newErrors = {};
+    if (!form.email) newErrors.email = "Email là bắt buộc";
+    else if (!/\S+@\S+\.\S+/.test(form.email)) newErrors.email = "Email không hợp lệ";
+
+    if (!form.firstName) newErrors.firstName = "Tên là bắt buộc";
+    if (!form.lastName) newErrors.lastName = "Họ là bắt buộc";
+    if (!form.gender) newErrors.gender = "Vui lòng chọn giới tính";
+    if (!form.dateOfBirth) newErrors.dateOfBirth = "Ngày sinh là bắt buộc";
+    if (!form.permanentAddress) newErrors.permanentAddress = "Địa chỉ là bắt buộc";
+    if (!form.emergencyContactName) newErrors.emergencyContactName = "Tên liên hệ khẩn cấp là bắt buộc";
+    if (!form.emergencyContactPhone) newErrors.emergencyContactPhone = "SĐT khẩn cấp là bắt buộc";
+    else if (!/^\d{10,11}$/.test(form.emergencyContactPhone)) newErrors.emergencyContactPhone = "SĐT phải từ 10-11 số";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNext = async () => {
+    if (step === 1) {
+      if (!validateStep1()) return;
+    }
+
+    if (step === 2 && !agreed) {
+      alert("Bạn cần đồng ý với điều khoản để tiếp tục.");
+      return;
+    }
+
     if (step < 3) {
       setStep((prev) => Math.min(3, prev + 1));
       return;
     }
-    const method = paymentMethod || "VISA / Mastercard";
-    navigate(
-      `/buildings/${buildingId}/rooms/${roomId}/payment?checkInDate=${checkInDate}&term=${rentalTerm}&method=${encodeURIComponent(
-        method
-      )}`
-    );
+
+    if (!paymentMethod) {
+      alert("Vui lòng chọn phương thức thanh toán.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      // Gọi API tạo đơn đặt phòng (Booking)
+      const res = await api.post("/api/bookings", {
+        roomId,
+        checkInDate,
+        rentalTerm,
+        customerInfo: form
+      });
+
+      const booking = res.data;
+
+      // Chuyển sang trang thanh toán với ID của booking thật
+      navigate(
+        `/buildings/${buildingId}/rooms/${roomId}/payment?bookingId=${booking.id}&method=${encodeURIComponent(
+          paymentMethod
+        )}`
+      );
+    } catch (err) {
+      alert(err.message || "Không thể khởi tạo đơn đặt phòng.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -149,9 +203,8 @@ function RoomCheckoutContent() {
             {STEPS.map((item) => (
               <div key={item.id} className="flex items-center gap-3">
                 <div
-                  className={`h-8 min-w-8 rounded-full px-3 text-center text-sm font-semibold leading-8 ${
-                    item.id <= step ? "bg-primary text-white" : "bg-primary/10 text-secondary"
-                  }`}
+                  className={`h-8 min-w-8 rounded-full px-3 text-center text-sm font-semibold leading-8 ${item.id <= step ? "bg-primary text-white" : "bg-primary/10 text-secondary"
+                    }`}
                 >
                   {item.id}
                 </div>
@@ -167,25 +220,51 @@ function RoomCheckoutContent() {
           {step === 1 && (
             <div className="mt-8 rounded-3xl border border-muted/20 bg-white p-6">
               <h2 className="text-2xl font-bold text-primary">Bước 1: Điền thông tin</h2>
-              <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                 {[
                   { key: "email", label: "Email", type: "email" },
                   { key: "firstName", label: "Tên", type: "text" },
                   { key: "lastName", label: "Họ", type: "text" },
-                  { key: "gender", label: "Giới tính", type: "text" },
+                  { key: "gender", label: "Giới tính", type: "select", options: ["MALE", "FEMALE", "OTHER"] },
                   { key: "dateOfBirth", label: "Ngày sinh", type: "date" },
                   { key: "permanentAddress", label: "Địa chỉ thường trú", type: "text" },
                   { key: "emergencyContactName", label: "Tên liên hệ khẩn cấp", type: "text" },
                   { key: "emergencyContactPhone", label: "SĐT khẩn cấp", type: "text" },
                 ].map((field) => (
-                  <input
-                    key={field.key}
-                    type={field.type}
-                    placeholder={field.label}
-                    value={form[field.key]}
-                    onChange={(e) => setForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                    className="h-11 rounded-xl border border-muted/30 px-4 text-sm text-primary outline-none focus:border-olive"
-                  />
+                  <div key={field.key} className="flex flex-col gap-1">
+                    <label className="text-xs font-semibold text-secondary uppercase tracking-wider ml-1">
+                      {field.label}
+                    </label>
+                    {field.type === "select" ? (
+                      <select
+                        value={form[field.key]}
+                        onChange={(e) => {
+                          setForm((prev) => ({ ...prev, [field.key]: e.target.value }));
+                          if (errors[field.key]) setErrors(prev => ({ ...prev, [field.key]: "" }));
+                        }}
+                        className={`h-11 rounded-xl border px-4 text-sm text-primary outline-none focus:border-olive bg-white ${errors[field.key] ? "border-red-500" : "border-muted/30"}`}
+                      >
+                        <option value="">Chọn {field.label}</option>
+                        {field.options.map(opt => (
+                          <option key={opt} value={opt}>{opt === "MALE" ? "Nam" : opt === "FEMALE" ? "Nữ" : "Khác"}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type={field.type}
+                        placeholder={field.label}
+                        value={form[field.key]}
+                        onChange={(e) => {
+                          setForm((prev) => ({ ...prev, [field.key]: e.target.value }));
+                          if (errors[field.key]) setErrors(prev => ({ ...prev, [field.key]: "" }));
+                        }}
+                        className={`h-11 rounded-xl border px-4 text-sm text-primary outline-none focus:border-olive ${errors[field.key] ? "border-red-500" : "border-muted/30"}`}
+                      />
+                    )}
+                    {errors[field.key] && (
+                      <span className="text-[10px] text-red-500 ml-1 font-medium">{errors[field.key]}</span>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -218,11 +297,10 @@ function RoomCheckoutContent() {
                     key={item.label}
                     type="button"
                     onClick={() => setPaymentMethod(item.label)}
-                    className={`h-11 rounded-full border px-4 text-sm font-semibold transition-colors ${
-                      paymentMethod === item.label
-                        ? "border-primary bg-primary text-white"
-                        : "border-muted/30 text-secondary hover:border-primary/40"
-                    }`}
+                    className={`h-11 rounded-full border px-4 text-sm font-semibold transition-colors ${paymentMethod === item.label
+                      ? "border-primary bg-primary text-white"
+                      : "border-muted/30 text-secondary hover:border-primary/40"
+                      }`}
                   >
                     <span className="inline-flex items-center gap-2">
                       <item.icon className="h-4 w-4" />
@@ -239,20 +317,21 @@ function RoomCheckoutContent() {
               type="button"
               onClick={() => setStep((prev) => Math.max(1, prev - 1))}
               disabled={step === 1}
-              className={`h-11 rounded-full px-6 text-sm font-semibold ${
-                step === 1 ? "bg-muted/30 text-secondary/50" : "bg-primary/10 text-primary"
-              }`}
+              className={`h-11 rounded-full px-6 text-sm font-semibold ${step === 1 ? "bg-muted/30 text-secondary/50" : "bg-primary/10 text-primary"
+                }`}
             >
               Quay lại
             </button>
             <button
               type="button"
               onClick={handleNext}
-              disabled={!canStepNext}
-              className={`h-11 rounded-full px-6 text-sm font-semibold ${
-                !canStepNext ? "bg-muted/30 text-secondary/50" : "bg-primary text-white"
-              }`}
+              disabled={submitting || (step === 2 && !agreed)}
+              className={`h-11 rounded-full px-6 text-sm font-semibold flex items-center gap-2 transition-all ${submitting || (step === 2 && !agreed)
+                ? "bg-muted/30 text-secondary/50 cursor-not-allowed"
+                : "bg-primary text-white hover:bg-primary/90"
+                }`}
             >
+              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {step === 3 ? "Thanh toán" : "Tiếp tục"}
             </button>
           </div>
@@ -319,7 +398,7 @@ function RoomCheckoutContent() {
           )}
         </div>
       </div>
-    </section>
+    </section >
   );
 }
 
