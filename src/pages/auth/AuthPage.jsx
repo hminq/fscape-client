@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion as Motion } from "framer-motion";
 import { Home, Users, Lock, ArrowLeft } from "lucide-react";
-import fscapeLogo from "../../assets/fscape-logo.svg";
+import fscapeLogoFull from "../../assets/fscape-logo-full.svg";
 import defaultRoomImg from "../../assets/default_room_img.jpg";
 import LoginForm from "./LoginForm";
 import SignUpForm from "./SignUpForm";
@@ -65,9 +65,8 @@ export default function AuthPage() {
             <Link to="/" className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm font-semibold mb-8 transition-colors">
               <ArrowLeft className="size-4" /> Về trang chủ
             </Link>
-            <div className="flex items-center gap-3 mb-4">
-              <img src={fscapeLogo} alt="FScape" className="w-14 h-14" />
-              <span className="text-4xl text-white font-display tracking-wide leading-none translate-y-px">FSCAPE</span>
+            <div className="flex items-center gap-3 mb-6">
+              <img src={fscapeLogoFull} alt="FScape" className="h-12" />
             </div>
             <p className="text-lg text-tea leading-relaxed">
               Nền tảng hiện đại để quản lý<br />nhà ở sinh viên một cách liền mạch.
@@ -150,9 +149,8 @@ export default function AuthPage() {
       >
         <div className="w-full max-w-md">
           {/* Logo mobile */}
-          <div className="flex items-center justify-center gap-2.5 mb-6 lg:hidden">
-            <img src={fscapeLogo} alt="FScape" className="w-10 h-10" />
-            <span className="text-2xl text-primary font-display tracking-wide leading-none translate-y-px">FSCAPE</span>
+          <div className="flex items-center justify-center gap-2.5 mb-8 lg:hidden">
+            <img src={fscapeLogoFull} alt="FScape" className="h-10" />
           </div>
 
           <Motion.div
@@ -179,11 +177,10 @@ export default function AuthPage() {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                    activeTab === tab.key
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === tab.key
                       ? "bg-white text-primary shadow-md"
                       : "text-muted hover:text-secondary"
-                  }`}
+                    }`}
                 >
                   {tab.label}
                 </button>

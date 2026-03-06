@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Button } from "@heroui/react";
+import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/react";
+import { LogOut, User } from "lucide-react";
 import { useLocations } from "@/contexts/LocationsContext";
 import { useAuth } from "@/contexts/AuthContext";
-import fscapeLogo from "../../assets/fscape-logo.svg";
+import fscapeLogoFull from "../../assets/fscape-logo-full.svg";
 import defaultAvatar from "../../assets/default_room_img.jpg";
 
 function TriangleIcon({ up, className }) {
@@ -23,7 +24,7 @@ function TriangleIcon({ up, className }) {
 
 export default function AppNavbar() {
   const { locations } = useLocations();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, logout, user } = useAuth();
   const [openLocId, setOpenLocId] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const navRef = useRef(null);
@@ -85,10 +86,7 @@ export default function AppNavbar() {
           >
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0">
-              <img src={fscapeLogo} alt="FScape" className="w-12 h-12" />
-              <span className="text-3xl text-white font-display tracking-wide leading-none translate-y-px">
-                FSCAPE
-              </span>
+              <img src={fscapeLogoFull} alt="FScape" className="h-10" />
               {scrolled && currentBuildingName && (
                 <>
                   <span className="mx-1 h-5 w-px bg-white/35" />
@@ -151,11 +149,38 @@ export default function AppNavbar() {
               Đặt phòng
             </Button>
             {isLoggedIn ? (
-              <img
-                src={defaultAvatar}
-                alt="User avatar"
-                className="h-10 w-10 rounded-full border border-white/60 object-cover"
-              />
+              <Dropdown placement="bottom-end">
+                <DropdownTrigger>
+                  <button className="outline-none transition-transform hover:scale-105 active:scale-95 shrink-0">
+                    <img
+                      src={user?.avatar_url || defaultAvatar}
+                      alt="User avatar"
+                      className="size-10 rounded-full border border-white/60 object-cover shadow-sm bg-white"
+                    />
+                  </button>
+                </DropdownTrigger>
+                <DropdownMenu aria-label="User actions" className="text-foreground">
+                  <DropdownItem key="profile" className="h-14 gap-2" textValue="Profile" isReadOnly>
+                    <p className="text-sm text-muted-foreground">Đăng nhập tài khoản</p>
+                    <p className="font-bold text-sm truncate">{user?.email || "Sinh viên FScape"}</p>
+                  </DropdownItem>
+                  <DropdownItem key="settings" startContent={<User className="size-4" />} href="/profile">
+                    Thông tin cá nhân
+                  </DropdownItem>
+                  <DropdownItem
+                    key="logout"
+                    color="danger"
+                    className="text-danger"
+                    startContent={<LogOut className="size-4" />}
+                    onPress={() => {
+                      logout();
+                      navigate("/");
+                    }}
+                  >
+                    Đăng xuất
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
             ) : (
               <Button
                 variant="bordered"
@@ -222,7 +247,7 @@ export default function AppNavbar() {
                   const firstBuilding = (activeLoc.buildings || [])[0];
                   if (firstBuilding) {
                     setOpenLocId(null);
-                    navigate(`/buildings/${firstBuilding.id}/rooms`);
+                    navigate(`/rooms?building_id=${firstBuilding.id}`);
                   }
                 }}
               >

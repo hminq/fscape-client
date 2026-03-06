@@ -254,7 +254,7 @@ function BuildingRoomsContent() {
                       e.target.onerror = null;
                       e.target.src = defaultRoomImg;
                     }}
-                    className="h-48 w-full object-cover md:h-full"
+                    className="h-48 w-full object-cover"
                   />
 
                   <div className="flex flex-col p-4">

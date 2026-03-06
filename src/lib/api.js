@@ -40,9 +40,44 @@ async function request(endpoint, options = {}) {
   return res.json();
 }
 
+async function uploadFile(endpoint, formData) {
+  const token = localStorage.getItem("token");
+  const headers = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  if (!BASE_URL) {
+    throw new Error("Lỗi cấu hình hệ thống (Thiếu API URL). Vui lòng restart FE.");
+  }
+
+  const url = `${BASE_URL.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  if (res.status === 401 && !endpoint.includes("login") && window.location.pathname !== "/login") {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+    throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+  }
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(error.message || `HTTP ${res.status}`);
+  }
+
+  return res.json();
+}
+
 export const api = {
   get: (endpoint) => request(endpoint),
   post: (endpoint, data) => request(endpoint, { method: "POST", body: JSON.stringify(data) }),
   put: (endpoint, data) => request(endpoint, { method: "PUT", body: JSON.stringify(data) }),
+  patch: (endpoint, data) => request(endpoint, { method: "PATCH", body: JSON.stringify(data) }),
   delete: (endpoint) => request(endpoint, { method: "DELETE" }),
+  upload: (endpoint, formData) => uploadFile(endpoint, formData),
 };

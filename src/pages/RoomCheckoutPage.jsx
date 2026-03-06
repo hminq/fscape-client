@@ -51,18 +51,38 @@ function RoomCheckoutContent() {
 
   useEffect(() => {
     let mounted = true;
-    async function fetchRoom() {
+    async function fetchData() {
       try {
         setLoading(true);
         setError("");
-        const res = await api.get(`/api/rooms/${roomId}`);
+
+        // Fetch room + profile in parallel
+        const [roomRes, profileRes] = await Promise.all([
+          api.get(`/api/rooms/${roomId}`),
+          api.get("/api/user-profile/me").catch(() => null),
+        ]);
+
         if (!mounted) return;
-        const roomData = res?.data || null;
+
+        const roomData = roomRes?.data || null;
         if (!roomData) {
           setError("Không tìm thấy thông tin phòng.");
           return;
         }
         setRoom(roomData);
+
+        // Pre-fill form with profile data
+        const profile = profileRes?.data?.profile;
+        if (profile) {
+          setForm((prev) => ({
+            ...prev,
+            gender: profile.gender || prev.gender,
+            dateOfBirth: profile.date_of_birth || prev.dateOfBirth,
+            permanentAddress: profile.permanent_address || prev.permanentAddress,
+            emergencyContactName: profile.emergency_contact_name || prev.emergencyContactName,
+            emergencyContactPhone: profile.emergency_contact_phone || prev.emergencyContactPhone,
+          }));
+        }
 
         const typeId = roomData?.room_type?.id;
         if (!typeId) {
@@ -85,7 +105,7 @@ function RoomCheckoutContent() {
         if (mounted) setLoading(false);
       }
     }
-    fetchRoom();
+    fetchData();
     return () => {
       mounted = false;
     };
@@ -154,7 +174,7 @@ function RoomCheckoutContent() {
       const res = await api.post("/api/bookings", {
         roomId,
         checkInDate,
-        rentalTerm,
+        rentalTerm: rentalTerm === "unlimited" ? 999 : Number(rentalTerm),
         customerInfo: form
       });
 

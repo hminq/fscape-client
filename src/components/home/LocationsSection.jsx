@@ -167,28 +167,6 @@ export default function LocationsSection() {
               </div>
             )}
 
-            {/* View more button */}
-            <Motion.div
-              className="mt-10 text-center"
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Button
-                variant="bordered"
-                radius="full"
-                size="lg"
-                endContent={<ArrowRight className="w-4 h-4" />}
-                className="border-primary text-primary font-semibold text-sm px-8 h-12 hover:bg-primary hover:text-white transition-colors"
-                onPress={() => {
-                  const firstBuilding = buildings[0];
-                  if (firstBuilding) navigate(`/buildings/${firstBuilding.id}/rooms`);
-                }}
-              >
-                Xem tất cả tại {activeLocation?.name}
-              </Button>
-            </Motion.div>
           </>
         )}
       </div>

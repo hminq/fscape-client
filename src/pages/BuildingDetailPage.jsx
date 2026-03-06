@@ -523,7 +523,7 @@ function BuildingDetailContent() {
                                     type="button"
                                     onClick={() =>
                                       navigate(
-                                        `/buildings/${buildingId}/rooms?roomTypeId=${slide.tab.id}`
+                                        `/rooms?building_id=${buildingId}&room_type_id=${slide.tab.id}`
                                       )
                                     }
                                     className="shrink-0 h-10 rounded-full bg-olive px-6 text-sm font-semibold text-primary transition-colors hover:bg-tea"

@@ -19,6 +19,7 @@ import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 import { api } from "@/lib/api";
 import { formatVnd } from "@/lib/formatters";
+import ModelViewer from "@/components/ui/ModelViewer";
 import defaultRoomImg from "@/assets/default_room_img.jpg";
 
 function RoomDetailContent() {
@@ -155,9 +156,14 @@ function RoomDetailContent() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_1.2fr]">
         <div>
           <h1 className="text-5xl font-bold uppercase leading-[0.95] text-primary md:text-6xl">
-            {roomType?.name || "Phòng"}
+            {roomType?.name || "Loại phòng"}
           </h1>
-          <p className="mt-2 text-3xl font-semibold text-secondary">{room.building?.name}</p>
+          <div className="mt-4 flex items-center gap-4">
+            <p className="text-3xl font-semibold text-secondary">{room.building?.name}</p>
+            <div className="inline-flex items-end rounded-full bg-olive/20 px-4 py-1.5 text-sm font-bold tracking-wide text-primary">
+              Phòng {room?.room_number || "---"}
+            </div>
+          </div>
           <p className="mt-1 text-lg text-secondary/80">{room.building?.address || "Đang cập nhật địa chỉ"}</p>
 
           <div className="mt-8">
@@ -212,7 +218,7 @@ function RoomDetailContent() {
           </div>
         </div>
 
-        <div className="relative">
+        <div className="relative h-fit lg:h-full">
           <img
             src={mainImage || previewImage}
             alt={roomType?.name || room.room_number}
@@ -220,22 +226,22 @@ function RoomDetailContent() {
               e.target.onerror = null;
               e.target.src = defaultRoomImg;
             }}
-            className="h-full min-h-[420px] w-full rounded-2xl object-cover"
+            className="w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-2xl object-cover"
           />
 
           <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-3">
             <button
               type="button"
-              onClick={() => setPreviewState({ mode: "3d", image: defaultRoomImg })}
-              className="inline-flex items-center gap-2 rounded-full bg-white/95 px-5 py-2 text-sm font-semibold text-muted"
+              onClick={() => setPreviewState({ mode: "3d", image: room.image_3d_url || null })}
+              className="inline-flex items-center gap-2 rounded-full bg-white/95 px-5 py-2 text-sm font-semibold text-muted transition-colors hover:bg-white"
             >
               <Camera className="h-4 w-4 text-olive" />
               Ảnh 3D
             </button>
             <button
               type="button"
-              onClick={() => setPreviewState({ mode: "blueprint", image: defaultRoomImg })}
-              className="inline-flex items-center gap-2 rounded-full bg-white/95 px-5 py-2 text-sm font-semibold text-muted"
+              onClick={() => setPreviewState({ mode: "blueprint", image: room.blueprint_url || null })}
+              className="inline-flex items-center gap-2 rounded-full bg-white/95 px-5 py-2 text-sm font-semibold text-muted transition-colors hover:bg-white"
             >
               <DraftingCompass className="h-4 w-4 text-olive" />
               Bản vẽ
@@ -269,7 +275,7 @@ function RoomDetailContent() {
                     image: img || defaultRoomImg,
                   })
                 }
-                className="min-w-[220px] overflow-hidden rounded-xl border border-muted/20"
+                className="w-[220px] shrink-0 overflow-hidden rounded-xl border border-muted/20"
               >
                 <img
                   src={img || defaultRoomImg}
@@ -349,15 +355,28 @@ function RoomDetailContent() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <img
-              src={previewState.image || defaultRoomImg}
-              alt="Preview"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = defaultRoomImg;
-              }}
-              className="h-[70vh] w-full rounded-xl object-cover"
-            />
+            {previewState.mode === "3d" ? (
+              <ModelViewer
+                url={previewState.image}
+                className="h-[70vh] w-full rounded-xl overflow-hidden bg-primary/5"
+              />
+            ) : !previewState.image ? (
+              <div className="flex h-[70vh] w-full items-center justify-center rounded-xl bg-primary/5 text-secondary">
+                {previewState.mode === "blueprint"
+                  ? "Chưa có bản vẽ cho phòng này."
+                  : "Chưa có ảnh cho phòng này."}
+              </div>
+            ) : (
+              <img
+                src={previewState.image}
+                alt="Preview"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = defaultRoomImg;
+                }}
+                className="h-[70vh] w-full rounded-xl object-contain bg-primary/5"
+              />
+            )}
           </div>
         </div>
       )}

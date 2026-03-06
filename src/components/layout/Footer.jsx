@@ -1,6 +1,6 @@
 import { Phone, Mail } from "lucide-react";
 import { useLocations } from "@/contexts/LocationsContext";
-import fscapeLogo from "../../assets/fscape-logo.svg";
+import fscapeLogoFull from "../../assets/fscape-logo-full.svg";
 
 function FacebookIcon({ className }) {
   return (
@@ -42,11 +42,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8">
           {/* Brand + socials */}
           <div className="lg:col-span-2">
-            <a href="/" className="flex items-center gap-2.5 mb-4">
-              <img src={fscapeLogo} alt="FScape" className="w-10 h-10" />
-              <span className="text-2xl text-white font-display tracking-wide leading-none translate-y-px">
-                FSCAPE
-              </span>
+            <a href="/" className="flex items-center gap-2.5 mb-6">
+              <img src={fscapeLogoFull} alt="FScape" className="h-[60px]" />
             </a>
 
             <p className="text-sm font-semibold text-white/80 mb-3">

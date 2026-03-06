@@ -22,12 +22,16 @@ function RoomBookingContent() {
   const [error, setError] = useState("");
 
   const today = useMemo(() => new Date(), []);
-  const maxDate = useMemo(() => {
-    const next = new Date(today);
-    next.setDate(next.getDate() + 7);
-    return next;
+  const minDate = useMemo(() => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + 3);
+    return startOfDay(d);
   }, [today]);
-  const minDate = useMemo(() => startOfDay(today), [today]);
+  const maxDate = useMemo(() => {
+    const d = new Date(minDate);
+    d.setDate(d.getDate() + 7);
+    return d;
+  }, [minDate]);
   const calendarMonths = useMemo(() => {
     const firstMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const secondMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
@@ -147,7 +151,7 @@ function RoomBookingContent() {
         <div className="mx-auto mt-16 max-w-5xl rounded-3xl border border-muted/20 bg-white p-8 shadow-sm">
           <h2 className="text-center text-3xl font-bold text-primary">Chọn ngày nhận phòng</h2>
           <p className="mt-2 text-center text-secondary">
-            Nhận phòng trong vòng 7 ngày từ hôm nay
+            Nhận phòng từ 3 đến 10 ngày kể từ hôm nay
           </p>
 
           <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
