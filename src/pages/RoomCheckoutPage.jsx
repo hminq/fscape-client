@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { CreditCard, Landmark, Loader2, Wallet } from "lucide-react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 import { api } from "@/lib/api";
@@ -11,12 +11,10 @@ import defaultRoomImg from "@/assets/default_room_img.jpg";
 const STEPS = [
   { id: 1, label: "Thông tin đặt phòng" },
   { id: 2, label: "Điều khoản" },
-  { id: 3, label: "Thanh toán" },
 ];
 
 function RoomCheckoutContent() {
   const { buildingId, roomId } = useParams();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const checkInDate = searchParams.get("checkInDate") || "";
   const rentalTerm = searchParams.get("term") || "";
@@ -28,7 +26,6 @@ function RoomCheckoutContent() {
   const [error, setError] = useState("");
   const [step, setStep] = useState(1);
   const [agreed, setAgreed] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("");
   const [form, setForm] = useState(() => {
     const u = authUser || {};
     return {
@@ -124,8 +121,6 @@ function RoomCheckoutContent() {
     return `${formatVnd(base * Number(rentalTerm))}/${rentalTerm} tháng`;
   }, [rentalTerm, roomType, room]);
 
-  const canStepNext = true;
-
   const [submitting, setSubmitting] = useState(false);
 
   const [errors, setErrors] = useState({});
@@ -151,43 +146,35 @@ function RoomCheckoutContent() {
   const handleNext = async () => {
     if (step === 1) {
       if (!validateStep1()) return;
+      setStep(2);
+      return;
     }
 
-    if (step === 2 && !agreed) {
+    // Step 2: đồng ý điều khoản → tạo booking → gọi VNPAY → redirect
+    if (!agreed) {
       alert("Bạn cần đồng ý với điều khoản để tiếp tục.");
-      return;
-    }
-
-    if (step < 3) {
-      setStep((prev) => Math.min(3, prev + 1));
-      return;
-    }
-
-    if (!paymentMethod) {
-      alert("Vui lòng chọn phương thức thanh toán.");
       return;
     }
 
     try {
       setSubmitting(true);
-      // Gọi API tạo đơn đặt phòng (Booking)
+
+      // Tạo booking (PENDING) + lấy URL thanh toán VNPAY trong 1 request
       const res = await api.post("/api/bookings", {
         roomId,
         checkInDate,
         rentalTerm: rentalTerm === "unlimited" ? 999 : Number(rentalTerm),
-        customerInfo: form
+        customerInfo: form,
       });
 
-      const booking = res.data;
-
-      // Chuyển sang trang thanh toán với ID của booking thật
-      navigate(
-        `/buildings/${buildingId}/rooms/${roomId}/payment?bookingId=${booking.id}&method=${encodeURIComponent(
-          paymentMethod
-        )}`
-      );
+      const paymentUrl = res?.data?.payment_url;
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
+      } else {
+        throw new Error("Không nhận được liên kết thanh toán từ máy chủ.");
+      }
     } catch (err) {
-      alert(err.message || "Không thể khởi tạo đơn đặt phòng.");
+      alert(err.message || "Không thể khởi tạo thanh toán.");
     } finally {
       setSubmitting(false);
     }
@@ -303,35 +290,6 @@ function RoomCheckoutContent() {
             </div>
           )}
 
-          {step === 3 && (
-            <div className="mt-8 rounded-3xl border border-muted/20 bg-white p-6">
-              <h2 className="text-2xl font-bold text-primary">Bước 3: Thanh toán</h2>
-              <p className="mt-3 text-secondary">Chọn phương thức thanh toán (demo).</p>
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                {[
-                  { label: "VISA / Mastercard", icon: CreditCard },
-                  { label: "VNPay", icon: Wallet },
-                  { label: "Chuyển khoản ngân hàng", icon: Landmark },
-                ].map((item) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    onClick={() => setPaymentMethod(item.label)}
-                    className={`h-11 rounded-full border px-4 text-sm font-semibold transition-colors ${paymentMethod === item.label
-                      ? "border-primary bg-primary text-white"
-                      : "border-muted/30 text-secondary hover:border-primary/40"
-                      }`}
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           <div className="mt-6 flex items-center gap-3">
             <button
               type="button"
@@ -352,7 +310,7 @@ function RoomCheckoutContent() {
                 }`}
             >
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {step === 3 ? "Thanh toán" : "Tiếp tục"}
+              {step === 2 ? "Thanh toán qua VNPay" : "Tiếp tục"}
             </button>
           </div>
         </div>
