@@ -1,0 +1,58 @@
+import { useSearchParams, Link } from "react-router-dom";
+import { CircleCheck, CircleX } from "lucide-react";
+import AppNavbar from "@/components/layout/AppNavbar";
+import { LocationsProvider } from "@/contexts/LocationsContext";
+
+function PaymentResultContent() {
+  const [searchParams] = useSearchParams();
+  const code = searchParams.get("vnp_ResponseCode") || searchParams.get("code");
+  const isSuccess = code === "00";
+
+  return (
+    <section className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-6 text-center">
+      {isSuccess ? (
+        <>
+          <CircleCheck className="h-20 w-20 text-olive" strokeWidth={1.5} />
+          <h1 className="mt-6 text-4xl font-bold text-primary">Thanh toán thành công</h1>
+          <p className="mt-3 text-secondary">
+            Đặt cọc của bạn đã được ghi nhận. Hợp đồng sẽ được gửi qua email để bạn ký xác nhận.
+          </p>
+        </>
+      ) : (
+        <>
+          <CircleX className="h-20 w-20 text-red-500" strokeWidth={1.5} />
+          <h1 className="mt-6 text-4xl font-bold text-primary">Thanh toán thất bại</h1>
+          <p className="mt-3 text-secondary">
+            Giao dịch không thành công hoặc đã bị hủy. Vui lòng thử lại.
+          </p>
+        </>
+      )}
+
+      <div className="mt-8 flex items-center gap-3">
+        <Link
+          to="/"
+          className="h-11 rounded-full bg-primary/10 px-6 text-sm font-semibold leading-[2.75rem] text-primary"
+        >
+          Trang chủ
+        </Link>
+        <Link
+          to="/rooms"
+          className="h-11 rounded-full bg-primary px-6 text-sm font-semibold leading-[2.75rem] text-white"
+        >
+          Xem phòng
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+export default function PaymentResultPage() {
+  return (
+    <LocationsProvider>
+      <div className="min-h-screen bg-white">
+        <AppNavbar />
+        <PaymentResultContent />
+      </div>
+    </LocationsProvider>
+  );
+}
