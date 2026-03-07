@@ -7,9 +7,13 @@ export function formatVnd(value) {
 
 export function formatDisplayDate(dateStr) {
   if (!dateStr) return "-";
-  const [year, month, day] = dateStr.split("-");
-  if (!year || !month || !day) return "-";
-  return `${day}/${month}/${year.slice(-2)}`;
+  // Handle both "YYYY-MM-DD" and full ISO timestamps
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "-";
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = String(d.getFullYear()).slice(-2);
+  return `${day}/${month}/${year}`;
 }
 
 export function formatDateValue(date) {

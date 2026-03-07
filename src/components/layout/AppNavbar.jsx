@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/react";
-import { LogOut, User } from "lucide-react";
+import { Button } from "@heroui/react";
 import { useLocations } from "@/contexts/LocationsContext";
 import { useAuth } from "@/contexts/AuthContext";
+import UserDrawer from "./UserDrawer";
 import fscapeLogoFull from "../../assets/fscape-logo-full.svg";
 import defaultAvatar from "../../assets/default_room_img.jpg";
 
@@ -27,6 +27,7 @@ export default function AppNavbar() {
   const { isLoggedIn, logout, user } = useAuth();
   const [openLocId, setOpenLocId] = useState(null);
   const [scrolled, setScrolled] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const navRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -133,63 +134,42 @@ export default function AppNavbar() {
               : "opacity-100 max-w-xs"
               }`}
           >
-            <Button
-              radius="full"
-              className="bg-olive text-primary font-semibold text-sm px-6 h-10"
-              onPress={() => {
-                const section = document.getElementById("hero-locations-section");
-                if (section) {
-                  section.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                  // Nếu không tìm thấy section (ví dụ đang ở page khác), về Home
-                  navigate("/");
-                }
-              }}
-            >
-              Đặt phòng
-            </Button>
             {isLoggedIn ? (
-              <Dropdown placement="bottom-end">
-                <DropdownTrigger>
-                  <button className="outline-none transition-transform hover:scale-105 active:scale-95 shrink-0">
-                    <img
-                      src={user?.avatar_url || defaultAvatar}
-                      alt="User avatar"
-                      className="size-10 rounded-full border border-white/60 object-cover shadow-sm bg-white"
-                    />
-                  </button>
-                </DropdownTrigger>
-                <DropdownMenu aria-label="User actions" className="text-foreground">
-                  <DropdownItem key="profile" className="h-14 gap-2" textValue="Profile" isReadOnly>
-                    <p className="text-sm text-muted-foreground">Đăng nhập tài khoản</p>
-                    <p className="font-bold text-sm truncate">{user?.email || "Sinh viên FScape"}</p>
-                  </DropdownItem>
-                  <DropdownItem key="settings" startContent={<User className="size-4" />} href="/profile">
-                    Thông tin cá nhân
-                  </DropdownItem>
-                  <DropdownItem
-                    key="logout"
-                    color="danger"
-                    className="text-danger"
-                    startContent={<LogOut className="size-4" />}
-                    onPress={() => {
-                      logout();
-                      navigate("/");
-                    }}
-                  >
-                    Đăng xuất
-                  </DropdownItem>
-                </DropdownMenu>
-              </Dropdown>
-            ) : (
-              <Button
-                variant="bordered"
-                radius="full"
-                className="border-white/60 text-white font-semibold text-sm px-6 h-10"
-                onPress={() => navigate("/login")}
+              <button
+                onClick={() => setDrawerOpen(true)}
+                className="outline-none transition-transform hover:scale-105 active:scale-95 shrink-0"
               >
-                Đăng nhập
-              </Button>
+                <img
+                  src={user?.avatar_url || defaultAvatar}
+                  alt="User avatar"
+                  className="size-10 rounded-full border border-white/60 object-cover shadow-sm bg-white"
+                />
+              </button>
+            ) : (
+              <>
+                <Button
+                  radius="full"
+                  className="bg-olive text-primary font-semibold text-sm px-6 h-10"
+                  onPress={() => {
+                    const section = document.getElementById("hero-locations-section");
+                    if (section) {
+                      section.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                      navigate("/");
+                    }
+                  }}
+                >
+                  Đặt phòng
+                </Button>
+                <Button
+                  variant="bordered"
+                  radius="full"
+                  className="border-white/60 text-white font-semibold text-sm px-6 h-10"
+                  onPress={() => navigate("/login")}
+                >
+                  Đăng nhập
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -256,6 +236,11 @@ export default function AppNavbar() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* User drawer */}
+      {isLoggedIn && (
+        <UserDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
       )}
     </div>
   );

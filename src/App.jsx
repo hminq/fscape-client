@@ -6,9 +6,13 @@ import BuildingRoomsPage from "./pages/BuildingRoomsPage";
 import RoomDetailPage from "./pages/RoomDetailPage";
 import RoomBookingPage from "./pages/RoomBookingPage";
 import RoomCheckoutPage from "./pages/RoomCheckoutPage";
-import RoomPaymentPage from "./pages/RoomPaymentPage";
+import PaymentResultPage from "./pages/PaymentResultPage";
 import RoomsPage from "./pages/RoomsPage";
 import ContractSigningPage from "./pages/ContractSigningPage";
+import ProfilePage from "./pages/ProfilePage";
+import MyRoomsPage from "./pages/MyRoomsPage";
+import MyBookingsPage from "./pages/MyBookingsPage";
+import MyContractsPage from "./pages/MyContractsPage";
 
 function App() {
   return (
@@ -21,8 +25,12 @@ function App() {
       <Route path="/buildings/:buildingId/rooms/:roomId" element={<RoomDetailPage />} />
       <Route path="/buildings/:buildingId/rooms/:roomId/booking" element={<RoomBookingPage />} />
       <Route path="/buildings/:buildingId/rooms/:roomId/checkout" element={<RoomCheckoutPage />} />
-      <Route path="/buildings/:buildingId/rooms/:roomId/payment" element={<RoomPaymentPage />} />
+      <Route path="/payment/result" element={<PaymentResultPage />} />
       <Route path="/sign" element={<ContractSigningPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/my-rooms" element={<MyRoomsPage />} />
+      <Route path="/my-bookings" element={<MyBookingsPage />} />
+      <Route path="/my-contracts" element={<MyContractsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
