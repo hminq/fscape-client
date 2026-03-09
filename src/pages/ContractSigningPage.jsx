@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CheckCircle, Loader2, RotateCcw, AlertTriangle } from "lucide-react";
+import { CheckCircle, CircleNotch, ArrowCounterClockwise, Warning } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -191,7 +191,7 @@ function ContractSigningPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <CircleNotch className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
@@ -200,7 +200,7 @@ function ContractSigningPage() {
   if (error && !contract) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-50 px-6 text-center">
-        <AlertTriangle className="h-12 w-12 text-red-500" />
+        <Warning className="h-12 w-12 text-red-500" />
         <p className="text-lg font-semibold text-primary">{error}</p>
         <p className="text-sm text-secondary">
           Vui lòng kiểm tra lại link trong email hoặc liên hệ quản lý tòa nhà.
@@ -297,7 +297,7 @@ function ContractSigningPage() {
                 onClick={clearCanvas}
                 className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-secondary hover:bg-gray-100"
               >
-                <RotateCcw className="h-4 w-4" />
+                <ArrowCounterClockwise className="h-4 w-4" />
                 Xóa & ký lại
               </button>
               <button
@@ -310,7 +310,7 @@ function ContractSigningPage() {
                     : "cursor-not-allowed bg-gray-300"
                 }`}
               >
-                {signing && <Loader2 className="h-4 w-4 animate-spin" />}
+                {signing && <CircleNotch className="h-4 w-4 animate-spin" />}
                 {signing ? "Đang ký..." : "Xác nhận ký hợp đồng"}
               </button>
             </div>

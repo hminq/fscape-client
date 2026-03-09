@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Loader2, ArrowLeft, MapPin, BedDouble, Bath, Ruler, Users, CalendarDays } from "lucide-react";
+import { CircleNotch, ArrowLeft, MapPin, Bed, Bathtub, Ruler, Users, CalendarDots } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
@@ -42,7 +42,7 @@ function MyRoomsContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="size-8 animate-spin text-primary" />
+        <CircleNotch className="size-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -129,10 +129,10 @@ function MyRoomsContent() {
                         <span className="flex items-center gap-1"><Ruler className="size-3" />{roomType.area_sqm}m²</span>
                       )}
                       {roomType.bedrooms && (
-                        <span className="flex items-center gap-1"><BedDouble className="size-3" />{roomType.bedrooms} PN</span>
+                        <span className="flex items-center gap-1"><Bed className="size-3" />{roomType.bedrooms} PN</span>
                       )}
                       {roomType.bathrooms && (
-                        <span className="flex items-center gap-1"><Bath className="size-3" />{roomType.bathrooms} WC</span>
+                        <span className="flex items-center gap-1"><Bathtub className="size-3" />{roomType.bathrooms} WC</span>
                       )}
                       {roomType.capacity_max && (
                         <span className="flex items-center gap-1"><Users className="size-3" />Tối đa {roomType.capacity_max}</span>
@@ -142,7 +142,7 @@ function MyRoomsContent() {
 
                   {/* Contract period */}
                   <div className="flex items-center gap-1.5 text-xs text-secondary border-t border-gray-100 pt-3">
-                    <CalendarDays className="size-3.5 text-olive" />
+                    <CalendarDots className="size-3.5 text-olive" />
                     <span>
                       {formatDisplayDate(contract.start_date)} — {formatDisplayDate(contract.end_date)}
                     </span>

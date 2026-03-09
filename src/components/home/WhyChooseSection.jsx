@@ -1,6 +1,6 @@
 import { Button } from "@heroui/react";
 import { motion as Motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@phosphor-icons/react";
 import whyChooseImg from "../../assets/why_choose_fscape_img.jpg";
 
 export default function WhyChooseSection() {

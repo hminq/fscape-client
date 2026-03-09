@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Bath, BedDouble, Loader2, MapPin, Ruler, Users } from "lucide-react";
+import { Bathtub, Bed, CircleNotch, MapPin, Ruler, Users } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider, useLocations } from "@/contexts/LocationsContext";
@@ -345,7 +345,7 @@ function BuildingDetailContent() {
 
       {loading ? (
         <div className="flex min-h-[60vh] items-center justify-center">
-          <Loader2 className="h-10 w-10 animate-spin text-white" />
+          <CircleNotch className="h-10 w-10 animate-spin text-white" />
         </div>
       ) : error || !building ? (
         <div className="mx-auto flex min-h-[60vh] max-w-3xl flex-col items-center justify-center gap-6 px-6 text-center">
@@ -511,7 +511,7 @@ function BuildingDetailContent() {
                                       {slide.roomType?.capacity_min ?? "N/A"}-{slide.roomType?.capacity_max ?? "N/A"} người
                                     </span>
                                     <span className="flex items-center gap-1.5">
-                                      <Bath className="h-4 w-4 text-olive" />
+                                      <Bathtub className="h-4 w-4 text-olive" />
                                       {slide.roomType?.bathrooms ?? "N/A"} WC
                                     </span>
                                     <span className="flex items-center gap-1.5">

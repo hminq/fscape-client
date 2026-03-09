@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { CircleNotch } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 import { api } from "@/lib/api";
@@ -183,7 +183,7 @@ function RoomCheckoutContent() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <CircleNotch className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
@@ -309,7 +309,7 @@ function RoomCheckoutContent() {
                 : "bg-primary text-white hover:bg-primary/90"
                 }`}
             >
-              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {submitting && <CircleNotch className="h-4 w-4 animate-spin" />}
               {step === 2 ? "Thanh toán qua VNPay" : "Tiếp tục"}
             </button>
           </div>

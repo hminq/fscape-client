@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, Input } from "@heroui/react";
-import { Lock, Mail, Eye, EyeOff, User } from "lucide-react";
+import { Lock, Envelope, Eye, EyeSlash, User } from "@phosphor-icons/react";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20">
@@ -35,7 +35,7 @@ export default function SignUpForm() {
         label="Email"
         placeholder="sinhvien@truonghoc.edu.vn"
         type="email"
-        startContent={<Mail className="size-4 text-muted" />}
+        startContent={<Envelope className="size-4 text-muted" />}
         variant="bordered"
         classNames={inputClasses}
         isRequired
@@ -47,7 +47,7 @@ export default function SignUpForm() {
         startContent={<Lock className="size-4 text-muted" />}
         endContent={
           <button type="button" className="text-muted hover:text-secondary" onClick={() => setShowPassword(!showPassword)}>
-            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            {showPassword ? <EyeSlash className="size-4" /> : <Eye className="size-4" />}
           </button>
         }
         variant="bordered"
@@ -61,7 +61,7 @@ export default function SignUpForm() {
         startContent={<Lock className="size-4 text-muted" />}
         endContent={
           <button type="button" className="text-muted hover:text-secondary" onClick={() => setShowConfirm(!showConfirm)}>
-            {showConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            {showConfirm ? <EyeSlash className="size-4" /> : <Eye className="size-4" />}
           </button>
         }
         variant="bordered"

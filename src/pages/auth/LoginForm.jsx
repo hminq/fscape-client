@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Input } from "@heroui/react";
-import { Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { Lock, Envelope, Eye, EyeSlash } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -66,7 +66,7 @@ export default function LoginForm() {
         placeholder="sinhvien@truonghoc.edu.vn"
         value={email}
         onValueChange={setEmail}
-        startContent={<Mail className="size-4 text-muted" />}
+        startContent={<Envelope className="size-4 text-muted" />}
         variant="bordered"
         classNames={inputClasses}
         isRequired
@@ -80,7 +80,7 @@ export default function LoginForm() {
         startContent={<Lock className="size-4 text-muted" />}
         endContent={
           <button type="button" className="text-muted hover:text-secondary" onClick={() => setShowPassword(!showPassword)}>
-            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            {showPassword ? <EyeSlash className="size-4" /> : <Eye className="size-4" />}
           </button>
         }
         variant="bordered"

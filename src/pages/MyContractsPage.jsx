@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Loader2, ArrowLeft, MapPin, CalendarDays, FileText, Download, X, Eye } from "lucide-react";
+import { CircleNotch, ArrowLeft, MapPin, CalendarDots, FileText, DownloadSimple, X, Eye } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
@@ -58,7 +58,7 @@ function MyContractsContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="size-8 animate-spin text-primary" />
+        <CircleNotch className="size-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -165,7 +165,7 @@ function ContractRow({ contract, onPreview }) {
             </span>
           )}
           <span className="flex items-center gap-1">
-            <CalendarDays className="size-3" />
+            <CalendarDots className="size-3" />
             {formatDisplayDate(contract.start_date)} — {formatDisplayDate(contract.end_date)}
           </span>
           <span>{formatVnd(contract.base_rent)}/tháng</span>
@@ -198,7 +198,7 @@ function ContractRow({ contract, onPreview }) {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
           >
-            <Download className="size-4" />
+            <DownloadSimple className="size-4" />
             Tải PDF
           </a>
         )}

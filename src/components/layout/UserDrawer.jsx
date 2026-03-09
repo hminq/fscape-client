@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, QrCode } from "lucide-react";
+import { X, QrCode } from "@phosphor-icons/react";
 import { useAuth } from "@/contexts/AuthContext";
 import { socials } from "@/components/icons/SocialIcons";
 import fscapeLogoFull from "../../assets/fscape-logo-full.svg";

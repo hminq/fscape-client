@@ -1,19 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
-  Bath,
+  Bathtub,
   Camera,
-  ChevronLeft,
-  ChevronRight,
+  CaretLeft,
+  CaretRight,
   CreditCard,
   DraftingCompass,
   Landmark,
-  Loader2,
+  CircleNotch,
   Ruler,
   Users,
   Wallet,
   X,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
@@ -124,7 +124,7 @@ function RoomDetailContent() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <CircleNotch className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
@@ -180,7 +180,7 @@ function RoomDetailContent() {
               {roomType?.capacity_min ?? "N/A"}-{roomType?.capacity_max ?? "N/A"} người
             </span>
             <span className="flex items-center gap-2">
-              <Bath className="h-5 w-5 text-olive" />
+              <Bathtub className="h-5 w-5 text-olive" />
               {roomType?.bathrooms ?? "N/A"} phòng tắm
             </span>
             <span className="flex items-center gap-2">
@@ -258,7 +258,7 @@ function RoomDetailContent() {
             onClick={() => scrollGallery("left")}
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-muted/30 text-secondary hover:bg-primary/5"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <CaretLeft className="h-5 w-5" />
           </button>
 
           <div
@@ -295,7 +295,7 @@ function RoomDetailContent() {
             onClick={() => scrollGallery("right")}
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-muted/30 text-secondary hover:bg-primary/5"
           >
-            <ChevronRight className="h-5 w-5" />
+            <CaretRight className="h-5 w-5" />
           </button>
         </div>
       </div>

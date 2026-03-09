@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion as Motion } from "framer-motion";
-import { Home, Users, Lock, ArrowLeft } from "lucide-react";
+import { House, Users, Lock, ArrowLeft } from "@phosphor-icons/react";
 import fscapeLogoFull from "../../assets/fscape-logo-full.svg";
 import defaultRoomImg from "../../assets/default_room_img.jpg";
 import LoginForm from "./LoginForm";
 import SignUpForm from "./SignUpForm";
 
 const features = [
-  { icon: Home, title: "Quản Lý Phòng Dễ Dàng", desc: "Tìm kiếm, đặt phòng và quản lý nhà ở sinh viên mọi lúc, mọi nơi" },
+  { icon: House, title: "Quản Lý Phòng Dễ Dàng", desc: "Tìm kiếm, đặt phòng và quản lý nhà ở sinh viên mọi lúc, mọi nơi" },
   { icon: Users, title: "Kết Nối Bạn Cùng Phòng", desc: "Trò chuyện với bạn cùng phòng tiềm năng và xây dựng cộng đồng" },
   { icon: Lock, title: "Thanh Toán An Toàn", desc: "Xử lý tiền thuê và tiền đặt cọc an toàn thông qua nền tảng" },
 ];

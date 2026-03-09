@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Loader2, ArrowLeft, MapPin, Clock, CalendarDays, BedDouble, Bath, Ruler } from "lucide-react";
+import { CircleNotch, ArrowLeft, MapPin, Clock, CalendarDots, Bed, Bathtub, Ruler } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
@@ -55,7 +55,7 @@ function MyBookingsContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="size-8 animate-spin text-primary" />
+        <CircleNotch className="size-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -170,15 +170,15 @@ function BookingCard({ booking }) {
         {roomType && (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-secondary mb-3">
             {roomType.area_sqm && <span className="flex items-center gap-1"><Ruler className="size-3" />{roomType.area_sqm}m²</span>}
-            {roomType.bedrooms && <span className="flex items-center gap-1"><BedDouble className="size-3" />{roomType.bedrooms} PN</span>}
-            {roomType.bathrooms && <span className="flex items-center gap-1"><Bath className="size-3" />{roomType.bathrooms} WC</span>}
+            {roomType.bedrooms && <span className="flex items-center gap-1"><Bed className="size-3" />{roomType.bedrooms} PN</span>}
+            {roomType.bathrooms && <span className="flex items-center gap-1"><Bathtub className="size-3" />{roomType.bathrooms} WC</span>}
           </div>
         )}
 
         {/* Details */}
         <div className="space-y-1.5 text-xs text-secondary border-t border-gray-100 pt-3">
           <div className="flex items-center gap-1.5">
-            <CalendarDays className="size-3.5 text-olive" />
+            <CalendarDots className="size-3.5 text-olive" />
             <span>Nhận phòng: {formatDisplayDate(booking.check_in_date)}</span>
             {booking.duration_months && (
               <span className="ml-1">· {booking.duration_months} tháng</span>

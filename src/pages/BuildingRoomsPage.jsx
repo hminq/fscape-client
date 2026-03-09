@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Bath, BedDouble, ChevronLeft, ChevronRight, Loader2, Ruler, Users } from "lucide-react";
+import { Bathtub, Bed, CaretLeft, CaretRight, CircleNotch, Ruler, Users } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
@@ -168,14 +168,14 @@ function BuildingRoomsContent() {
             to={`/buildings/${buildingId}`}
             className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <CaretLeft className="h-4 w-4" />
             Quay lại
           </Link>
         </div>
 
         {loading ? (
           <div className="flex min-h-[40vh] items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <CircleNotch className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : error ? (
           <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</p>
@@ -281,11 +281,11 @@ function BuildingRoomsContent() {
                           {detailType.area_sqm ?? "N/A"} m²
                         </span>
                         <span className="flex items-center gap-1.5">
-                          <BedDouble className="h-4 w-4 text-olive" />
+                          <Bed className="h-4 w-4 text-olive" />
                           {detailType.bedrooms ?? "N/A"} phòng ngủ
                         </span>
                         <span className="flex items-center gap-1.5">
-                          <Bath className="h-4 w-4 text-olive" />
+                          <Bathtub className="h-4 w-4 text-olive" />
                           {detailType.bathrooms ?? "N/A"} phòng tắm
                         </span>
                       </div>
@@ -313,7 +313,7 @@ function BuildingRoomsContent() {
                       page <= 1 ? "cursor-not-allowed text-secondary/30" : "text-secondary hover:bg-primary/5 hover:text-primary"
                     }`}
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <CaretLeft className="h-4 w-4" />
                   </button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                     <button
@@ -337,7 +337,7 @@ function BuildingRoomsContent() {
                       page >= totalPages ? "cursor-not-allowed text-secondary/30" : "text-secondary hover:bg-primary/5 hover:text-primary"
                     }`}
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <CaretRight className="h-4 w-4" />
                   </button>
                 </div>
               )}

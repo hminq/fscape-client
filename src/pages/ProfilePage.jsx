@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Input, Select, SelectItem } from "@heroui/react";
-import { Camera, Loader2, ArrowLeft } from "lucide-react";
+import { Camera, CircleNotch, ArrowLeft } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
@@ -136,7 +136,7 @@ function ProfileContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="size-8 animate-spin text-primary" />
+        <CircleNotch className="size-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -168,7 +168,7 @@ function ProfileContent() {
             className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
           >
             {uploading ? (
-              <Loader2 className="size-6 text-white animate-spin" />
+              <CircleNotch className="size-6 text-white animate-spin" />
             ) : (
               <Camera className="size-6 text-white" />
             )}

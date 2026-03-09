@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@heroui/react";
 import { motion as Motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@phosphor-icons/react";
 import slide1 from "../../assets/slideshow/slideshow_1.webp";
 import slide2 from "../../assets/slideshow/slideshow_2.jpg";
 import slide3 from "../../assets/slideshow/slideshow_3.jpg";

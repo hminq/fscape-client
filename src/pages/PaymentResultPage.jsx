@@ -1,5 +1,5 @@
 import { useSearchParams, Link } from "react-router-dom";
-import { CircleCheck, CircleX } from "lucide-react";
+import { CheckCircle, XCircle } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 
@@ -12,7 +12,7 @@ function PaymentResultContent() {
     <section className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-6 text-center">
       {isSuccess ? (
         <>
-          <CircleCheck className="h-20 w-20 text-olive" strokeWidth={1.5} />
+          <CheckCircle className="h-20 w-20 text-olive" strokeWidth={1.5} />
           <h1 className="mt-6 text-4xl font-bold text-primary">Thanh toán thành công</h1>
           <p className="mt-3 text-secondary">
             Đặt cọc của bạn đã được ghi nhận. Hợp đồng sẽ được gửi qua email để bạn ký xác nhận.
@@ -20,7 +20,7 @@ function PaymentResultContent() {
         </>
       ) : (
         <>
-          <CircleX className="h-20 w-20 text-red-500" strokeWidth={1.5} />
+          <XCircle className="h-20 w-20 text-red-500" strokeWidth={1.5} />
           <h1 className="mt-6 text-4xl font-bold text-primary">Thanh toán thất bại</h1>
           <p className="mt-3 text-secondary">
             Giao dịch không thành công hoặc đã bị hủy. Vui lòng thử lại.

@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@heroui/react";
 import { motion as Motion } from "framer-motion";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, CircleNotch } from "@phosphor-icons/react";
 import { useLocations } from "@/contexts/LocationsContext";
 import defaultBuildingImg from "@/assets/default_room_img.jpg";
 
@@ -45,7 +45,7 @@ export default function LocationsSection() {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <CircleNotch className="w-8 h-8 text-primary animate-spin" />
           </div>
         ) : locations.length === 0 ? (
           <p className="text-center text-secondary py-20">

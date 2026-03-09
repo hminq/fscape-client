@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Bath, BedDouble, ChevronLeft, ChevronRight, ChevronDown, Loader2, Ruler, Users } from "lucide-react";
+import { Bathtub, Bed, CaretLeft, CaretRight, CaretDown, CircleNotch, Ruler, Users } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider, useLocations } from "@/contexts/LocationsContext";
@@ -229,7 +229,7 @@ function RoomsContent() {
                 </optgroup>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
+            <CaretDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
           </div>
         </div>
 
@@ -243,7 +243,7 @@ function RoomsContent() {
         {/* Loading locations */}
         {locationsLoading && (
           <div className="flex min-h-[30vh] items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <CircleNotch className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
 
@@ -252,7 +252,7 @@ function RoomsContent() {
           <>
             {loading ? (
               <div className="flex min-h-[40vh] items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <CircleNotch className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : error ? (
               <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</p>
@@ -360,11 +360,11 @@ function RoomsContent() {
                                   {detailType.area_sqm ?? "N/A"} m²
                                 </span>
                                 <span className="flex items-center gap-1.5">
-                                  <BedDouble className="h-4 w-4 text-olive" />
+                                  <Bed className="h-4 w-4 text-olive" />
                                   {detailType.bedrooms ?? "N/A"} phòng ngủ
                                 </span>
                                 <span className="flex items-center gap-1.5">
-                                  <Bath className="h-4 w-4 text-olive" />
+                                  <Bathtub className="h-4 w-4 text-olive" />
                                   {detailType.bathrooms ?? "N/A"} phòng tắm
                                 </span>
                               </div>
@@ -393,7 +393,7 @@ function RoomsContent() {
                           page <= 1 ? "cursor-not-allowed text-secondary/30" : "text-secondary hover:bg-primary/5 hover:text-primary"
                         }`}
                       >
-                        <ChevronLeft className="h-4 w-4" />
+                        <CaretLeft className="h-4 w-4" />
                       </button>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                         <button
@@ -417,7 +417,7 @@ function RoomsContent() {
                           page >= totalPages ? "cursor-not-allowed text-secondary/30" : "text-secondary hover:bg-primary/5 hover:text-primary"
                         }`}
                       >
-                        <ChevronRight className="h-4 w-4" />
+                        <CaretRight className="h-4 w-4" />
                       </button>
                     </div>
                   )}

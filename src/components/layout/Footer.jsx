@@ -1,4 +1,4 @@
-import { Phone, Mail } from "lucide-react";
+import { Phone, Envelope } from "@phosphor-icons/react";
 import { useLocations } from "@/contexts/LocationsContext";
 import { socials } from "@/components/icons/SocialIcons";
 import fscapeLogoFull from "../../assets/fscape-logo-full.svg";
@@ -74,7 +74,7 @@ export default function Footer() {
               </li>
               <li>
                 <a href="mailto:hminh250104@gmail.com" className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
-                  <Mail className="w-3.5 h-3.5 text-olive shrink-0" />
+                  <Envelope className="w-3.5 h-3.5 text-olive shrink-0" />
                   hminh250104@gmail.com
                 </a>
               </li>

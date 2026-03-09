@@ -1,4 +1,4 @@
-import { Megaphone } from "lucide-react";
+import { Megaphone } from "@phosphor-icons/react";
 
 const message = "PHÒNG CUỐI CÙNG - ĐỪNG BỎ LỠ!";
 
