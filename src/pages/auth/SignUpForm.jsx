@@ -1,6 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button, Input } from "@heroui/react";
 import { Lock, Envelope, Eye, EyeSlash, User } from "@phosphor-icons/react";
+import { api } from "@/lib/api";
+import { GoogleLogin } from "@react-oauth/google";
+import { useAuth } from "@/contexts/AuthContext";
+
+const INTERNAL_ROLES = ["ADMIN", "BUILDING_MANAGER", "STAFF"];
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20">
@@ -14,11 +20,84 @@ const GoogleIcon = () => (
 const inputClasses = { inputWrapper: "border-muted/30 hover:border-muted focus-within:border-olive" };
 
 export default function SignUpForm() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const validate = () => {
+    if (!fullName.trim()) return "Vui lòng nhập họ và tên.";
+    if (!email.trim()) return "Vui lòng nhập email.";
+    if (password.length < 6) return "Mật khẩu phải có ít nhất 6 ký tự.";
+    if (password !== confirmPassword) return "Mật khẩu xác nhận không khớp.";
+    return null;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setError("");
+    setLoading(true);
+
+    try {
+      await api.post("/api/auth/signup", { email, password });
+
+      navigate("/verify-otp", {
+        state: { email, password, flow: "signup" },
+      });
+    } catch (err) {
+      const msgMap = {
+        "Email already exists": "Email này đã được đăng ký. Vui lòng đăng nhập hoặc dùng email khác.",
+        "OTP request limit exceeded (5/day)": "Bạn đã yêu cầu OTP quá nhiều lần. Vui lòng thử lại sau 24 giờ.",
+      };
+      setError(msgMap[err.message] || err.message || "Đăng ký thất bại.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError("");
+    try {
+      const res = await api.post("/api/auth/google", {
+        id_token: credentialResponse.credential,
+      });
+
+      const accessToken = res?.access_token;
+      const user = res?.user;
+
+      if (accessToken) {
+        if (INTERNAL_ROLES.includes(user?.role)) {
+          setError("Tài khoản nội bộ không được phép đăng nhập tại đây.");
+          return;
+        }
+        login(accessToken, user);
+        navigate("/", { replace: true });
+      } else {
+        navigate("/verify-otp", {
+          state: { id_token: credentialResponse.credential, flow: "google" },
+        });
+      }
+    } catch (err) {
+      const msgMap = {
+        "Google email not verified": "Email Google của bạn chưa được xác minh.",
+        "Google account already linked to another user": "Tài khoản Google này đã được liên kết với một tài khoản khác.",
+        "User account is deactivated": "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ.",
+      };
+      setError(msgMap[err?.message] || err?.message || "Đăng ký bằng Google thất bại.");
+    }
   };
 
   return (
@@ -26,6 +105,8 @@ export default function SignUpForm() {
       <Input
         label="Họ và Tên"
         placeholder="Họ và tên đầy đủ"
+        value={fullName}
+        onValueChange={setFullName}
         startContent={<User className="size-4 text-muted" />}
         variant="bordered"
         classNames={inputClasses}
@@ -35,6 +116,8 @@ export default function SignUpForm() {
         label="Email"
         placeholder="sinhvien@truonghoc.edu.vn"
         type="email"
+        value={email}
+        onValueChange={setEmail}
         startContent={<Envelope className="size-4 text-muted" />}
         variant="bordered"
         classNames={inputClasses}
@@ -44,6 +127,8 @@ export default function SignUpForm() {
         label="Mật khẩu"
         placeholder="Tạo mật khẩu"
         type={showPassword ? "text" : "password"}
+        value={password}
+        onValueChange={setPassword}
         startContent={<Lock className="size-4 text-muted" />}
         endContent={
           <button type="button" className="text-muted hover:text-secondary" onClick={() => setShowPassword(!showPassword)}>
@@ -58,6 +143,8 @@ export default function SignUpForm() {
         label="Xác nhận mật khẩu"
         placeholder="Xác nhận mật khẩu"
         type={showConfirm ? "text" : "password"}
+        value={confirmPassword}
+        onValueChange={setConfirmPassword}
         startContent={<Lock className="size-4 text-muted" />}
         endContent={
           <button type="button" className="text-muted hover:text-secondary" onClick={() => setShowConfirm(!showConfirm)}>
@@ -69,12 +156,17 @@ export default function SignUpForm() {
         isRequired
       />
 
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-center">{error}</p>
+      )}
+
       <Button
         type="submit"
         radius="lg"
+        isLoading={loading}
         className="bg-olive text-primary font-bold text-base h-12 mt-1 shadow-lg shadow-olive/30"
       >
-        Tạo Tài Khoản
+        {loading ? "Đang tạo tài khoản..." : "Tạo Tài Khoản"}
       </Button>
 
       <div className="flex items-center gap-3 text-muted text-sm">
@@ -83,14 +175,10 @@ export default function SignUpForm() {
         <div className="flex-1 h-px bg-muted/20" />
       </div>
 
-      <Button
-        variant="bordered"
-        radius="lg"
-        className="border-muted/30 text-secondary font-medium h-12 hover:bg-muted/5"
-        startContent={<GoogleIcon />}
-      >
-        Google
-      </Button>
+      <GoogleLogin
+        onSuccess={handleGoogleSuccess}
+        onError={() => setError("Không thể đăng ký bằng Google.")}
+      />
     </form>
   );
 }

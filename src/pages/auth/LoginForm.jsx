@@ -5,6 +5,9 @@ import { Lock, Envelope, Eye, EyeSlash } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
+
+const INTERNAL_ROLES = ["ADMIN", "BUILDING_MANAGER", "STAFF"];
+
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20">
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -32,13 +35,7 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      let res;
-      try {
-        res = await api.post("/auth/login", { email, password });
-      } catch {
-        // Backward compatibility if backend still exposes /api/auth/login
-        res = await api.post("/api/auth/login", { email, password });
-      }
+      const res = await api.post("/api/auth/app/login", { email, password });
 
       const accessToken = res?.access_token;
       const user = res?.user;
@@ -53,7 +50,11 @@ export default function LoginForm() {
       const returnTo = params.get("returnTo");
       navigate(returnTo || "/", { replace: true });
     } catch (err) {
-      setError(err.message || "Đăng nhập thất bại.");
+      const msgMap = {
+        "Invalid credentials": "Email hoặc mật khẩu không chính xác.",
+        "User account is deactivated": "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ.",
+      };
+      setError(msgMap[err.message] || err.message || "Đăng nhập thất bại.");
     } finally {
       setLoading(false);
     }
@@ -127,21 +128,31 @@ export default function LoginForm() {
             const user = res?.user;
 
             if (accessToken) {
+              if (INTERNAL_ROLES.includes(user?.role)) {
+                setError("Tài khoản nội bộ không được phép đăng nhập tại đây.");
+                return;
+              }
               login(accessToken, user);
 
               const params = new URLSearchParams(location.search);
               const returnTo = params.get("returnTo");
-              navigate(returnTo || "/login", { replace: true });
+              navigate(returnTo || "/", { replace: true });
             } else {
               navigate("/verify-otp", {
                 state: {
                   id_token: credentialResponse.credential,
+                  flow: "google",
                 },
               });
             }
 
           } catch (err) {
-            setError("Đăng nhập Google thất bại.");
+            const msgMap = {
+              "Google email not verified": "Email Google của bạn chưa được xác minh.",
+              "Google account already linked to another user": "Tài khoản Google này đã được liên kết với một tài khoản khác.",
+              "User account is deactivated": "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ.",
+            };
+            setError(msgMap[err?.message] || err?.message || "Đăng nhập Google thất bại.");
           }
         }}
         onError={() => setError("Không thể đăng nhập bằng Google.")}
