@@ -4,7 +4,7 @@ import { Button, Input } from "@heroui/react";
 import { Lock, Envelope, Eye, EyeSlash } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
-
+import { GoogleLogin } from "@react-oauth/google";
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20">
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -58,7 +58,6 @@ export default function LoginForm() {
       setLoading(false);
     }
   };
-
   return (
     <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
       <Input
@@ -117,14 +116,36 @@ export default function LoginForm() {
         <div className="flex-1 h-px bg-muted/20" />
       </div>
 
-      <Button
-        variant="bordered"
-        radius="lg"
-        className="border-muted/30 text-secondary font-medium h-12 hover:bg-muted/5"
-        startContent={<GoogleIcon />}
-      >
-        Google
-      </Button>
+      <GoogleLogin
+        onSuccess={async (credentialResponse) => {
+          try {
+            const res = await api.post("/api/auth/google", {
+              id_token: credentialResponse.credential,
+            });
+
+            const accessToken = res?.access_token;
+            const user = res?.user;
+
+            if (accessToken) {
+              login(accessToken, user);
+
+              const params = new URLSearchParams(location.search);
+              const returnTo = params.get("returnTo");
+              navigate(returnTo || "/login", { replace: true });
+            } else {
+              navigate("/verify-otp", {
+                state: {
+                  id_token: credentialResponse.credential,
+                },
+              });
+            }
+
+          } catch (err) {
+            setError("Đăng nhập Google thất bại.");
+          }
+        }}
+        onError={() => setError("Không thể đăng nhập bằng Google.")}
+      />
     </form>
   );
 }
