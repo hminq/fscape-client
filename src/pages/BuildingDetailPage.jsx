@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Bathtub, Bed, CircleNotch, MapPin, Ruler, Users } from "@phosphor-icons/react";
+import { Bathtub, Bed, CircleNotch, MapPin, Ruler, Users, X } from "@phosphor-icons/react";
+import { AnimatePresence, motion } from "framer-motion";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider, useLocations } from "@/contexts/LocationsContext";
@@ -14,7 +15,45 @@ const DETAIL_TABS = [
   { label: "Phòng", sectionId: "building-rooms" },
 ];
 
-function BuildingHero({ building, activeTab, onTabChange }) {
+function ImageModal({ imageUrl, onClose }) {
+  if (!imageUrl) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm cursor-zoom-out"
+      >
+        <motion.button
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.5, opacity: 0 }}
+          className="absolute right-6 top-6 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+        >
+          <X className="h-6 w-6" />
+        </motion.button>
+        <motion.img
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          src={imageUrl}
+          alt="Large view"
+          className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        />
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function BuildingHero({ building, activeTab, onTabChange, onImageClick }) {
   const heroImage = useMemo(() => {
     const galleryImage = (building.images || []).find((item) => item?.image_url)?.image_url;
     return building.thumbnail_url || galleryImage || defaultBuildingImg;
@@ -29,7 +68,8 @@ function BuildingHero({ building, activeTab, onTabChange }) {
           e.target.onerror = null;
           e.target.src = defaultBuildingImg;
         }}
-        className="absolute inset-0 h-full w-full object-cover"
+        onClick={() => onImageClick(heroImage)}
+        className="absolute inset-0 h-full w-full object-cover cursor-zoom-in"
       />
 
       <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/45 to-black/25" />
@@ -66,11 +106,10 @@ function BuildingHero({ building, activeTab, onTabChange }) {
                 key={tab.label}
                 type="button"
                 onClick={() => onTabChange(tab.label)}
-                className={`nav-underline nav-underline-olive pb-1 text-sm font-medium transition-colors md:text-base ${
-                  activeTab === tab.label
+                className={`nav-underline nav-underline-olive pb-1 text-sm font-medium transition-colors md:text-base ${activeTab === tab.label
                     ? "nav-underline-active text-tea"
                     : "text-white/80 hover:text-white"
-                }`}
+                  }`}
               >
                 {tab.label}
               </button>
@@ -94,6 +133,7 @@ function BuildingDetailContent() {
   const [activeTab, setActiveTab] = useState("Thông tin");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedImageUrl, setSelectedImageUrl] = useState(null);
   const sectionRefs = useRef({});
   const roomTypeScrollRef = useRef(null);
   const roomShowcaseScrollRef = useRef(null);
@@ -359,7 +399,7 @@ function BuildingDetailContent() {
         </div>
       ) : (
         <>
-          <BuildingHero building={building} activeTab={activeTab} onTabChange={handleTabChange} />
+          <BuildingHero building={building} activeTab={activeTab} onTabChange={handleTabChange} onImageClick={setSelectedImageUrl} />
           <section className="bg-white">
             <div className="mx-auto max-w-7xl px-6 py-12 md:px-12 md:py-16">
               <section
@@ -445,11 +485,10 @@ function BuildingDetailContent() {
                             }}
                             type="button"
                             onClick={() => setActiveRoomTypeId(roomType.id)}
-                            className={`shrink-0 snap-center rounded-full px-3.5 py-1.5 text-sm font-medium text-center transition-colors ${
-                              activeRoomTypeId === roomType.id
+                            className={`shrink-0 snap-center rounded-full px-3.5 py-1.5 text-sm font-medium text-center transition-colors ${activeRoomTypeId === roomType.id
                                 ? "bg-primary text-white"
                                 : "text-secondary hover:text-primary"
-                            }`}
+                              }`}
                           >
                             {roomType.name}
                           </button>
@@ -483,7 +522,8 @@ function BuildingDetailContent() {
                                     e.target.onerror = null;
                                     e.target.src = defaultBuildingImg;
                                   }}
-                                  className="h-[520px] w-full object-cover"
+                                  onClick={() => setSelectedImageUrl(slide.room.thumbnail_url || slide.room.images?.[0]?.image_url || defaultBuildingImg)}
+                                  className="h-[520px] w-full object-cover cursor-zoom-in"
                                 />
                               </div>
 
@@ -545,6 +585,7 @@ function BuildingDetailContent() {
         </>
       )}
       <Footer />
+      <ImageModal imageUrl={selectedImageUrl} onClose={() => setSelectedImageUrl(null)} />
     </div>
   );
 }

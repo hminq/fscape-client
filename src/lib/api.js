@@ -34,6 +34,14 @@ async function request(endpoint, options = {}) {
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: res.statusText }));
+    if (error.message === "User account is deactivated") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      if (window.location.pathname !== "/login" && window.location.pathname !== "/verify-otp") {
+        window.location.href = "/";
+        return;
+      }
+    }
     throw new Error(error.message || `HTTP ${res.status}`);
   }
 
@@ -67,6 +75,14 @@ async function uploadFile(endpoint, formData) {
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: res.statusText }));
+    if (error.message === "User account is deactivated") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      if (window.location.pathname !== "/login" && window.location.pathname !== "/verify-otp") {
+        window.location.href = "/";
+        return;
+      }
+    }
     throw new Error(error.message || `HTTP ${res.status}`);
   }
 

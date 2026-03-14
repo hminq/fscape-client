@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Input } from "@heroui/react";
-import { Lock, Envelope, Eye, EyeSlash, User } from "@phosphor-icons/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Button, Input } from "@heroui/react";
+import { Lock, Envelope, Eye, EyeSlash, User, Headset, Phone } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
 import { GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,6 +20,7 @@ const GoogleIcon = () => (
 const inputClasses = { inputWrapper: "border-muted/30 hover:border-muted focus-within:border-olive" };
 
 export default function SignUpForm() {
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -30,39 +31,47 @@ export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const validate = () => {
-    if (!fullName.trim()) return "Vui lòng nhập họ và tên.";
-    if (!email.trim()) return "Vui lòng nhập email.";
-    if (password.length < 6) return "Mật khẩu phải có ít nhất 6 ký tự.";
-    if (password !== confirmPassword) return "Mật khẩu xác nhận không khớp.";
-    return null;
+    const newErrors = {};
+    if (!fullName.trim()) newErrors.fullName = "Họ và tên là bắt buộc.";
+    if (!email.trim()) newErrors.email = "Email là bắt buộc.";
+    else if (!/^\S+@\S+\.\S+$/.test(email)) newErrors.email = "Email không hợp lệ.";
+    
+    if (password.length < 6) newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự.";
+    if (password !== confirmPassword) newErrors.confirmPassword = "Mật khẩu xác nhận không khớp.";
+    
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
+    const isValid = validate();
+    if (!isValid) return;
 
     setError("");
+    setFieldErrors({});
     setLoading(true);
 
     try {
       await api.post("/api/auth/signup", { email, password });
 
       navigate("/verify-otp", {
-        state: { email, password, flow: "signup" },
+        state: { email, password, fullName, flow: "signup" },
       });
     } catch (err) {
       const msgMap = {
         "Email already exists": "Email này đã được đăng ký. Vui lòng đăng nhập hoặc dùng email khác.",
-        "OTP request limit exceeded (5/day)": "Bạn đã yêu cầu OTP quá nhiều lần. Vui lòng thử lại sau 24 giờ.",
+        "OTP request limit exceeded (5/day)": "Bạn đã vượt quá số lần nhận OTP trong ngày (5 lần/ngày). Vui lòng thử lại sau.",
+        "Internal server error": "Lỗi hệ thống. Vui lòng thử lại sau.",
+        "Invalid credentials": "Thông tin đăng ký không hợp lệ.",
+        "User account is deactivated": "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ hỗ trợ.",
       };
-      setError(msgMap[err.message] || err.message || "Đăng ký thất bại.");
+      const displayError = msgMap[err.message] || err.message || "Đăng ký thất bại. Vui lòng thử lại.";
+      setError(displayError);
     } finally {
       setLoading(false);
     }
@@ -94,41 +103,57 @@ export default function SignUpForm() {
       const msgMap = {
         "Google email not verified": "Email Google của bạn chưa được xác minh.",
         "Google account already linked to another user": "Tài khoản Google này đã được liên kết với một tài khoản khác.",
-        "User account is deactivated": "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ.",
+        "User account is deactivated": "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ hỗ trợ.",
+        "Invalid or expired OTP": "Mã OTP không đúng hoặc đã hết hạn.",
+        "Internal server error": "Lỗi hệ thống khi đăng nhập bằng Google.",
       };
-      setError(msgMap[err?.message] || err?.message || "Đăng ký bằng Google thất bại.");
+      const displayError = msgMap[err?.message] || err?.message || "Đăng ký bằng Google thất bại.";
+      setError(displayError);
     }
   };
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+    <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
       <Input
         label="Họ và Tên"
         placeholder="Họ và tên đầy đủ"
         value={fullName}
-        onValueChange={setFullName}
+        onValueChange={(val) => {
+          setFullName(val);
+          if (fieldErrors.fullName) setFieldErrors(prev => ({ ...prev, fullName: "" }));
+        }}
         startContent={<User className="size-4 text-muted" />}
         variant="bordered"
         classNames={inputClasses}
         isRequired
+        isInvalid={!!fieldErrors.fullName}
+        errorMessage={fieldErrors.fullName}
       />
       <Input
         label="Email"
         placeholder="sinhvien@truonghoc.edu.vn"
         type="email"
         value={email}
-        onValueChange={setEmail}
+        onValueChange={(val) => {
+          setEmail(val);
+          if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: "" }));
+        }}
         startContent={<Envelope className="size-4 text-muted" />}
         variant="bordered"
         classNames={inputClasses}
         isRequired
+        isInvalid={!!fieldErrors.email}
+        errorMessage={fieldErrors.email}
       />
       <Input
         label="Mật khẩu"
         placeholder="Tạo mật khẩu"
         type={showPassword ? "text" : "password"}
         value={password}
-        onValueChange={setPassword}
+        onValueChange={(val) => {
+          setPassword(val);
+          if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: "" }));
+        }}
         startContent={<Lock className="size-4 text-muted" />}
         endContent={
           <button type="button" className="text-muted hover:text-secondary" onClick={() => setShowPassword(!showPassword)}>
@@ -138,13 +163,18 @@ export default function SignUpForm() {
         variant="bordered"
         classNames={inputClasses}
         isRequired
+        isInvalid={!!fieldErrors.password}
+        errorMessage={fieldErrors.password}
       />
       <Input
         label="Xác nhận mật khẩu"
         placeholder="Xác nhận mật khẩu"
         type={showConfirm ? "text" : "password"}
         value={confirmPassword}
-        onValueChange={setConfirmPassword}
+        onValueChange={(val) => {
+          setConfirmPassword(val);
+          if (fieldErrors.confirmPassword) setFieldErrors(prev => ({ ...prev, confirmPassword: "" }));
+        }}
         startContent={<Lock className="size-4 text-muted" />}
         endContent={
           <button type="button" className="text-muted hover:text-secondary" onClick={() => setShowConfirm(!showConfirm)}>
@@ -154,6 +184,8 @@ export default function SignUpForm() {
         variant="bordered"
         classNames={inputClasses}
         isRequired
+        isInvalid={!!fieldErrors.confirmPassword}
+        errorMessage={fieldErrors.confirmPassword}
       />
 
       {error && (
@@ -169,7 +201,7 @@ export default function SignUpForm() {
         {loading ? "Đang tạo tài khoản..." : "Tạo Tài Khoản"}
       </Button>
 
-      <div className="flex items-center gap-3 text-muted text-sm">
+      {/* <div className="flex items-center gap-3 text-muted text-sm">
         <div className="flex-1 h-px bg-muted/20" />
         <span>Hoặc tiếp tục với</span>
         <div className="flex-1 h-px bg-muted/20" />
@@ -178,7 +210,68 @@ export default function SignUpForm() {
       <GoogleLogin
         onSuccess={handleGoogleSuccess}
         onError={() => setError("Không thể đăng ký bằng Google.")}
-      />
+      /> */}
+
+      <div className="mt-4 text-center">
+        <button
+          type="button"
+          onClick={onOpen}
+          className="text-xs text-muted hover:text-olive transition-colors font-medium underline underline-offset-4 flex items-center justify-center gap-1 mx-auto"
+        >
+          <Headset className="size-3" /> Liên hệ hỗ trợ
+        </button>
+      </div>
+
+      <Modal 
+        isOpen={isOpen} 
+        onOpenChange={onOpenChange}
+        placement="center"
+        backdrop="blur"
+        classNames={{
+          base: "border-[#e5e7eb] bg-white",
+          header: "border-b-[1px] border-[#e5e7eb]",
+          footer: "border-t-[1px] border-[#e5e7eb]",
+          closeButton: "hover:bg-black/5 active:bg-black/10",
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1 text-primary">Trung Tâm Hỗ Trợ FScape</ModalHeader>
+              <ModalBody className="py-6">
+                <p className="text-sm text-secondary mb-4">
+                  Nếu bạn gặp khó khăn trong việc đăng ký tài khoản mới, vui lòng liên hệ với đội ngũ hỗ trợ của chúng tôi:
+                </p>
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-4 p-3 rounded-xl bg-olive/5 border border-olive/10">
+                    <div className="w-10 h-10 rounded-full bg-olive/20 flex items-center justify-center text-olive">
+                      <Envelope size={20} weight="fill" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted">Email hỗ trợ</p>
+                      <p className="text-sm font-bold text-primary">support@fscape.vn</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 p-3 rounded-xl bg-olive/5 border border-olive/10">
+                    <div className="w-10 h-10 rounded-full bg-olive/20 flex items-center justify-center text-olive">
+                      <Phone size={20} weight="fill" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted">Hotline 24/7</p>
+                      <p className="text-sm font-bold text-primary">1900 8888</p>
+                    </div>
+                  </div>
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="primary" className="bg-olive font-bold" onPress={onClose}>
+                   Đã hiểu
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </form>
   );
 }
