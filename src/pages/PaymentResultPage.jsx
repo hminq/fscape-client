@@ -6,7 +6,9 @@ import { LocationsProvider } from "@/contexts/LocationsContext";
 function PaymentResultContent() {
   const [searchParams] = useSearchParams();
   const code = searchParams.get("vnp_ResponseCode") || searchParams.get("code");
+  const orderInfo = searchParams.get("vnp_OrderInfo") || "";
   const isSuccess = code === "00";
+  const isInvoicePayment = orderInfo.startsWith("INV");
 
   return (
     <section className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-6 text-center">
@@ -15,7 +17,9 @@ function PaymentResultContent() {
           <CheckCircle className="h-20 w-20 text-olive" strokeWidth={1.5} />
           <h1 className="mt-6 text-4xl font-bold text-primary">Thanh toán thành công</h1>
           <p className="mt-3 text-secondary">
-            Đặt cọc của bạn đã được ghi nhận. Hợp đồng sẽ được gửi qua email để bạn ký xác nhận.
+            {isInvoicePayment
+              ? "Hóa đơn của bạn đã được thanh toán thành công."
+              : "Đặt cọc của bạn đã được ghi nhận. Hợp đồng sẽ được gửi qua email để bạn ký xác nhận."}
           </p>
         </>
       ) : (
@@ -35,12 +39,21 @@ function PaymentResultContent() {
         >
           Trang chủ
         </Link>
-        <Link
-          to="/rooms"
-          className="h-11 rounded-full bg-primary px-6 text-sm font-semibold leading-[2.75rem] text-white"
-        >
-          Xem phòng
-        </Link>
+        {isInvoicePayment ? (
+          <Link
+            to="/my-invoices"
+            className="h-11 rounded-full bg-primary px-6 text-sm font-semibold leading-[2.75rem] text-white"
+          >
+            Xem hóa đơn
+          </Link>
+        ) : (
+          <Link
+            to="/rooms"
+            className="h-11 rounded-full bg-primary px-6 text-sm font-semibold leading-[2.75rem] text-white"
+          >
+            Xem phòng
+          </Link>
+        )}
       </div>
     </section>
   );

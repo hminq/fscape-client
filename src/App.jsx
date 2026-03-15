@@ -13,6 +13,7 @@ import ProfilePage from "./pages/ProfilePage";
 import MyRoomsPage from "./pages/MyRoomsPage";
 import MyBookingsPage from "./pages/MyBookingsPage";
 import MyContractsPage from "./pages/MyContractsPage";
+import MyInvoicesPage from "./pages/MyInvoicesPage";
 import VerifyOtp from "./pages/auth/VerifyOtp";
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
       <Route path="/my-rooms" element={<MyRoomsPage />} />
       <Route path="/my-bookings" element={<MyBookingsPage />} />
       <Route path="/my-contracts" element={<MyContractsPage />} />
+      <Route path="/my-invoices" element={<MyInvoicesPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
       <Route path="/verify-otp" element={<VerifyOtp />} />
     </Routes>
