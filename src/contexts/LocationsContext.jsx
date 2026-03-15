@@ -22,7 +22,11 @@ export function LocationsProvider({ children }) {
               .catch(() => loc)
           )
         );
-        setLocations(details);
+        const filtered = details.map((loc) => ({
+          ...loc,
+          buildings: (loc.buildings || []).filter((b) => b.is_active !== false),
+        }));
+        setLocations(filtered);
       })
       .catch((err) => console.error("Failed to fetch locations:", err))
       .finally(() => setLoading(false));

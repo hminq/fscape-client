@@ -50,6 +50,11 @@ function RoomDetailContent() {
           return;
         }
 
+        if (roomData.status && roomData.status !== 'AVAILABLE') {
+          setError("Phòng này hiện không khả dụng.");
+          return;
+        }
+
         setRoom(roomData);
 
         const typeId = roomData?.room_type?.id;

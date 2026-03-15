@@ -40,7 +40,7 @@ function BuildingRoomsContent() {
       try {
         setLoading(true);
         setError("");
-        const res = await api.get(`/api/rooms?building_id=${buildingId}&limit=${PAGE_SIZE}&page=${page}`);
+        const res = await api.get(`/api/rooms?building_id=${buildingId}&status=AVAILABLE&limit=${PAGE_SIZE}&page=${page}`);
         if (!mounted) return;
         const roomList = res?.data || [];
         setRooms(roomList);
