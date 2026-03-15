@@ -18,6 +18,7 @@ function RoomCheckoutContent() {
   const [searchParams] = useSearchParams();
   const checkInDate = searchParams.get("checkInDate") || "";
   const rentalTerm = searchParams.get("term") || "";
+  const billingCycle = searchParams.get("billingCycle") || "";
   const { token, user: authUser } = useAuth();
 
   const [room, setRoom] = useState(null);
@@ -113,13 +114,20 @@ function RoomCheckoutContent() {
     [room]
   );
 
-  const termLabel = rentalTerm === "unlimited" ? "Không giới hạn" : rentalTerm ? `${rentalTerm} tháng` : "-";
+  const BILLING_CYCLE_LABELS = {
+    CYCLE_1M: "Hàng tháng",
+    CYCLE_3M: "3 tháng",
+    CYCLE_6M: "6 tháng",
+    ALL_IN: "Trả trọn gói",
+  };
+
+  const termLabel = rentalTerm ? `${rentalTerm} tháng` : "-";
+  const billingCycleLabel = BILLING_CYCLE_LABELS[billingCycle] || "-";
   const depositLabel = useMemo(() => {
     const base = Number(roomType?.base_price || room?.room_type?.base_price || 0);
-    if (!rentalTerm || !base) return "-";
-    if (rentalTerm === "unlimited") return `${formatVnd(base)}/1 tháng`;
-    return `${formatVnd(base * Number(rentalTerm))}/${rentalTerm} tháng`;
-  }, [rentalTerm, roomType, room]);
+    if (!base) return "-";
+    return formatVnd(base);
+  }, [roomType, room]);
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -163,7 +171,8 @@ function RoomCheckoutContent() {
       const res = await api.post("/api/bookings", {
         roomId,
         checkInDate,
-        rentalTerm: rentalTerm === "unlimited" ? 999 : Number(rentalTerm),
+        durationMonths: Number(rentalTerm),
+        billingCycle,
         customerInfo: form,
       });
 
@@ -340,6 +349,9 @@ function RoomCheckoutContent() {
               </p>
               <p>
                 <span className="font-semibold text-primary">Thời gian thuê:</span> {termLabel}
+              </p>
+              <p>
+                <span className="font-semibold text-primary">Chu kỳ thanh toán:</span> {billingCycleLabel}
               </p>
               <p>
                 <span className="font-semibold text-primary">Cọc dự kiến:</span> {depositLabel}

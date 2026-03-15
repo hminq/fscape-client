@@ -18,6 +18,7 @@ function RoomBookingContent() {
   const [roomType, setRoomType] = useState(null);
   const [checkInDate, setCheckInDate] = useState("");
   const [rentalMonths, setRentalMonths] = useState(null);
+  const [billingCycle, setBillingCycle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -82,30 +83,37 @@ function RoomBookingContent() {
     };
   }, [roomId]);
 
-  const isReadyToDeposit = Boolean(checkInDate && rentalMonths && room && roomType);
-  const rentalLabel =
-    rentalMonths === "unlimited"
-      ? "Không giới hạn"
-      : rentalMonths
-        ? `${rentalMonths} tháng`
-        : "-";
+  const BILLING_CYCLES = useMemo(() => [
+    { value: "CYCLE_1M", label: "Hàng tháng", months: 1 },
+    { value: "CYCLE_3M", label: "3 tháng", months: 3 },
+    { value: "CYCLE_6M", label: "6 tháng", months: 6 },
+    { value: "ALL_IN", label: "Trả trọn gói", months: null },
+  ], []);
+
+  const availableCycles = useMemo(() => {
+    if (!rentalMonths) return [];
+    return BILLING_CYCLES.filter((c) => c.months === null || c.months <= rentalMonths);
+  }, [rentalMonths, BILLING_CYCLES]);
+
+  const billingCycleLabel = useMemo(() => {
+    if (!billingCycle) return null;
+    return BILLING_CYCLES.find((c) => c.value === billingCycle)?.label || null;
+  }, [billingCycle, BILLING_CYCLES]);
+
+  const isReadyToDeposit = Boolean(checkInDate && rentalMonths && billingCycle && room && roomType);
+  const rentalLabel = rentalMonths ? `${rentalMonths} tháng` : "-";
   const basePrice = Number(roomType?.base_price || room?.room_type?.base_price || 0);
   const endDate = useMemo(() => addMonthsToDate(checkInDate, rentalMonths), [checkInDate, rentalMonths]);
   const moveOutDateLabel = useMemo(() => {
     if (!rentalMonths) return "-";
-    if (rentalMonths === "unlimited") return "--/-/----";
     return formatDisplayDate(endDate);
   }, [rentalMonths, endDate]);
-  const depositPreview = useMemo(() => {
-    if (!rentalMonths || !basePrice) return "-";
-    if (rentalMonths === "unlimited") return `${formatVnd(basePrice)}/1 tháng`;
-    return `${formatVnd(basePrice * Number(rentalMonths))}/${rentalMonths} tháng`;
-  }, [rentalMonths, basePrice]);
+  const depositPreview = basePrice ? formatVnd(basePrice) : "-";
 
   const handleProceedDeposit = () => {
     if (!isReadyToDeposit) return;
 
-    const target = `/buildings/${buildingId}/rooms/${roomId}/checkout?checkInDate=${checkInDate}&term=${rentalMonths}`;
+    const target = `/buildings/${buildingId}/rooms/${roomId}/checkout?checkInDate=${checkInDate}&term=${rentalMonths}&billingCycle=${billingCycle}`;
     if (!token) {
       navigate(`/login?returnTo=${encodeURIComponent(target)}`);
       return;
@@ -177,7 +185,7 @@ function RoomBookingContent() {
                           {formatDisplayDate(checkInDate)}
                         </p>
                       </>
-                    ) : rentalMonths === "unlimited" ? null : (
+                    ) : (
                       <>
                         <p className="text-xs uppercase tracking-wide text-secondary">
                           Ngày kết thúc dự kiến
@@ -236,16 +244,18 @@ function RoomBookingContent() {
 
           <div className="mt-8">
             <p className="mb-3 text-sm font-semibold text-secondary">Thời gian thuê</p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {[
-                { value: 1, label: "1 tháng" },
                 { value: 6, label: "6 tháng" },
-                { value: "unlimited", label: "Không giới hạn" },
+                { value: 12, label: "12 tháng" },
               ].map((option) => (
                 <button
                   key={String(option.value)}
                   type="button"
-                  onClick={() => setRentalMonths(option.value)}
+                  onClick={() => {
+                    setRentalMonths(option.value);
+                    setBillingCycle(null);
+                  }}
                   className={`h-11 rounded-full text-sm font-semibold transition-colors ${
                     rentalMonths === option.value
                       ? "bg-primary text-white"
@@ -257,6 +267,28 @@ function RoomBookingContent() {
               ))}
             </div>
           </div>
+
+          {rentalMonths && (
+            <div className="mt-6">
+              <p className="mb-3 text-sm font-semibold text-secondary">Chu kỳ thanh toán</p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {availableCycles.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setBillingCycle(option.value)}
+                    className={`h-11 rounded-full text-sm font-semibold transition-colors ${
+                      billingCycle === option.value
+                        ? "bg-primary text-white"
+                        : "bg-primary/5 text-secondary hover:bg-primary/10 hover:text-primary"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -276,6 +308,9 @@ function RoomBookingContent() {
           <div>
             <p className="text-xs uppercase tracking-wide text-white/60">Thời gian thuê</p>
             <p className="text-lg font-semibold text-white">{rentalLabel}</p>
+            {billingCycleLabel && (
+              <p className="text-sm text-white/70">Chu kỳ: {billingCycleLabel}</p>
+            )}
             <p className="text-sm text-white/70">Giá từ {formatVnd(basePrice)}</p>
             <p className="text-sm text-white/70">Cọc dự kiến: {depositPreview}</p>
           </div>
