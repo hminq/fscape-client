@@ -175,10 +175,15 @@ export default function SignUpForm() {
         <div className="flex-1 h-px bg-muted/20" />
       </div>
 
+      <div className="flex justify-center">
       <GoogleLogin
+        type="icon"
+        shape="circle"
+        size="large"
         onSuccess={handleGoogleSuccess}
         onError={() => setError("Không thể đăng ký bằng Google.")}
       />
+      </div>
     </form>
   );
 }

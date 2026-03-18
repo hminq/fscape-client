@@ -117,7 +117,11 @@ export default function LoginForm() {
         <div className="flex-1 h-px bg-muted/20" />
       </div>
 
+      <div className="flex justify-center">
       <GoogleLogin
+        type="icon"
+        shape="circle"
+        size="large"
         onSuccess={async (credentialResponse) => {
           try {
             const res = await api.post("/api/auth/google", {
@@ -157,6 +161,7 @@ export default function LoginForm() {
         }}
         onError={() => setError("Không thể đăng nhập bằng Google.")}
       />
+      </div>
     </form>
   );
 }
