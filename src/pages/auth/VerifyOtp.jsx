@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button, Input } from "@heroui/react";
 import { api } from "@/lib/api";
@@ -19,6 +19,23 @@ export default function VerifyOtp() {
     const [otp, setOtp] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [countdown, setCountdown] = useState(300); // 5 minutes in seconds
+
+    const isReady = otp.trim().length === 6;
+
+    // Countdown effect
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCountdown(prev => (prev > 0 ? prev - 1 : 0));
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const formatTime = (seconds) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    };
 
     const handleVerify = async (e) => {
         e.preventDefault();
@@ -95,14 +112,38 @@ export default function VerifyOtp() {
                     {description}
                 </p>
 
-                <Input
-                    label="OTP Code"
-                    placeholder="Nhập mã OTP"
-                    value={otp}
-                    onValueChange={setOtp}
-                    variant="bordered"
-                    isRequired
-                />
+                <div className="flex flex-col gap-2">
+                    <Input
+                        label="Mã OTP"
+                        placeholder="Nhập 6 số"
+                        value={otp}
+                        onValueChange={(v) => { 
+                            const numericOnly = v.replace(/\D/g, "");
+                            if (numericOnly.length <= 6) setOtp(numericOnly); 
+                        }}
+                        variant="bordered"
+                        type="tel"
+                        maxLength={6}
+                        classNames={{
+                            inputWrapper: "border-muted/30 hover:border-muted focus-within:border-olive h-12",
+                            label: "font-semibold"
+                        }}
+                    />
+                    <div className="flex justify-between items-center px-1">
+                        <p className={`text-xs ${countdown === 0 ? "text-red-500 font-bold" : "text-muted"}`}>
+                            {countdown === 0 ? "Mã đã hết hạn" : `Mã hết hạn sau: ${formatTime(countdown)}`}
+                        </p>
+                        {countdown === 0 && (
+                            <button
+                                type="button"
+                                className="text-xs text-olive font-bold hover:underline"
+                                onClick={() => { setCountdown(300); /* Logic gửi lại OTP */ }}
+                            >
+                                Gửi lại mã
+                            </button>
+                        )}
+                    </div>
+                </div>
 
                 {error && (
                     <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-center">
@@ -113,8 +154,13 @@ export default function VerifyOtp() {
                 <Button
                     type="submit"
                     isLoading={loading}
-                    radius="lg"
-                    className="bg-olive text-white font-semibold h-11"
+                    radius="xl"
+                    className={`h-12 mt-2 font-bold text-base transition-all duration-300 ${
+                        isReady
+                            ? "bg-olive text-primary shadow-lg shadow-olive/30 scale-100 opacity-100"
+                            : "bg-olive/40 text-primary/40 cursor-not-allowed scale-[0.98] opacity-60"
+                    }`}
+                    disabled={!isReady || loading}
                 >
                     {loading ? "Đang xác minh..." : "Xác minh OTP"}
                 </Button>

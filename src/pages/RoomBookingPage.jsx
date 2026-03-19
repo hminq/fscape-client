@@ -33,11 +33,27 @@ function RoomBookingContent() {
     d.setDate(d.getDate() + 7);
     return d;
   }, [minDate]);
+  
+  const endDate = useMemo(() => addMonthsToDate(checkInDate, rentalMonths), [checkInDate, rentalMonths]);
+  const moveOutDateLabel = useMemo(() => {
+    if (!rentalMonths) return "-";
+    return formatDisplayDate(endDate);
+  }, [rentalMonths, endDate]);
+
   const calendarMonths = useMemo(() => {
     const firstMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const secondMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-    return [firstMonth, secondMonth];
-  }, [today]);
+    if (!endDate) {
+      return [firstMonth, new Date(today.getFullYear(), today.getMonth() + 1, 1)];
+    }
+    const endObj = new Date(endDate); // Parse string to Date
+    const endMonth = new Date(endObj.getFullYear(), endObj.getMonth(), 1);
+    
+    // If check-in and end are in the same month, show next month on right
+    if (firstMonth.getFullYear() === endMonth.getFullYear() && firstMonth.getMonth() === endMonth.getMonth()) {
+      return [firstMonth, new Date(firstMonth.getFullYear(), firstMonth.getMonth() + 1, 1)];
+    }
+    return [firstMonth, endMonth];
+  }, [today, endDate]);
 
   useEffect(() => {
     let mounted = true;
@@ -103,11 +119,6 @@ function RoomBookingContent() {
   const isReadyToDeposit = Boolean(checkInDate && rentalMonths && billingCycle && room && roomType);
   const rentalLabel = rentalMonths ? `${rentalMonths} tháng` : "-";
   const basePrice = Number(roomType?.base_price || room?.room_type?.base_price || 0);
-  const endDate = useMemo(() => addMonthsToDate(checkInDate, rentalMonths), [checkInDate, rentalMonths]);
-  const moveOutDateLabel = useMemo(() => {
-    if (!rentalMonths) return "-";
-    return formatDisplayDate(endDate);
-  }, [rentalMonths, endDate]);
   const depositPreview = basePrice ? formatVnd(basePrice) : "-";
 
   const handleProceedDeposit = () => {
@@ -180,17 +191,17 @@ function RoomBookingContent() {
                   <div className="mb-4 rounded-2xl bg-primary/5 p-4 min-h-[74px]">
                     {monthIdx === 0 ? (
                       <>
-                        <p className="text-xs uppercase tracking-wide text-secondary">Ngày nhận phòng</p>
-                        <p className="mt-1 text-lg font-semibold text-primary">
+                        <p className="text-xs font-bold uppercase tracking-wide text-secondary">Ngày nhận phòng</p>
+                        <p className="mt-1 text-lg font-bold text-primary">
                           {formatDisplayDate(checkInDate)}
                         </p>
                       </>
                     ) : (
                       <>
-                        <p className="text-xs uppercase tracking-wide text-secondary">
-                          Ngày kết thúc dự kiến
+                        <p className="text-xs font-bold uppercase tracking-wide text-secondary">
+                          Ngày kết thúc / Trả phòng
                         </p>
-                        <p className="mt-1 text-lg font-semibold text-primary">
+                        <p className="mt-1 text-lg font-bold text-primary">
                           {formatDisplayDate(endDate)}
                         </p>
                       </>
@@ -216,23 +227,29 @@ function RoomBookingContent() {
                       const disabled = dayDate < minDate || dayDate > maxDate;
                       const value = formatDateValue(dayDate);
                       const selected = checkInDate === value;
+                      const isEnd = endDate && formatDateValue(startOfDay(endDate)) === value;
 
                       return (
-                        <div key={value} className="flex items-center justify-center">
+                        <div key={value} className="flex items-center justify-center relative">
                           <button
                             type="button"
-                            disabled={disabled}
-                            onClick={() => setCheckInDate(value)}
+                            disabled={monthIdx === 0 ? disabled : true}
+                            onClick={() => monthIdx === 0 && setCheckInDate(value)}
                             className={`h-10 w-10 rounded-full text-sm font-semibold transition-colors ${
                               selected
                                 ? "bg-primary text-white"
-                                : disabled
-                                  ? "cursor-not-allowed text-secondary/30"
-                                  : "text-secondary hover:bg-primary/5 hover:text-primary"
+                                : isEnd
+                                  ? "bg-olive text-primary border-2 border-primary"
+                                  : disabled && monthIdx === 0
+                                    ? "cursor-not-allowed text-secondary/30"
+                                    : "text-secondary hover:bg-primary/5 hover:text-primary"
                             }`}
                           >
                             {date.getDate()}
                           </button>
+                          {isEnd && (
+                            <span className="absolute -bottom-1 text-[8px] font-bold text-olive uppercase"></span>
+                          )}
                         </div>
                       );
                     })}
@@ -315,8 +332,8 @@ function RoomBookingContent() {
             <p className="text-sm text-white/70">Cọc dự kiến: {depositPreview}</p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-wide text-white/60">Ngày trả phòng</p>
-            <p className="text-lg font-semibold text-white">{moveOutDateLabel}</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-white/60">Ngày trả phòng</p>
+            <p className="text-lg font-bold text-white">{moveOutDateLabel}</p>
           </div>
           <button
             type="button"

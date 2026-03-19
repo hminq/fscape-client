@@ -33,8 +33,10 @@ async function request(endpoint, options = {}) {
   }
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(error.message || `HTTP ${res.status}`);
+    const errorBody = await res.json().catch(() => ({ message: res.statusText }));
+    const error = new Error(errorBody.message || `HTTP ${res.status}`);
+    error.response = errorBody;
+    throw error;
   }
 
   return res.json();
@@ -66,8 +68,10 @@ async function uploadFile(endpoint, formData) {
   }
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(error.message || `HTTP ${res.status}`);
+    const errorBody = await res.json().catch(() => ({ message: res.statusText }));
+    const error = new Error(errorBody.message || `HTTP ${res.status}`);
+    error.response = errorBody;
+    throw error;
   }
 
   return res.json();
