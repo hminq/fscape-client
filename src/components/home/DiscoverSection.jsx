@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MagnifyingGlass, CheckCircle, ArrowRight, GraduationCap, Buildings, NavigationArrow } from "@phosphor-icons/react";
 import { useLocations } from "@/contexts/LocationsContext";
 import { findNearestBuilding } from "@/lib/geo";
 import { CircleNotch } from "@phosphor-icons/react";
 import { Map as MapView, MapMarker, MarkerContent, MapRoute, MapControls } from "@/components/ui/map";
+import { api } from "@/lib/api";
 
 const CAPACITY_OPTIONS = [
   { label: "Một mình", value: 1 },
@@ -46,6 +47,23 @@ export default function DiscoverSection() {
     return findNearestBuilding(selectedUniversity, allBuildings);
   }, [selectedUniversity, allBuildings]);
 
+  const [distance, setDistance] = useState(null);
+
+  useEffect(() => {
+    const uni = selectedUniversity;
+    const bld = nearestBuilding;
+    if (!uni?.latitude || !uni?.longitude || !bld?.latitude || !bld?.longitude) return;
+
+    let cancelled = false;
+    api
+      .get(`/api/utils/distance?lat1=${uni.latitude}&lng1=${uni.longitude}&lat2=${bld.latitude}&lng2=${bld.longitude}`)
+      .then((res) => {
+        if (!cancelled) setDistance(res);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [selectedUniversity, nearestBuilding]);
+
   const activeLocation = locations[activeLocationIndex];
   const tabUniversities = activeLocation?.universities || [];
 
@@ -57,6 +75,7 @@ export default function DiscoverSection() {
   const handleClearUniversity = () => {
     setSelectedUniversity(null);
     setSelectedCapacity(null);
+    setDistance(null);
   };
 
   const handleSubmit = () => {
@@ -210,7 +229,16 @@ export default function DiscoverSection() {
             <div className="my-12 border-t border-muted/15" />
 
             <div className="text-center">
-              <p className="text-sm text-muted">Tòa nhà gần nhất với trường của bạn</p>
+              <p className="text-sm text-muted">
+                Tòa nhà gần nhất với trường của bạn
+                {distance && (
+                  <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-olive/10 px-2.5 py-0.5 text-xs font-semibold text-olive">
+                    <NavigationArrow className="h-3 w-3" weight="fill" />
+                    {distance.distance_km} km
+                    {distance.duration_min != null && ` · ~${distance.duration_min} phút`}
+                  </span>
+                )}
+              </p>
               <h2 className="mt-1 text-2xl font-bold text-primary md:text-3xl">
                 {nearestBuilding.name}
               </h2>
