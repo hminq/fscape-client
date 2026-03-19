@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { MagnifyingGlass, CheckCircle, ArrowRight, GraduationCap, Buildings, NavigationArrow } from "@phosphor-icons/react";
+import { MagnifyingGlass, CheckCircle, ArrowRight, GraduationCap, Buildings, NavigationArrow, Clock } from "@phosphor-icons/react";
 import { useLocations } from "@/contexts/LocationsContext";
 import { findNearestBuilding } from "@/lib/geo";
 import { CircleNotch } from "@phosphor-icons/react";
@@ -229,19 +229,24 @@ export default function DiscoverSection() {
             <div className="my-12 border-t border-muted/15" />
 
             <div className="text-center">
-              <p className="text-sm text-muted">
-                Tòa nhà gần nhất với trường của bạn
-                {distance && (
-                  <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-olive/10 px-2.5 py-0.5 text-xs font-semibold text-olive">
-                    <NavigationArrow className="h-3 w-3" weight="fill" />
-                    {distance.distance_km} km
-                    {distance.duration_min != null && ` · ~${distance.duration_min} phút`}
-                  </span>
-                )}
-              </p>
+              <p className="text-sm text-muted">Tòa nhà gần nhất với trường của bạn</p>
               <h2 className="mt-1 text-2xl font-bold text-primary md:text-3xl">
                 {nearestBuilding.name}
               </h2>
+              {distance && (
+                <div className="mt-2 flex items-center justify-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-olive/10 px-3 py-1 text-sm font-semibold text-olive">
+                    <NavigationArrow className="h-3.5 w-3.5" weight="fill" />
+                    {distance.distance_km} km
+                  </span>
+                  {distance.duration_min != null && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
+                      <Clock className="h-3.5 w-3.5" weight="fill" />
+                      ~{distance.duration_min} phút
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Map */}
