@@ -50,11 +50,7 @@ export default function LoginForm() {
       const returnTo = params.get("returnTo");
       navigate(returnTo || "/", { replace: true });
     } catch (err) {
-      const msgMap = {
-        "Invalid credentials": "Email hoặc mật khẩu không chính xác.",
-        "User account is deactivated": "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ.",
-      };
-      setError(msgMap[err.message] || err.message || "Đăng nhập thất bại.");
+      setError(err.message || "Đăng nhập thất bại.");
     } finally {
       setLoading(false);
     }
@@ -117,50 +113,53 @@ export default function LoginForm() {
         <div className="flex-1 h-px bg-muted/20" />
       </div>
 
-      <div className="flex justify-center">
-      <GoogleLogin
-        type="icon"
-        shape="circle"
-        size="large"
-        onSuccess={async (credentialResponse) => {
-          try {
-            const res = await api.post("/api/auth/google", {
-              id_token: credentialResponse.credential,
-            });
-
-            const accessToken = res?.access_token;
-            const user = res?.user;
-
-            if (accessToken) {
-              if (INTERNAL_ROLES.includes(user?.role)) {
-                setError("Tài khoản nội bộ không được phép đăng nhập tại đây.");
-                return;
-              }
-              login(accessToken, user);
-
-              const params = new URLSearchParams(location.search);
-              const returnTo = params.get("returnTo");
-              navigate(returnTo || "/", { replace: true });
-            } else {
-              navigate("/verify-otp", {
-                state: {
+      <div className="relative w-full" style={{ height: 48 }}>
+        {/* Custom visual button */}
+        <div className="absolute inset-0 flex items-center justify-center rounded-xl border border-gray-200 bg-white shadow-sm transition-colors pointer-events-none z-0">
+          <GoogleIcon />
+        </div>
+        {/* Real Google button — invisible but clickable */}
+        <div className="absolute inset-0 z-10 overflow-hidden rounded-xl opacity-[0.01] [&>div]:!w-full [&>div]:!h-full [&_iframe]:!w-full [&_iframe]:!h-full [&_div[role=button]]:!w-full [&_div[role=button]]:!h-full">
+          <GoogleLogin
+            type="standard"
+            theme="outline"
+            size="large"
+            width={400}
+            onSuccess={async (credentialResponse) => {
+              try {
+                const res = await api.post("/api/auth/google", {
                   id_token: credentialResponse.credential,
-                  flow: "google",
-                },
-              });
-            }
+                });
 
-          } catch (err) {
-            const msgMap = {
-              "Google email not verified": "Email Google của bạn chưa được xác minh.",
-              "Google account already linked to another user": "Tài khoản Google này đã được liên kết với một tài khoản khác.",
-              "User account is deactivated": "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ.",
-            };
-            setError(msgMap[err?.message] || err?.message || "Đăng nhập Google thất bại.");
-          }
-        }}
-        onError={() => setError("Không thể đăng nhập bằng Google.")}
-      />
+                const accessToken = res?.access_token;
+                const user = res?.user;
+
+                if (accessToken) {
+                  if (INTERNAL_ROLES.includes(user?.role)) {
+                    setError("Tài khoản nội bộ không được phép đăng nhập tại đây.");
+                    return;
+                  }
+                  login(accessToken, user);
+
+                  const params = new URLSearchParams(location.search);
+                  const returnTo = params.get("returnTo");
+                  navigate(returnTo || "/", { replace: true });
+                } else {
+                  navigate("/verify-otp", {
+                    state: {
+                      id_token: credentialResponse.credential,
+                      flow: "google",
+                    },
+                  });
+                }
+
+              } catch (err) {
+                setError(err?.message || "Đăng nhập Google thất bại.");
+              }
+            }}
+            onError={() => setError("Không thể đăng nhập bằng Google.")}
+          />
+        </div>
       </div>
     </form>
   );

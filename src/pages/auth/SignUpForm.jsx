@@ -58,11 +58,7 @@ export default function SignUpForm() {
         state: { email, password, flow: "signup" },
       });
     } catch (err) {
-      const msgMap = {
-        "Email already exists": "Email này đã được đăng ký. Vui lòng đăng nhập hoặc dùng email khác.",
-        "OTP request limit exceeded (5/day)": "Bạn đã yêu cầu OTP quá nhiều lần. Vui lòng thử lại sau 24 giờ.",
-      };
-      setError(msgMap[err.message] || err.message || "Đăng ký thất bại.");
+      setError(err.message || "Đăng ký thất bại.");
     } finally {
       setLoading(false);
     }
@@ -91,12 +87,7 @@ export default function SignUpForm() {
         });
       }
     } catch (err) {
-      const msgMap = {
-        "Google email not verified": "Email Google của bạn chưa được xác minh.",
-        "Google account already linked to another user": "Tài khoản Google này đã được liên kết với một tài khoản khác.",
-        "User account is deactivated": "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ hỗ trợ.",
-      };
-      setError(msgMap[err?.message] || err?.message || "Đăng ký bằng Google thất bại.");
+      setError(err?.message || "Đăng ký bằng Google thất bại.");
     }
   };
 
@@ -175,14 +166,22 @@ export default function SignUpForm() {
         <div className="flex-1 h-px bg-muted/20" />
       </div>
 
-      <div className="flex justify-center">
-      <GoogleLogin
-        type="icon"
-        shape="circle"
-        size="large"
-        onSuccess={handleGoogleSuccess}
-        onError={() => setError("Không thể đăng ký bằng Google.")}
-      />
+      <div className="relative w-full" style={{ height: 48 }}>
+        {/* Custom visual button */}
+        <div className="absolute inset-0 flex items-center justify-center rounded-xl border border-gray-200 bg-white shadow-sm transition-colors pointer-events-none z-0">
+          <GoogleIcon />
+        </div>
+        {/* Real Google button — invisible but clickable */}
+        <div className="absolute inset-0 z-10 overflow-hidden rounded-xl opacity-[0.01] [&>div]:!w-full [&>div]:!h-full [&_iframe]:!w-full [&_iframe]:!h-full [&_div[role=button]]:!w-full [&_div[role=button]]:!h-full">
+          <GoogleLogin
+            type="standard"
+            theme="outline"
+            size="large"
+            width={400}
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError("Không thể đăng ký bằng Google.")}
+          />
+        </div>
       </div>
     </form>
   );

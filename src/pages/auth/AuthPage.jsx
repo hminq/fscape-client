@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion as Motion } from "framer-motion";
 import { House, Users, Lock, ArrowLeft } from "@phosphor-icons/react";
 import fscapeLogoFull from "../../assets/fscape-logo-full.svg";
-import defaultRoomImg from "../../assets/default_room_img.jpg";
+import loginImg from "../../assets/login_img.jpg";
 import LoginForm from "./LoginForm";
 import SignUpForm from "./SignUpForm";
 
@@ -78,7 +78,7 @@ export default function AuthPage() {
             initial="hidden" animate="visible" variants={fadeUp} custom={1}
           >
             <img
-              src={defaultRoomImg}
+              src={loginImg}
               alt="Student accommodation"
               className="w-full h-48 object-cover"
             />

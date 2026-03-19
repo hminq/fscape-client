@@ -68,11 +68,7 @@ export default function VerifyOtp() {
             login(accessToken, user);
             navigate("/", { replace: true });
         } catch (err) {
-            const msgMap = {
-                "Invalid or expired OTP": "Mã OTP không hợp lệ hoặc đã hết hạn.",
-                "OTP request limit exceeded (5/day)": "Bạn đã yêu cầu OTP quá nhiều lần. Vui lòng thử lại sau 24 giờ.",
-            };
-            setError(msgMap[err?.message] || err?.message || "Xác minh thất bại.");
+            setError(err?.message || "Xác minh thất bại.");
         } finally {
             setLoading(false);
         }
@@ -96,7 +92,7 @@ export default function VerifyOtp() {
                 </p>
 
                 <Input
-                    label="OTP Code"
+                    label="Mã OTP"
                     placeholder="Nhập mã OTP"
                     value={otp}
                     onValueChange={setOtp}
