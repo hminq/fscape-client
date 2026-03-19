@@ -115,7 +115,7 @@ function RoomBookingContent() {
     if (!rentalMonths) return "-";
     return formatDisplayDate(endDate);
   }, [rentalMonths, endDate]);
-  const depositPreview = basePrice ? formatVnd(basePrice) : "-";
+
 
   const handleProceedDeposit = () => {
     if (!isReadyToDeposit) return;
@@ -169,8 +169,17 @@ function RoomBookingContent() {
             Nhận phòng từ 3 đến 10 ngày kể từ hôm nay
           </p>
 
-          <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
-            {calendarMonths.map((monthStart, monthIdx) => {
+          <div className="mt-6 border-t border-muted/15 pt-6">
+            <p className="mb-2 text-center text-sm text-secondary">
+              Ngày nhận phòng
+            </p>
+            <p className="mb-6 text-center text-2xl font-bold text-olive">
+              {checkInDate ? formatDisplayDate(checkInDate) : "—"}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            {calendarMonths.map((monthStart) => {
               const firstDay = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
               const startWeekDay = firstDay.getDay();
               const daysInMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
@@ -184,26 +193,6 @@ function RoomBookingContent() {
 
               return (
                 <div key={monthStart.toISOString()}>
-                  <div className="mb-4 rounded-2xl bg-primary/5 p-4 min-h-[74px]">
-                    {monthIdx === 0 ? (
-                      <>
-                        <p className="text-xs uppercase tracking-wide text-secondary">Ngày nhận phòng</p>
-                        <p className="mt-1 text-lg font-semibold text-primary">
-                          {formatDisplayDate(checkInDate)}
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-xs uppercase tracking-wide text-secondary">
-                          Ngày kết thúc dự kiến
-                        </p>
-                        <p className="mt-1 text-lg font-semibold text-primary">
-                          {formatDisplayDate(endDate)}
-                        </p>
-                      </>
-                    )}
-                  </div>
-
                   <p className="mb-4 text-center text-xl font-semibold capitalize text-primary">
                     {MONTH_FORMATTER.format(monthStart)}
                   </p>
@@ -232,7 +221,7 @@ function RoomBookingContent() {
                             onClick={() => setCheckInDate(value)}
                             className={`h-10 w-10 rounded-full text-sm font-semibold transition-colors ${
                               selected
-                                ? "bg-primary text-white"
+                                ? "bg-olive text-primary"
                                 : disabled
                                   ? "cursor-not-allowed text-secondary/30"
                                   : "text-secondary hover:bg-primary/5 hover:text-primary"
@@ -382,6 +371,9 @@ function RoomBookingContent() {
             <p className="text-sm text-white/70">
               {room.room_number ? `Phòng ${room.room_number}` : "-"} · {room.building?.name || "-"}
             </p>
+            {basePrice > 0 && (
+              <p className="text-sm font-semibold text-olive">{formatVnd(basePrice)}/tháng</p>
+            )}
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-white/60">Ngày nhận phòng</p>
@@ -393,8 +385,6 @@ function RoomBookingContent() {
             {billingCycleLabel && (
               <p className="text-sm text-white/70">Chu kỳ: {billingCycleLabel}</p>
             )}
-            <p className="text-sm text-white/70">Giá từ {formatVnd(basePrice)}</p>
-            <p className="text-sm text-white/70">Cọc dự kiến: {depositPreview}</p>
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-white/60">Ngày trả phòng</p>

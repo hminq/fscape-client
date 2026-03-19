@@ -123,12 +123,6 @@ function RoomCheckoutContent() {
 
   const termLabel = rentalTerm ? `${rentalTerm} tháng` : "-";
   const billingCycleLabel = BILLING_CYCLE_LABELS[billingCycle] || "-";
-  const depositLabel = useMemo(() => {
-    const base = Number(roomType?.base_price || room?.room_type?.base_price || 0);
-    if (!base) return "-";
-    return formatVnd(base);
-  }, [roomType, room]);
-
   const [submitting, setSubmitting] = useState(false);
 
   const [errors, setErrors] = useState({});
@@ -352,9 +346,6 @@ function RoomCheckoutContent() {
               </p>
               <p>
                 <span className="font-semibold text-primary">Chu kỳ thanh toán:</span> {billingCycleLabel}
-              </p>
-              <p>
-                <span className="font-semibold text-primary">Cọc dự kiến:</span> {depositLabel}
               </p>
             </div>
           </aside>
