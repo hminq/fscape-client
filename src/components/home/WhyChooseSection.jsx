@@ -1,16 +1,18 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@heroui/react";
 import { motion as Motion } from "framer-motion";
 import { ArrowRight } from "@phosphor-icons/react";
 import whyChooseImg from "../../assets/why_choose_fscape_img.jpg";
 
 export default function WhyChooseSection() {
+  const navigate = useNavigate();
   return (
     <section className="relative h-[100vh] min-h-[700px]">
       {/* Background image */}
       <div className="sticky top-0 h-screen overflow-hidden">
         <img
           src={whyChooseImg}
-          alt="FScape building"
+          alt="Tòa nhà FScape"
           className="w-full h-full object-cover"
         />
         {/* Dark overlay for readability */}
@@ -62,6 +64,10 @@ export default function WhyChooseSection() {
                     size="lg"
                     endContent={<ArrowRight className="w-4 h-4" />}
                     className="bg-olive text-primary font-bold text-sm px-8 h-11"
+                    onPress={() => {
+                      const el = document.getElementById("discover-section");
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
+                    }}
                   >
                     Tìm phòng phù hợp
                   </Button>
@@ -70,6 +76,7 @@ export default function WhyChooseSection() {
                     radius="full"
                     size="lg"
                     className="border-primary text-primary font-semibold text-sm px-8 h-11 hover:bg-primary hover:text-white transition-colors"
+                    onPress={() => navigate("/rooms")}
                   >
                     Đặt phòng ngay
                   </Button>

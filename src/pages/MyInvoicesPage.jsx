@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { CircleNotch, ArrowLeft, CalendarDots, Receipt, CreditCard } from "@phosphor-icons/react";
+import { CircleNotch, ArrowLeft, CalendarDots, Receipt, CreditCard, MagnifyingGlass, FunnelSimple, CaretDown, CaretUp, Tag } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
@@ -15,12 +15,73 @@ const STATUS_CONFIG = {
   CANCELLED: { text: "Đã hủy", className: "bg-gray-100 text-gray-500" },
 };
 
-const BILLING_CYCLE_LABELS = {
-  CYCLE_1M: "Hàng tháng",
-  CYCLE_3M: "3 tháng",
-  CYCLE_6M: "6 tháng",
-  ALL_IN: "Trả trọn gói",
-};
+const STATUS_FILTERS = [
+  { value: "all", label: "Tất cả" },
+  { value: "unpaid", label: "Cần thanh toán" },
+  { value: "PAID", label: "Đã thanh toán" },
+  { value: "CANCELLED", label: "Đã hủy" },
+];
+
+const TYPE_FILTERS = [
+  { value: "all", label: "Tất cả loại" },
+  { value: "RENT", label: "Tiền thuê" },
+  { value: "SERVICE", label: "Dịch vụ" },
+  { value: "SETTLEMENT", label: "Thanh toán cuối kỳ" },
+];
+
+const UNPAID_STATUSES = ["UNPAID", "OVERDUE"];
+
+function FilterDropdown({ options, value, onChange, icon: Icon, placeholder, align = "right" }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  const activeLabel = options.find((o) => o.value === value)?.label || placeholder;
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="inline-flex items-center gap-2 rounded-full border border-muted/30 bg-white px-4 py-2 text-sm font-semibold text-secondary transition-colors hover:border-primary hover:text-primary"
+      >
+        {Icon && <Icon className="h-4 w-4" />}
+        {activeLabel}
+        {open ? <CaretUp className="h-3.5 w-3.5" /> : <CaretDown className="h-3.5 w-3.5" />}
+      </button>
+
+      {open && (
+        <div className={`absolute ${align === "left" ? "left-0" : "right-0"} z-20 mt-2 max-h-64 w-48 overflow-y-auto overflow-x-hidden rounded-xl border border-muted/20 bg-white shadow-lg`}>
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+              className={`flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors ${
+                value === option.value
+                  ? "bg-primary text-white font-semibold"
+                  : "text-secondary hover:bg-primary/5 hover:text-primary"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function MyInvoicesContent() {
   const navigate = useNavigate();
@@ -31,6 +92,11 @@ function MyInvoicesContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [payingId, setPayingId] = useState(null);
+
+  // Filters
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -75,18 +141,39 @@ function MyInvoicesContent() {
     }
   };
 
-  const unpaid = useMemo(
-    () => invoices.filter((inv) => inv.status === "UNPAID" || inv.status === "OVERDUE"),
-    [invoices]
-  );
-  const paid = useMemo(
-    () => invoices.filter((inv) => inv.status === "PAID"),
-    [invoices]
-  );
-  const cancelled = useMemo(
-    () => invoices.filter((inv) => inv.status === "CANCELLED"),
-    [invoices]
-  );
+  const filtered = useMemo(() => {
+    let result = [...invoices];
+
+    // Search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter((inv) => {
+        const room = inv.contract?.room;
+        const building = room?.building;
+        return (
+          inv.invoice_number?.toLowerCase().includes(q) ||
+          room?.room_number?.toLowerCase().includes(q) ||
+          building?.name?.toLowerCase().includes(q)
+        );
+      });
+    }
+
+    // Status filter
+    if (statusFilter === "unpaid") {
+      result = result.filter((inv) => UNPAID_STATUSES.includes(inv.status));
+    } else if (statusFilter !== "all") {
+      result = result.filter((inv) => inv.status === statusFilter);
+    }
+
+    // Type filter
+    if (typeFilter !== "all") {
+      result = result.filter((inv) => inv.invoice_type === typeFilter);
+    }
+
+    return result;
+  }, [invoices, searchQuery, statusFilter, typeFilter]);
+
+  const unpaidCount = invoices.filter((inv) => UNPAID_STATUSES.includes(inv.status)).length;
 
   if (loading) {
     return (
@@ -106,8 +193,22 @@ function MyInvoicesContent() {
         Quay lại
       </button>
 
-      <h1 className="text-3xl font-bold text-primary mb-2">Hóa đơn của tôi</h1>
-      <p className="text-secondary mb-8">Theo dõi và thanh toán các hóa đơn thuê phòng.</p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-primary mb-1">Hóa đơn của tôi</h1>
+          <p className="text-secondary text-sm">
+            {invoices.length > 0
+              ? `${invoices.length} hóa đơn`
+              : "Theo dõi và thanh toán các hóa đơn thuê phòng."}
+            {unpaidCount > 0 && (
+              <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                {unpaidCount} cần thanh toán
+              </span>
+            )}
+          </p>
+        </div>
+      </div>
 
       {error && (
         <div className="mb-6 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
@@ -126,46 +227,71 @@ function MyInvoicesContent() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-10">
-          {unpaid.length > 0 && (
-            <div>
-              <h2 className="text-lg font-bold text-primary mb-4">Cần thanh toán</h2>
-              <div className="space-y-4">
-                {unpaid.map((inv) => (
-                  <InvoiceCard
-                    key={inv.id}
-                    invoice={inv}
-                    highlighted={inv.id === highlightId}
-                    onPay={handlePay}
-                    paying={payingId === inv.id}
-                  />
-                ))}
-              </div>
+        <>
+          {/* Toolbar: Search + Filters */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+            {/* Search */}
+            <div className="relative flex-1">
+              <MagnifyingGlass className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-secondary/50" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Tìm theo mã hóa đơn, phòng, tòa nhà..."
+                className="w-full rounded-full border border-muted/30 bg-white py-2 pl-10 pr-4 text-sm text-primary outline-none transition-colors placeholder:text-secondary/40 focus:border-primary hover:border-primary"
+              />
             </div>
-          )}
 
-          {paid.length > 0 && (
-            <div>
-              <h2 className="text-lg font-bold text-primary mb-4">Đã thanh toán</h2>
-              <div className="space-y-4">
-                {paid.map((inv) => (
-                  <InvoiceCard key={inv.id} invoice={inv} highlighted={inv.id === highlightId} />
-                ))}
-              </div>
-            </div>
-          )}
+            <div className="flex items-center gap-2">
+              {/* Status filter */}
+              <FilterDropdown
+                options={STATUS_FILTERS}
+                value={statusFilter}
+                onChange={setStatusFilter}
+                icon={FunnelSimple}
+                placeholder="Tất cả"
+                align="right"
+              />
 
-          {cancelled.length > 0 && (
-            <div>
-              <h2 className="text-lg font-bold text-primary mb-4">Đã hủy</h2>
-              <div className="space-y-4">
-                {cancelled.map((inv) => (
-                  <InvoiceCard key={inv.id} invoice={inv} highlighted={inv.id === highlightId} />
-                ))}
-              </div>
+              {/* Type filter */}
+              <FilterDropdown
+                options={TYPE_FILTERS}
+                value={typeFilter}
+                onChange={setTypeFilter}
+                icon={Tag}
+                placeholder="Tất cả loại"
+                align="right"
+              />
+            </div>
+          </div>
+
+          {/* Results */}
+          {filtered.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-secondary">Không tìm thấy hóa đơn phù hợp.</p>
+              {(searchQuery || statusFilter !== "all" || typeFilter !== "all") && (
+                <button
+                  onClick={() => { setSearchQuery(""); setStatusFilter("all"); setTypeFilter("all"); }}
+                  className="mt-3 text-sm font-medium text-primary hover:underline"
+                >
+                  Xóa bộ lọc
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filtered.map((inv) => (
+                <InvoiceCard
+                  key={inv.id}
+                  invoice={inv}
+                  highlighted={inv.id === highlightId}
+                  onPay={handlePay}
+                  paying={payingId === inv.id}
+                />
+              ))}
             </div>
           )}
-        </div>
+        </>
       )}
     </section>
   );
@@ -177,101 +303,103 @@ function InvoiceCard({ invoice, highlighted, onPay, paying }) {
   const room = contract?.room;
   const building = room?.building;
   const canPay = invoice.status === "UNPAID" || invoice.status === "OVERDUE";
-  const billingCycleLabel = BILLING_CYCLE_LABELS[contract?.billing_cycle] || "";
 
   const isOverdue = invoice.status === "OVERDUE" || (
     invoice.status === "UNPAID" && invoice.due_date && new Date(invoice.due_date) < new Date()
   );
 
+  const typeLabel = invoice.invoice_type === "SERVICE"
+    ? "Dịch vụ"
+    : invoice.invoice_type === "SETTLEMENT"
+      ? "Cuối kỳ"
+      : "Tiền thuê";
+
   return (
     <div
       id={`invoice-${invoice.id}`}
-      className={`rounded-2xl border bg-white p-5 transition-all ${
+      className={`flex flex-col sm:flex-row gap-4 rounded-2xl border bg-white p-5 transition-all ${
         highlighted
           ? "border-olive ring-2 ring-olive/20 shadow-md"
-          : "border-gray-200 hover:shadow-sm"
+          : canPay
+            ? "border-amber-200 bg-amber-50/30 hover:shadow-sm"
+            : "border-gray-200 hover:shadow-sm"
       }`}
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        {/* Left side: invoice info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-2">
-            <Receipt className="size-5 text-primary shrink-0" />
-            <h3 className="text-base font-bold text-primary truncate">
-              {invoice.invoice_number}
-            </h3>
-            <span className={`shrink-0 rounded-full px-3 py-0.5 text-xs font-semibold ${statusInfo.className}`}>
-              {statusInfo.text}
-            </span>
-          </div>
+      {/* Icon */}
+      <div className="hidden sm:flex items-center">
+        <Receipt className="size-5 text-olive shrink-0" />
+      </div>
 
-          {/* Room & building */}
-          {room && (
-            <p className="text-sm text-secondary mb-2">
-              Phòng {room.room_number} · {building?.name || ""}
-              {billingCycleLabel && ` · ${billingCycleLabel}`}
-            </p>
-          )}
-
-          {/* Billing period & due date */}
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-secondary">
-            <span className="flex items-center gap-1">
-              <CalendarDots className="size-3.5 text-olive" />
-              Kỳ: {formatDisplayDate(invoice.billing_period_start)} – {formatDisplayDate(invoice.billing_period_end)}
-            </span>
-            <span className={`flex items-center gap-1 ${isOverdue ? "text-red-500 font-semibold" : ""}`}>
-              <CalendarDots className="size-3.5" />
-              Hạn: {formatDisplayDate(invoice.due_date)}
-              {isOverdue && " (Quá hạn)"}
-            </span>
-          </div>
-
-          {/* Amount breakdown */}
-          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-secondary border-t border-gray-100 pt-3">
-            <span>Tiền thuê: {formatVnd(invoice.room_rent)}</span>
-            {Number(invoice.request_fees) > 0 && (
-              <span>Phí dịch vụ: {formatVnd(invoice.request_fees)}</span>
-            )}
-            {Number(invoice.penalty_fees) > 0 && (
-              <span className="text-red-500">Phí phạt: {formatVnd(invoice.penalty_fees)}</span>
-            )}
-          </div>
-
-          {/* Paid date */}
-          {invoice.paid_at && (
-            <p className="text-xs text-green-600 mt-2">
-              Thanh toán lúc: {formatDisplayDate(invoice.paid_at)}
-            </p>
-          )}
+      {/* Invoice info */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h3 className="text-base font-bold text-primary truncate">
+            {invoice.invoice_number}
+          </h3>
+          <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+            {typeLabel}
+          </span>
         </div>
 
-        {/* Right side: total + pay button */}
-        <div className="flex flex-col items-end gap-3 shrink-0">
-          <div className="text-right">
-            <p className="text-xs text-secondary">Tổng cộng</p>
-            <p className="text-xl font-bold text-primary">{formatVnd(invoice.total_amount)}</p>
-          </div>
+        {/* Room & building */}
+        {room && (
+          <p className="text-xs text-secondary mt-1">
+            Phòng {room.room_number} - {building?.name || ""}
+          </p>
+        )}
 
-          {canPay && onPay && (
-            <button
-              type="button"
-              disabled={paying}
-              onClick={() => onPay(invoice.id)}
-              className={`flex items-center gap-2 h-10 rounded-full px-6 text-sm font-semibold transition-colors ${
-                paying
-                  ? "bg-muted/30 text-secondary/50 cursor-not-allowed"
-                  : "bg-primary text-white hover:bg-primary/90"
-              }`}
-            >
-              {paying ? (
-                <CircleNotch className="size-4 animate-spin" />
-              ) : (
-                <CreditCard className="size-4" />
-              )}
-              Thanh toán
-            </button>
-          )}
+        {/* Billing period & due date */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-secondary mt-1">
+          <span className="flex items-center gap-1">
+            <CalendarDots className="size-3" />
+            Kỳ: {formatDisplayDate(invoice.billing_period_start)} – {formatDisplayDate(invoice.billing_period_end)}
+          </span>
+          <span className={`flex items-center gap-1 ${isOverdue ? "text-red-500 font-semibold" : ""}`}>
+            <CalendarDots className="size-3" />
+            Hạn: {formatDisplayDate(invoice.due_date)}
+            {isOverdue && " (Quá hạn)"}
+          </span>
         </div>
+
+        {/* Status badge */}
+        <span className={`inline-flex mt-2 shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${statusInfo.className}`}>
+          {statusInfo.text}
+        </span>
+
+        {/* Paid date */}
+        {invoice.paid_at && (
+          <p className="text-xs text-green-600 mt-1">
+            Thanh toán lúc: {formatDisplayDate(invoice.paid_at)}
+          </p>
+        )}
+      </div>
+
+      {/* Right side: total + pay button */}
+      <div className="flex flex-col items-end gap-2 shrink-0 sm:ml-auto">
+        <div className="text-right">
+          <p className="text-[11px] text-secondary">Tổng cộng</p>
+          <p className="text-xl font-extrabold text-primary">{formatVnd(invoice.total_amount)}</p>
+        </div>
+
+        {canPay && onPay && (
+          <button
+            type="button"
+            disabled={paying}
+            onClick={() => onPay(invoice.id)}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              paying
+                ? "bg-muted/30 text-secondary/50 cursor-not-allowed"
+                : "bg-primary text-white hover:bg-primary/90"
+            }`}
+          >
+            {paying ? (
+              <CircleNotch className="size-4 animate-spin" />
+            ) : (
+              <CreditCard className="size-4" />
+            )}
+            Thanh toán
+          </button>
+        )}
       </div>
     </div>
   );

@@ -141,7 +141,7 @@ export default function AppNavbar() {
               >
                 <img
                   src={user?.avatar_url || defaultAvatar}
-                  alt="User avatar"
+                  alt="Ảnh đại diện"
                   className="size-10 rounded-full border border-white/60 object-cover shadow-sm bg-white"
                 />
               </button>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { CheckCircle, CircleNotch, ArrowCounterClockwise, Warning } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -215,11 +215,13 @@ function ContractSigningPage() {
       {/* Header */}
       <header className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-6 py-4">
-          <img
-            src="https://res.cloudinary.com/dz0rxiivc/image/upload/v1772824029/fscape-logo_qkmcfz.svg"
-            alt="FScape"
-            className="h-8"
-          />
+          <Link to="/" className="transition-opacity hover:opacity-70">
+            <img
+              src="https://res.cloudinary.com/dz0rxiivc/image/upload/v1772824029/fscape-logo_qkmcfz.svg"
+              alt="FScape"
+              className="h-8"
+            />
+          </Link>
           <div className="h-6 w-px bg-gray-300" />
           <span className="text-sm font-semibold text-primary">Ký hợp đồng</span>
         </div>

@@ -284,7 +284,7 @@ function RoomDetailContent() {
               >
                 <img
                   src={img || defaultRoomImg}
-                  alt={`Room gallery ${idx + 1}`}
+                  alt={`Ảnh phòng ${idx + 1}`}
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = defaultRoomImg;

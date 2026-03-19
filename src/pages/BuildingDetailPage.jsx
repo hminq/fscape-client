@@ -388,6 +388,12 @@ function BuildingDetailContent() {
                       <span className="font-semibold text-primary">Địa chỉ:</span>{" "}
                       {building.address || "Đang cập nhật"}
                     </p>
+                    {building.description && (
+                      <p className="md:col-span-2 leading-relaxed">
+                        <span className="font-semibold text-primary">Mô tả:</span>{" "}
+                        {building.description}
+                      </p>
+                    )}
                   </div>
 
                   {/* Map */}
@@ -439,7 +445,7 @@ function BuildingDetailContent() {
                     {facilities.map((facility) => (
                       <li key={facility.id} className="relative pl-5">
                         <span className="absolute left-0 top-2 h-2 w-2 rounded-full bg-olive" />
-                        <p className="text-xl font-semibold text-primary">{facility.name}</p>
+                        <p className="text-base font-semibold text-primary">{facility.name}</p>
                       </li>
                     ))}
                   </ul>
