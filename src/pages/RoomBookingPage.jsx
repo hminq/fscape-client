@@ -104,6 +104,13 @@ function RoomBookingContent() {
   const rentalLabel = rentalMonths ? `${rentalMonths} tháng` : "-";
   const basePrice = Number(roomType?.base_price || room?.room_type?.base_price || 0);
   const endDate = useMemo(() => addMonthsToDate(checkInDate, rentalMonths), [checkInDate, rentalMonths]);
+
+  useEffect(() => {
+    if (checkInDate && rentalMonths && endDate) {
+      const el = document.getElementById("end-date-calendar");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [rentalMonths, checkInDate, endDate]);
   const moveOutDateLabel = useMemo(() => {
     if (!rentalMonths) return "-";
     return formatDisplayDate(endDate);
@@ -268,8 +275,83 @@ function RoomBookingContent() {
             </div>
           </div>
 
+          {/* End-date calendar preview */}
+          {checkInDate && rentalMonths && endDate && (() => {
+            const [ey, em, ed] = endDate.split("-").map(Number);
+            const endDateObj = new Date(ey, em - 1, ed);
+            const endMonthStart = new Date(ey, em - 1, 1);
+            const prevMonthStart = new Date(ey, em - 2, 1);
+            const endCalendarMonths = [prevMonthStart, endMonthStart];
+
+            return (
+              <div id="end-date-calendar" className="mt-8 border-t border-muted/15 pt-8">
+                <p className="mb-2 text-center text-sm text-secondary">
+                  Ngày kết thúc hợp đồng dự kiến
+                </p>
+                <p className="mb-6 text-center text-2xl font-bold text-olive">
+                  {formatDisplayDate(endDate)}
+                </p>
+
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                  {endCalendarMonths.map((monthStart) => {
+                    const firstDay = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
+                    const startWeekDay = firstDay.getDay();
+                    const daysInMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
+                    const cells = [];
+
+                    for (let i = 0; i < startWeekDay; i += 1) cells.push(null);
+                    for (let d = 1; d <= daysInMonth; d += 1) {
+                      cells.push(new Date(monthStart.getFullYear(), monthStart.getMonth(), d));
+                    }
+                    while (cells.length % 7 !== 0) cells.push(null);
+
+                    return (
+                      <div key={monthStart.toISOString()}>
+                        <p className="mb-4 text-center text-xl font-semibold capitalize text-primary">
+                          {MONTH_FORMATTER.format(monthStart)}
+                        </p>
+                        <div className="grid grid-cols-7 gap-2">
+                          {WEEK_DAYS.map((day) => (
+                            <p key={day} className="text-center text-sm font-semibold text-secondary">
+                              {day}
+                            </p>
+                          ))}
+
+                          {cells.map((date, idx) => {
+                            if (!date) {
+                              return <div key={`end-empty-${idx}`} className="h-10" />;
+                            }
+
+                            const isEndDate =
+                              date.getFullYear() === endDateObj.getFullYear() &&
+                              date.getMonth() === endDateObj.getMonth() &&
+                              date.getDate() === endDateObj.getDate();
+
+                            return (
+                              <div key={`end-${formatDateValue(date)}`} className="flex items-center justify-center">
+                                <span
+                                  className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold ${
+                                    isEndDate
+                                      ? "bg-olive text-primary"
+                                      : "text-secondary/40"
+                                  }`}
+                                >
+                                  {date.getDate()}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
           {rentalMonths && (
-            <div className="mt-6">
+            <div className="mt-8 border-t border-muted/15 pt-8">
               <p className="mb-3 text-sm font-semibold text-secondary">Chu kỳ thanh toán</p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {availableCycles.map((option) => (
