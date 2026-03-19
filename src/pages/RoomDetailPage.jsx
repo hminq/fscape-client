@@ -139,7 +139,7 @@ function RoomDetailContent() {
       <div className="mx-auto flex min-h-[60vh] max-w-3xl flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-xl font-semibold text-primary">{error || "Đã có lỗi xảy ra."}</p>
         <Link
-          to={`/buildings/${buildingId}/rooms`}
+          to={`/rooms?building_id=${buildingId}`}
           className="rounded-full border border-primary/50 px-6 py-2 text-sm font-semibold text-primary"
         >
           Quay lại

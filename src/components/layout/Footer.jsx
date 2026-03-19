@@ -1,11 +1,8 @@
 import { Phone, Envelope } from "@phosphor-icons/react";
-import { useLocations } from "@/contexts/LocationsContext";
 import { socials } from "@/components/icons/SocialIcons";
 import fscapeLogoFull from "../../assets/fscape-logo-full.svg";
 
 export default function Footer() {
-  const { locations } = useLocations();
-
   return (
     <footer className="bg-primary text-white">
       {/* Top section — Brand + links + socials */}
@@ -80,36 +77,6 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-        </div>
-      </div>
-
-      {/* Divider */}
-      <div className="max-w-7xl mx-auto px-6 md:px-12">
-        <div className="border-t border-white/10" />
-      </div>
-
-      {/* Bottom section — Location buildings grid */}
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-10 md:py-14">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 lg:gap-8">
-          {locations.map((loc) => (
-            <div key={loc.id}>
-              <p className="inline-block text-sm font-bold uppercase tracking-wider text-primary bg-olive px-2 py-0.5 mb-5">
-                {loc.name}
-              </p>
-              <ul className="flex flex-col gap-2.5">
-                {(loc.buildings || []).slice(0, 5).map((b) => (
-                  <li key={b.id}>
-                    <a
-                      href="#"
-                      className="nav-underline inline-block text-sm text-white/50 hover:text-white pb-0.5 transition-colors"
-                    >
-                      {b.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
         </div>
       </div>
 

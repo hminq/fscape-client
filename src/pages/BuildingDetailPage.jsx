@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Bathtub, Bed, CircleNotch, MapPin, Ruler, Users } from "@phosphor-icons/react";
+import { Bathtub, Bed, CircleNotch, MapPin, Ruler, Users, NavigationArrow } from "@phosphor-icons/react";
+import { Map as MapView, MapMarker, MarkerContent, MapControls } from "@/components/ui/map";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider, useLocations } from "@/contexts/LocationsContext";
@@ -367,24 +368,54 @@ function BuildingDetailContent() {
                 ref={(node) => {
                   sectionRefs.current["Thông tin"] = node;
                 }}
-                className="scroll-mt-36 max-w-4xl"
+                className="scroll-mt-36"
               >
                 <div className="flex items-center gap-4 pb-3">
                   <h2 className="text-3xl font-bold text-secondary md:text-4xl">Thông tin</h2>
                   <span className="h-px flex-1 bg-muted/30" />
                 </div>
-                <div className="mt-6 grid grid-cols-1 gap-4 text-base text-secondary md:grid-cols-2 md:text-lg">
-                  <p>
-                    <span className="font-semibold text-primary">Tòa nhà:</span> {building.name}
-                  </p>
-                  <p>
-                    <span className="font-semibold text-primary">Khu vực:</span>{" "}
-                    {building.location?.name || "Đang cập nhật"}
-                  </p>
-                  <p className="md:col-span-2">
-                    <span className="font-semibold text-primary">Địa chỉ:</span>{" "}
-                    {building.address || "Đang cập nhật"}
-                  </p>
+
+                <div className={`mt-6 grid grid-cols-1 gap-8 ${building.latitude && building.longitude ? "lg:grid-cols-[1fr_360px]" : ""}`}>
+                  <div className="grid grid-cols-1 gap-4 text-base text-secondary md:grid-cols-2 md:text-lg self-start">
+                    <p>
+                      <span className="font-semibold text-primary">Tòa nhà:</span> {building.name}
+                    </p>
+                    <p>
+                      <span className="font-semibold text-primary">Khu vực:</span>{" "}
+                      {building.location?.name || "Đang cập nhật"}
+                    </p>
+                    <p className="md:col-span-2">
+                      <span className="font-semibold text-primary">Địa chỉ:</span>{" "}
+                      {building.address || "Đang cập nhật"}
+                    </p>
+                  </div>
+
+                  {/* Map */}
+                  {building.latitude && building.longitude && (
+                    <div className="aspect-square overflow-hidden rounded-2xl border border-muted/20">
+                      <MapView
+                        center={[Number(building.longitude), Number(building.latitude)]}
+                        zoom={15}
+                        className="h-full w-full"
+                        theme="light"
+                      >
+                        <MapMarker
+                          longitude={Number(building.longitude)}
+                          latitude={Number(building.latitude)}
+                        >
+                          <MarkerContent>
+                            <div className="flex items-center justify-center">
+                              <span className="absolute h-8 w-8 animate-ping rounded-full bg-olive/30" />
+                              <span className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-olive shadow-lg">
+                                <NavigationArrow className="h-3 w-3 text-primary" weight="fill" />
+                              </span>
+                            </div>
+                          </MarkerContent>
+                        </MapMarker>
+                        <MapControls position="bottom-right" showZoom />
+                      </MapView>
+                    </div>
+                  )}
                 </div>
               </section>
 
@@ -393,7 +424,7 @@ function BuildingDetailContent() {
                 ref={(node) => {
                   sectionRefs.current["Tiện ích"] = node;
                 }}
-                className="scroll-mt-36 mt-14 border-t border-muted/20 pt-14"
+                className="scroll-mt-36 mt-14 pt-14"
               >
                 <div className="flex items-center gap-4 pb-3">
                   <h2 className="text-3xl font-bold text-secondary md:text-4xl">Tiện ích</h2>
@@ -420,7 +451,7 @@ function BuildingDetailContent() {
                 ref={(node) => {
                   sectionRefs.current["Phòng"] = node;
                 }}
-                className="scroll-mt-36 mt-14 border-t border-muted/20 pt-14"
+                className="scroll-mt-36 mt-14 pt-14"
               >
                 <div className="flex items-center gap-4 pb-3">
                   <h2 className="text-3xl font-bold text-secondary md:text-4xl">Phòng</h2>

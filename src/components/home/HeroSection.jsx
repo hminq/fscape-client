@@ -93,8 +93,8 @@ export default function HeroSection() {
                 endContent={<ArrowRight className="w-5 h-5" />}
                 className="bg-olive text-primary font-bold text-base px-10 h-12"
                 onPress={() => {
-                  const section = document.getElementById("hero-locations-section");
-                  if (section) section.scrollIntoView({ behavior: 'smooth' });
+                  const section = document.getElementById("discover-section");
+                  if (section) section.scrollIntoView({ behavior: "smooth" });
                 }}
               >
                 Khám phá ngay

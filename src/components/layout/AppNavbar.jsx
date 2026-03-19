@@ -151,9 +151,9 @@ export default function AppNavbar() {
                   radius="full"
                   className="bg-olive text-primary font-semibold text-sm px-6 h-10"
                   onPress={() => {
-                    const section = document.getElementById("hero-locations-section");
+                    const section = document.getElementById("discover-section");
                     if (section) {
-                      section.scrollIntoView({ behavior: 'smooth' });
+                      section.scrollIntoView({ behavior: "smooth" });
                     } else {
                       navigate("/");
                     }

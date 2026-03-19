@@ -1,8 +1,7 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import AuthPage from "./pages/auth/AuthPage";
 import BuildingDetailPage from "./pages/BuildingDetailPage";
-import BuildingRoomsPage from "./pages/BuildingRoomsPage";
 import RoomDetailPage from "./pages/RoomDetailPage";
 import RoomBookingPage from "./pages/RoomBookingPage";
 import RoomCheckoutPage from "./pages/RoomCheckoutPage";
@@ -15,6 +14,11 @@ import MyBookingsPage from "./pages/MyBookingsPage";
 import MyContractsPage from "./pages/MyContractsPage";
 import MyInvoicesPage from "./pages/MyInvoicesPage";
 import VerifyOtp from "./pages/auth/VerifyOtp";
+function BuildingRoomsRedirect() {
+  const { buildingId } = useParams();
+  return <Navigate to={`/rooms?building_id=${buildingId}`} replace />;
+}
+
 function App() {
   return (
     <Routes>
@@ -22,7 +26,7 @@ function App() {
       <Route path="/login" element={<AuthPage />} />
       <Route path="/rooms" element={<RoomsPage />} />
       <Route path="/buildings/:buildingId" element={<BuildingDetailPage />} />
-      <Route path="/buildings/:buildingId/rooms" element={<BuildingRoomsPage />} />
+      <Route path="/buildings/:buildingId/rooms" element={<BuildingRoomsRedirect />} />
       <Route path="/buildings/:buildingId/rooms/:roomId" element={<RoomDetailPage />} />
       <Route path="/buildings/:buildingId/rooms/:roomId/booking" element={<RoomBookingPage />} />
       <Route path="/buildings/:buildingId/rooms/:roomId/checkout" element={<RoomCheckoutPage />} />

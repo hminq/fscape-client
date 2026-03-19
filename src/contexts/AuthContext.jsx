@@ -2,17 +2,34 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext(null);
 
+const INTERNAL_ROLES = ["ADMIN", "BUILDING_MANAGER", "STAFF"];
+
+const isClientRole = (userData) =>
+  userData?.role && !INTERNAL_ROLES.includes(userData.role);
+
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [token, setToken] = useState(() => {
+    const stored = localStorage.getItem("token");
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+      if (storedUser && !isClientRole(storedUser)) return null;
+    } catch { /* ignore */ }
+    return stored;
+  });
   const [user, setUser] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("user") || "null");
+      const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+      if (storedUser && !isClientRole(storedUser)) return null;
+      return storedUser;
     } catch {
       return null;
     }
   });
 
   const login = (accessToken, userData) => {
+    if (userData && !isClientRole(userData)) {
+      throw new Error("Tài khoản nội bộ không được phép đăng nhập tại đây");
+    }
     localStorage.setItem("token", accessToken);
     if (userData) {
       localStorage.setItem("user", JSON.stringify(userData));
@@ -30,15 +47,22 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === "token") {
-        setToken(e.newValue);
-      }
       if (e.key === "user") {
         try {
-          setUser(JSON.parse(e.newValue || "null"));
+          const newUser = JSON.parse(e.newValue || "null");
+          if (newUser && !isClientRole(newUser)) {
+            setToken(null);
+            setUser(null);
+            return;
+          }
+          setUser(newUser);
+          setToken(localStorage.getItem("token"));
         } catch {
           setUser(null);
         }
+      }
+      if (e.key === "token") {
+        setToken(e.newValue);
       }
     };
     window.addEventListener("storage", handler);

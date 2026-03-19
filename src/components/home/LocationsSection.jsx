@@ -153,7 +153,7 @@ export default function LocationsSection() {
                                 radius="full"
                                 size="sm"
                                 className="bg-olive text-primary font-semibold text-xs px-5 h-9 hover:bg-tea"
-                                onPress={() => navigate(`/buildings/${building.id}/rooms`)}
+                                onPress={() => navigate(`/rooms?building_id=${building.id}`)}
                               >
                                 Đặt phòng
                               </Button>
