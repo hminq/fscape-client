@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { CircleNotch } from "@phosphor-icons/react";
+import { toast } from "@heroui/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 import { api } from "@/lib/api";
 import { formatVnd, formatDisplayDate } from "@/lib/formatters";
 import { useAuth } from "@/contexts/AuthContext";
+import { BILLING_CYCLE_LABELS, GENDER_LABELS } from "@/lib/constants";
 import defaultRoomImg from "@/assets/default_room_img.jpg";
 
 const STEPS = [
@@ -114,12 +116,7 @@ function RoomCheckoutContent() {
     [room]
   );
 
-  const BILLING_CYCLE_LABELS = {
-    CYCLE_1M: "Hàng tháng",
-    CYCLE_3M: "3 tháng",
-    CYCLE_6M: "6 tháng",
-    ALL_IN: "Trả trọn gói",
-  };
+
 
   const termLabel = rentalTerm ? `${rentalTerm} tháng` : "-";
   const billingCycleLabel = BILLING_CYCLE_LABELS[billingCycle] || "-";
@@ -154,7 +151,7 @@ function RoomCheckoutContent() {
 
     // Step 2: đồng ý điều khoản → tạo booking → gọi VNPAY → redirect
     if (!agreed) {
-      alert("Bạn cần đồng ý với điều khoản để tiếp tục.");
+      toast({ title: "Thiếu thông tin", description: "Bạn cần đồng ý với điều khoản để tiếp tục.", color: "warning" });
       return;
     }
 
@@ -177,7 +174,7 @@ function RoomCheckoutContent() {
         throw new Error("Không nhận được liên kết thanh toán từ máy chủ.");
       }
     } catch (err) {
-      alert(err.message || "Không thể khởi tạo thanh toán.");
+      toast({ title: "Lỗi", description: err.message || "Không thể khởi tạo thanh toán.", color: "danger" });
     } finally {
       setSubmitting(false);
     }
@@ -283,9 +280,57 @@ function RoomCheckoutContent() {
           {step === 2 && (
             <div className="mt-8 rounded-3xl border border-muted/20 bg-white p-6">
               <h2 className="text-2xl font-bold text-primary">Bước 2: Điều khoản</h2>
-              <p className="mt-3 text-secondary">
-                Đây là dữ liệu demo: bạn xác nhận đồng ý với điều khoản lưu trú, thanh toán và hoàn cọc theo quy định của tòa nhà.
-              </p>
+
+              <div className="mt-4 max-h-[40vh] overflow-y-auto rounded-2xl border border-muted/20 bg-primary/[0.02] p-5 text-sm leading-relaxed text-secondary space-y-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-primary">Điều khoản và Điều kiện sử dụng hệ thống Fscape</p>
+                <p className="text-xs text-secondary/70">Vui lòng đọc kỹ các điều khoản này trước khi sử dụng hệ thống.</p>
+
+                <div className="space-y-2.5 text-xs text-secondary/90">
+                  <p><strong className="text-primary">1. Phạm vi áp dụng</strong></p>
+                  <p>1.1. Các Điều khoản Sử dụng này áp dụng cho toàn bộ nội dung của hệ thống quản lý lưu trú sinh viên Fscape (bao gồm website và ứng dụng di động). 1.2. Việc sử dụng Hệ thống bao gồm: truy cập, duyệt tin, đăng ký tài khoản hoặc thực hiện các giao dịch đặt phòng. 1.3. Bằng việc sử dụng Fscape, bạn xác nhận chấp nhận các Điều khoản này. Nếu không đồng ý, bạn phải ngừng sử dụng Hệ thống ngay lập tức.</p>
+
+                  <p><strong className="text-primary">2. Các chính sách bổ sung</strong></p>
+                  <p>2.1. Chính sách Bảo mật: Quy định cách chúng tôi xử lý dữ liệu cá nhân bạn cung cấp (bao gồm thông tin đăng ký, CCCD/Hộ chiếu cho hợp đồng). 2.2. Điều khoản Đặt phòng & Hợp đồng: Nếu bạn thực hiện đặt phòng hoặc ký hợp đồng, các điều khoản cụ thể về tiền cọc, thanh toán và nội quy nhà trọ sẽ được áp dụng bổ sung.</p>
+
+                  <p><strong className="text-primary">3. Thông tin về chúng tôi</strong></p>
+                  <p>Hệ thống Fscape được vận hành bởi Đội ngũ Quản lý Fscape (Fscape Management Team). Mọi thông tin hỗ trợ vui lòng liên hệ qua email: support@fscape.vn.</p>
+
+                  <p><strong className="text-primary">4. Đăng ký và bảo mật tài khoản</strong></p>
+                  <p>4.1. Mỗi tài khoản được đăng ký chỉ dành cho một người dùng duy nhất. 4.2. Bạn có trách nhiệm bảo mật thông tin đăng nhập (Email, Mật khẩu, mã OTP). Fscape không chịu trách nhiệm cho bất kỳ tổn thất nào phát sinh do bạn tiết lộ thông tin tài khoản cho bên thứ ba. 4.3. Chúng tôi có quyền vô hiệu hóa tài khoản nếu phát hiện hành vi vi phạm điều khoản hoặc nghi ngờ có hoạt động gian lận.</p>
+
+                  <p><strong className="text-primary">5. Quyền sở hữu trí tuệ</strong></p>
+                  <p>5.1. Fscape và các đối tác sở hữu toàn bộ bản quyền hình ảnh, giao diện, logo và mã nguồn trên Hệ thống. 5.2. Khi bạn tải lên hình ảnh (qua dịch vụ Cloudinary tích hợp trong hệ thống) như ảnh phòng, ảnh hồ sơ hoặc yêu cầu sửa chữa, bạn cấp quyền cho Fscape sử dụng các hình ảnh này cho mục đích quản lý vận hành và hiển thị thông tin lưu trú.</p>
+
+                  <p><strong className="text-primary">6. Tuyên bố miễn trừ trách nhiệm (AI & LLM)</strong></p>
+                  <p>6.1. Các phản hồi được tạo ra bởi trí tuệ nhân tạo (AI) trên Fscape chỉ mang tính chất tham khảo. Bạn không nên coi đó là lời khuyên pháp lý hoặc tài chính chính xác tuyệt đối. 6.2. Mặc dù chúng tôi nỗ lực cập nhật dữ liệu, Fscape không cam kết thông tin về giá phòng, tiện ích hoặc khoảng cách đến các trường đại học là chính xác 100% tại mọi thời điểm. Bạn cần xác nhận lại thông tin trong Hợp đồng chính thức.</p>
+
+                  <p><strong className="text-primary">7. Giới hạn trách nhiệm</strong></p>
+                  <p>7.1. Fscape không chịu trách nhiệm cho bất kỳ thiệt hại nào phát sinh từ: sự gián đoạn dịch vụ do bảo trì hệ thống hoặc lỗi đường truyền internet; thông tin sai lệch do người dùng khác cung cấp trên diễn đàn/bảng tin; các mất mát dữ liệu do virus hoặc tấn công mạng từ bên ngoài. 7.2. Đối với người dùng là Sinh viên (Resident), Fscape cung cấp nền tảng để kết nối và quản lý lưu trú cá nhân, không chịu trách nhiệm cho các giao dịch dân sự bên ngoài phạm vi hệ thống.</p>
+
+                  <p><strong className="text-primary">8. Chính sách sử dụng hợp lệ</strong></p>
+                  <p>8.1. Hành vi cấm: đăng tải nội dung độc hại, vi phạm pháp luật Việt Nam, xúc phạm danh dự người khác; cố tình phá hoại hệ thống (hack, spam request, làm quá tải server); sử dụng hình ảnh giả mạo hoặc không có bản quyền để đăng tin. 8.2. Bảng tin nội bộ: Người dùng phải sử dụng ngôn từ văn minh. Chúng tôi có quyền xóa bất kỳ bài đăng nào vi phạm tiêu chuẩn cộng đồng mà không cần báo trước.</p>
+
+                  <p><strong className="text-primary">9. Quy trình quản lý cư dân</strong></p>
+                  <p>Bằng cách sử dụng Fscape, bạn đồng ý tuân thủ quy trình điện tử bao gồm: (1) Giai đoạn Tìm kiếm — tra cứu vị trí, tiện ích và hình ảnh tòa nhà; (2) Giai đoạn Đặt phòng — đặt giữ chỗ và thanh toán tiền cọc trong thời gian quy định; (3) Giai đoạn Hợp đồng — thực hiện ký hợp đồng điện tử và nhận bàn giao phòng; (4) Giai đoạn Lưu trú — nhận hóa đơn điện tử hàng tháng và gửi yêu cầu sửa chữa qua ứng dụng.</p>
+
+                  <p><strong className="text-primary">10. Điều khoản liên lạc và marketing</strong></p>
+                  <p>Bằng việc hoàn tất đăng ký cư dân, bạn đồng ý nhận các thông báo từ Fscape bao gồm: thông báo vận hành (hóa đơn tiền điện/nước, nhắc hẹn thanh toán, thông báo sửa chữa tòa nhà) và thông báo tiếp thị (các chương trình ưu đãi, sự kiện dành cho sinh viên — bạn có thể hủy đăng ký bất cứ lúc nào).</p>
+
+                  <p><strong className="text-primary">11. Luật pháp và thẩm quyền</strong></p>
+                  <p>Các Điều khoản Sử dụng này được điều chỉnh và giải thích theo Pháp luật nước Cộng hòa Xã hội Chủ nghĩa Việt Nam. Mọi tranh chấp phát sinh sẽ được giải quyết tại Tòa án có thẩm quyền tại Việt Nam.</p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center gap-4">
+                <a
+                  href="https://res.cloudinary.com/dz0rxiivc/raw/upload/v1774116931/term_du0gb9.docx"
+                  download
+                  className="text-xs font-semibold text-primary underline underline-offset-2 hover:text-primary/80"
+                >
+                  Tải điều khoản đầy đủ (.docx)
+                </a>
+              </div>
+
               <label className="mt-5 flex items-center gap-2 text-primary">
                 <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
                 Tôi đồng ý với điều khoản và điều kiện
@@ -313,7 +358,7 @@ function RoomCheckoutContent() {
                 }`}
             >
               {submitting && <CircleNotch className="h-4 w-4 animate-spin" />}
-              {step === 2 ? "Thanh toán qua VNPay" : "Tiếp tục"}
+              {step === 2 ? "Thanh toán tiền cọc" : "Tiếp tục"}
             </button>
           </div>
         </div>
@@ -363,7 +408,7 @@ function RoomCheckoutContent() {
                 </p>
                 <p>
                   <span className="font-semibold text-primary">Giới tính:</span>{" "}
-                  {{ MALE: "Nam", FEMALE: "Nữ", OTHER: "Khác" }[form.gender] || "-"}
+                  {GENDER_LABELS[form.gender] || "-"}
                 </p>
                 <p>
                   <span className="font-semibold text-primary">Ngày sinh:</span> {form.dateOfBirth || "-"}

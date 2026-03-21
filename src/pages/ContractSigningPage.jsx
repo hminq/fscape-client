@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { CheckCircle, CircleNotch, ArrowCounterClockwise, Warning } from "@phosphor-icons/react";
+import { ArrowLeft, CheckCircle, CircleNotch, ArrowCounterClockwise, Warning } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { CONTRACT_STATUS_LABELS } from "@/lib/constants";
+import fscapeLogoFull from "@/assets/fscape-logo-full.svg";
+
+const STATUS_LABELS = CONTRACT_STATUS_LABELS;
 
 const CANVAS_SCALE = 2;
 const CANVAS_LINE_WIDTH = 2;
@@ -31,6 +35,9 @@ function ContractSigningPage() {
   const [error, setError] = useState("");
   const [signing, setSigning] = useState(false);
   const [signed, setSigned] = useState(false);
+  const [justSigned, setJustSigned] = useState(false);
+
+  const isViewOnly = signed && !justSigned;
 
   const canvasRef = useRef(null);
   const contractRef = useRef(null);
@@ -61,11 +68,7 @@ function ContractSigningPage() {
 
         const c = res.data;
         if (c.status !== "PENDING_CUSTOMER_SIGNATURE") {
-          if (c.status === "PENDING_MANAGER_SIGNATURE" || c.status === "PENDING_FIRST_PAYMENT" || c.status === "ACTIVE") {
-            setSigned(true);
-          } else {
-            setError("Hợp đồng này không ở trạng thái chờ ký.");
-          }
+          setSigned(true);
         }
 
         setContract(c);
@@ -175,6 +178,7 @@ function ContractSigningPage() {
 
       setContract(res.data);
       setSigned(true);
+      setJustSigned(true);
 
       // Scroll to contract so user sees their signature in the document
       setTimeout(() => {
@@ -213,21 +217,26 @@ function ContractSigningPage() {
     <div className="min-h-screen bg-gray-50">
       <style>{CONTRACT_STYLES}</style>
       {/* Header */}
-      <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-6 py-4">
+      <header className="bg-primary">
+        <div className="mx-auto flex max-w-5xl items-center justify-center px-6 py-3">
           <Link to="/" className="transition-opacity hover:opacity-70">
             <img
-              src="https://res.cloudinary.com/dz0rxiivc/image/upload/v1772824029/fscape-logo_qkmcfz.svg"
+              src={fscapeLogoFull}
               alt="FScape"
-              className="h-8"
+              className="h-10"
             />
           </Link>
-          <div className="h-6 w-px bg-gray-300" />
-          <span className="text-sm font-semibold text-primary">Ký hợp đồng</span>
         </div>
       </header>
 
       <main className="mx-auto max-w-5xl px-6 py-8">
+        <Link
+          to="/my-contracts"
+          className="mb-6 inline-flex items-center gap-1.5 text-sm text-secondary hover:text-primary transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Quay lại
+        </Link>
         {/* Contract info bar */}
         <div className="mb-6 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl bg-white p-4 shadow-sm">
           <div>
@@ -242,8 +251,13 @@ function ContractSigningPage() {
           </div>
           <div>
             <p className="text-xs text-secondary">Trạng thái</p>
-            <p className={`font-semibold ${signed ? "text-green-600" : "text-amber-600"}`}>
-              {signed ? "Đã ký" : "Chờ ký"}
+            <p className={`font-semibold ${
+              contract.status === "PENDING_CUSTOMER_SIGNATURE" ? "text-amber-600"
+                : contract.status === "ACTIVE" || contract.status === "EXPIRING_SOON" ? "text-green-600"
+                : contract.status === "TERMINATED" ? "text-red-600"
+                : "text-primary"
+            }`}>
+              {STATUS_LABELS[contract.status] || contract.status}
             </p>
           </div>
         </div>
@@ -264,7 +278,7 @@ function ContractSigningPage() {
         </div>
 
         {/* Signing section */}
-        {signed ? (
+        {signed && !isViewOnly ? (
           <div className="mt-8 flex flex-col items-center gap-3 rounded-xl bg-green-50 p-8 text-center">
             <CheckCircle className="h-12 w-12 text-green-600" />
             <p className="text-lg font-semibold text-green-800">
@@ -274,7 +288,7 @@ function ContractSigningPage() {
               Quản lý tòa nhà sẽ xác nhận và ký hợp đồng. Bạn sẽ nhận email thông báo khi hợp đồng được kích hoạt.
             </p>
           </div>
-        ) : (
+        ) : !signed ? (
           <div className="mt-8 rounded-xl bg-white p-6 shadow-sm">
             <h2 className="text-lg font-bold text-primary">Ký tên của bạn</h2>
             <p className="mt-1 text-sm text-secondary">
@@ -317,7 +331,7 @@ function ContractSigningPage() {
               </button>
             </div>
           </div>
-        )}
+        ) : null}
       </main>
     </div>
   );

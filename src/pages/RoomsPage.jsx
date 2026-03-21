@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Bathtub, Bed, CaretLeft, CaretRight, CaretDown, CaretUp, CircleNotch, Ruler, SortAscending, Users } from "@phosphor-icons/react";
+import { Bathtub, Bed, Buildings, CaretLeft, CaretRight, CaretDown, CaretUp, CircleNotch, Door, MapPin, Ruler, SortAscending, Users } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider, useLocations } from "@/contexts/LocationsContext";
@@ -16,7 +16,7 @@ const SORT_OPTIONS = [
 ];
 
 const CAPACITY_OPTIONS = [
-  { value: "", label: "Tất cả sức chứa" },
+  { value: "", label: "Tất cả" },
   { value: "1", label: "Một mình" },
   { value: "2", label: "1-2 người" },
   { value: "3", label: "Nhiều hơn" },
@@ -290,30 +290,6 @@ function RoomsContent() {
           </p>
         </div>
 
-        {/* Building selector */}
-        <div className="mb-8">
-          <label className="mb-2 block text-sm font-semibold text-primary">Tòa nhà</label>
-          <div className="relative w-full max-w-md">
-            <select
-              value={buildingId}
-              onChange={(e) => handleBuildingChange(e.target.value)}
-              className="w-full appearance-none rounded-xl border border-muted/30 bg-white px-4 py-3 pr-10 text-sm text-secondary transition-colors focus:border-primary focus:outline-none"
-            >
-              <option value="">Tất cả tòa nhà</option>
-              {buildingsByLocation.map((group) => (
-                <optgroup key={group.locationName} label={group.locationName}>
-                  {group.buildings.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-            <CaretDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
-          </div>
-        </div>
-
         {/* Loading locations */}
         {locationsLoading && (
           <div className="flex min-h-[30vh] items-center justify-center">
@@ -334,9 +310,61 @@ function RoomsContent() {
               <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr]">
                 {/* Sidebar filters */}
                 <aside className="space-y-6 self-start">
+                  {/* Building filter */}
+                  <div className="rounded-2xl border border-muted/20 bg-white p-4">
+                    <h2 className="flex items-center gap-2 text-lg font-bold text-primary">
+                      <Buildings className="h-5 w-5 text-olive" />
+                      Tòa nhà
+                    </h2>
+                    <div className="mt-3 max-h-60 space-y-0.5 overflow-y-auto">
+                      <button
+                        type="button"
+                        onClick={() => handleBuildingChange("")}
+                        className={`flex w-full items-center rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors ${
+                          !buildingId
+                            ? "bg-primary text-white"
+                            : "text-secondary hover:bg-primary/5 hover:text-primary"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <input type="radio" name="building" checked={!buildingId} onChange={() => {}} className="h-3.5 w-3.5" />
+                          Tất cả
+                        </span>
+                      </button>
+                      {buildingsByLocation.map((group) => (
+                        <div key={group.locationName}>
+                          <p className="mt-2 mb-1 flex items-center gap-1.5 px-2.5 text-xs font-semibold uppercase tracking-wide text-muted">
+                            <MapPin className="h-3 w-3" />
+                            {group.locationName}
+                          </p>
+                          {group.buildings.map((b) => (
+                            <button
+                              key={b.id}
+                              type="button"
+                              onClick={() => handleBuildingChange(b.id)}
+                              className={`flex w-full items-center rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors ${
+                                buildingId === b.id
+                                  ? "bg-primary text-white"
+                                  : "text-secondary hover:bg-primary/5 hover:text-primary"
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <input type="radio" name="building" checked={buildingId === b.id} onChange={() => {}} className="h-3.5 w-3.5" />
+                                {b.name}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Room type filter */}
                   <div className="rounded-2xl border border-muted/20 bg-white p-4">
-                    <h2 className="text-lg font-bold text-primary">Loại phòng</h2>
+                    <h2 className="flex items-center gap-2 text-lg font-bold text-primary">
+                      <Door className="h-5 w-5 text-olive" />
+                      Loại phòng
+                    </h2>
                     <div className="mt-3 space-y-0.5">
                       <button
                         type="button"
@@ -349,7 +377,7 @@ function RoomsContent() {
                       >
                         <span className="flex items-center gap-2">
                           <input type="checkbox" checked={typeIds.length === 0} onChange={() => {}} className="h-3.5 w-3.5" />
-                          Tất cả loại phòng
+                          Tất cả
                         </span>
                         <span className="font-semibold">{rooms.length}</span>
                       </button>
@@ -381,7 +409,10 @@ function RoomsContent() {
 
                   {/* Capacity filter */}
                   <div className="rounded-2xl border border-muted/20 bg-white p-4">
-                    <h2 className="text-lg font-bold text-primary">Sức chứa</h2>
+                    <h2 className="flex items-center gap-2 text-lg font-bold text-primary">
+                      <Users className="h-5 w-5 text-olive" />
+                      Sức chứa
+                    </h2>
                     <div className="mt-3 space-y-0.5">
                       {CAPACITY_OPTIONS.map((opt) => (
                         <button
@@ -395,7 +426,7 @@ function RoomsContent() {
                           }`}
                         >
                           <span className="flex items-center gap-2">
-                            <input type="checkbox" checked={String(capacity || "") === opt.value} onChange={() => {}} className="h-3.5 w-3.5" />
+                            <input type="radio" name="capacity" checked={String(capacity || "") === opt.value} onChange={() => {}} className="h-3.5 w-3.5" />
                             {opt.label}
                           </span>
                         </button>
@@ -451,16 +482,13 @@ function RoomsContent() {
                           <div className="flex flex-col p-4">
                             <div className="flex items-start justify-between gap-4">
                               <div>
-                                <h3 className="text-xl font-bold leading-tight text-primary">{detailType.name || "Phòng"}</h3>
-                                <p className="mt-0.5 text-sm text-secondary">
-                                  Phòng {room.room_number}
-                                  {showBuildingOnCards && room.building?.name && (
-                                    <span className="ml-1.5 text-muted">— {room.building.name}</span>
-                                  )}
-                                  {room.floor != null && (
-                                    <span className="ml-1.5 text-muted">· Tầng {room.floor}</span>
-                                  )}
+                                <h3 className="text-2xl font-bold leading-tight text-primary">{detailType.name || "Phòng"}</h3>
+                                <p className="mt-1 text-[15px] font-medium text-secondary">
+                                  {room.floor != null && <>Tầng {room.floor} · </>}Phòng {room.room_number}
                                 </p>
+                                {showBuildingOnCards && room.building?.name && (
+                                  <p className="text-sm text-muted">{room.building.name}</p>
+                                )}
                               </div>
                               <div className="shrink-0 text-right">
                                 <p className="text-xs text-muted">Giá từ</p>

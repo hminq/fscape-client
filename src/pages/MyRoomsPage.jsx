@@ -7,13 +7,10 @@ import { LocationsProvider } from "@/contexts/LocationsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { formatVnd, formatDisplayDate } from "@/lib/formatters";
+import { MY_ROOM_STATUS_LABELS } from "@/lib/constants";
 import defaultRoomImg from "@/assets/default_room_img.jpg";
 
-const STATUS_LABELS = {
-  PENDING_CHECK_IN: { text: "Chờ nhận phòng", className: "bg-cyan-100 text-cyan-700" },
-  ACTIVE: { text: "Đang thuê", className: "bg-green-100 text-green-700" },
-  EXPIRING_SOON: { text: "Sắp hết hạn", className: "bg-amber-100 text-amber-700" },
-};
+const STATUS_LABELS = MY_ROOM_STATUS_LABELS;
 
 function MyRoomsContent() {
   const navigate = useNavigate();

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { CircleNotch, ArrowLeft, MapPin, CalendarDots, FileText, DownloadSimple, X, Eye, PenNib, MagnifyingGlass, FunnelSimple, CaretDown, CaretUp } from "@phosphor-icons/react";
+import { CircleNotch, ArrowLeft, MapPin, CalendarDots, FileText, DownloadSimple, Eye, PenNib, MagnifyingGlass, FunnelSimple, CaretDown, CaretUp } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
@@ -89,8 +89,6 @@ function MyContractsContent() {
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [previewHtml, setPreviewHtml] = useState(null);
-  const [previewTitle, setPreviewTitle] = useState("");
 
   // Filters & search
   const [searchQuery, setSearchQuery] = useState("");
@@ -144,16 +142,6 @@ function MyContractsContent() {
   }, [contracts, searchQuery, statusFilter]);
 
   const actionNeededCount = contracts.filter((c) => ACTION_NEEDED_STATUSES.includes(c.status)).length;
-
-  const openPreview = (contract) => {
-    setPreviewHtml(contract.rendered_content);
-    setPreviewTitle(contract.contract_number);
-  };
-
-  const closePreview = () => {
-    setPreviewHtml(null);
-    setPreviewTitle("");
-  };
 
   if (loading) {
     return (
@@ -249,26 +237,18 @@ function MyContractsContent() {
           ) : (
             <div className="space-y-4">
               {filtered.map((c) => (
-                <ContractRow key={c.id} contract={c} onPreview={openPreview} />
+                <ContractRow key={c.id} contract={c} />
               ))}
             </div>
           )}
         </>
       )}
 
-      {/* Preview modal */}
-      {previewHtml && (
-        <ContractPreviewModal
-          html={previewHtml}
-          title={previewTitle}
-          onClose={closePreview}
-        />
-      )}
     </section>
   );
 }
 
-function ContractRow({ contract, onPreview }) {
+function ContractRow({ contract }) {
   const room = contract.room;
   const building = room?.building;
   const statusInfo = STATUS_CONFIG[contract.status] || STATUS_CONFIG.DRAFT;
@@ -308,15 +288,13 @@ function ContractRow({ contract, onPreview }) {
 
       {/* Right — actions */}
       <div className="flex items-center gap-2 shrink-0 sm:ml-auto">
-        {contract.rendered_content && (
-          <button
-            onClick={() => onPreview(contract)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-secondary hover:bg-gray-50 transition-colors"
-          >
-            <Eye className="size-4" />
-            Xem
-          </button>
-        )}
+        <Link
+          to={`/sign?contractId=${contract.id}`}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-secondary hover:bg-gray-50 transition-colors"
+        >
+          <Eye className="size-4" />
+          Xem
+        </Link>
         {needsSign && (
           <Link
             to={`/sign?contractId=${contract.id}`}
@@ -339,53 +317,6 @@ function ContractRow({ contract, onPreview }) {
         )}
       </div>
     </div>
-  );
-}
-
-function ContractPreviewModal({ html, title, onClose }) {
-  // Lock body scroll
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
-  }, []);
-
-  // Close on Escape
-  useEffect(() => {
-    const handleKey = (e) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [onClose]);
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-[60] bg-black/50"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="fixed inset-4 sm:inset-8 md:inset-12 z-[70] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b px-6 py-4">
-          <h2 className="font-bold text-primary text-lg">{title}</h2>
-          <button
-            onClick={onClose}
-            className="flex items-center justify-center size-9 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <X className="size-5" />
-          </button>
-        </div>
-
-        {/* Content — rendered HTML */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-10">
-          <div
-            className="prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
-        </div>
-      </div>
-    </>
   );
 }
 

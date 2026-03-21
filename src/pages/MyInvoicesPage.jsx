@@ -7,6 +7,7 @@ import { LocationsProvider } from "@/contexts/LocationsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { formatVnd, formatDisplayDate } from "@/lib/formatters";
+import { toast } from "@heroui/react";
 
 const STATUS_CONFIG = {
   UNPAID: { text: "Chưa thanh toán", className: "bg-amber-100 text-amber-700" },
@@ -136,7 +137,7 @@ function MyInvoicesContent() {
         throw new Error("Không nhận được liên kết thanh toán.");
       }
     } catch (err) {
-      alert(err.message || "Không thể tạo thanh toán.");
+      toast({ title: "Lỗi", description: err.message || "Không thể tạo thanh toán.", color: "danger" });
       setPayingId(null);
     }
   };

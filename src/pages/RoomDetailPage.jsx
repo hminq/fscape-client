@@ -344,18 +344,11 @@ function RoomDetailContent() {
             className="relative w-full max-w-4xl rounded-2xl bg-white p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-lg font-semibold text-primary">
-                {previewState.mode === "3d"
-                  ? "Ảnh 3D"
-                  : previewState.mode === "blueprint"
-                    ? "Bản vẽ"
-                    : "Thư viện ảnh"}
-              </p>
+            <div className="mb-3 flex items-center justify-end">
               <button
                 type="button"
                 onClick={() => setPreviewState({ mode: null, image: defaultRoomImg })}
-                className="rounded-full p-1 text-secondary hover:bg-primary/5"
+                className="rounded-full p-1.5 text-secondary hover:bg-primary/5"
               >
                 <X className="h-5 w-5" />
               </button>
