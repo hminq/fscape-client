@@ -362,7 +362,8 @@ function RoomCheckoutContent() {
                   {[form.firstName, form.lastName].filter(Boolean).join(" ") || "-"}
                 </p>
                 <p>
-                  <span className="font-semibold text-primary">Giới tính:</span> {form.gender || "-"}
+                  <span className="font-semibold text-primary">Giới tính:</span>{" "}
+                  {{ MALE: "Nam", FEMALE: "Nữ", OTHER: "Khác" }[form.gender] || "-"}
                 </p>
                 <p>
                   <span className="font-semibold text-primary">Ngày sinh:</span> {form.dateOfBirth || "-"}
