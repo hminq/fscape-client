@@ -61,7 +61,7 @@ function ContractSigningPage() {
 
         const c = res.data;
         if (c.status !== "PENDING_CUSTOMER_SIGNATURE") {
-          if (c.status === "PENDING_MANAGER_SIGNATURE" || c.status === "ACTIVE") {
+          if (c.status === "PENDING_MANAGER_SIGNATURE" || c.status === "PENDING_FIRST_PAYMENT" || c.status === "ACTIVE") {
             setSigned(true);
           } else {
             setError("Hợp đồng này không ở trạng thái chờ ký.");

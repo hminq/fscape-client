@@ -10,6 +10,7 @@ import { formatVnd, formatDisplayDate } from "@/lib/formatters";
 import defaultRoomImg from "@/assets/default_room_img.jpg";
 
 const STATUS_LABELS = {
+  PENDING_CHECK_IN: { text: "Chờ nhận phòng", className: "bg-cyan-100 text-cyan-700" },
   ACTIVE: { text: "Đang thuê", className: "bg-green-100 text-green-700" },
   EXPIRING_SOON: { text: "Sắp hết hạn", className: "bg-amber-100 text-amber-700" },
 };

@@ -12,6 +12,8 @@ const STATUS_CONFIG = {
   DRAFT: { text: "Bản nháp", className: "bg-gray-100 text-gray-600" },
   PENDING_CUSTOMER_SIGNATURE: { text: "Chờ bạn ký", className: "bg-amber-100 text-amber-700" },
   PENDING_MANAGER_SIGNATURE: { text: "Chờ quản lý ký", className: "bg-blue-100 text-blue-700" },
+  PENDING_FIRST_PAYMENT: { text: "Chờ thanh toán kỳ đầu", className: "bg-orange-100 text-orange-700" },
+  PENDING_CHECK_IN: { text: "Chờ nhận phòng", className: "bg-cyan-100 text-cyan-700" },
   ACTIVE: { text: "Đang hiệu lực", className: "bg-green-100 text-green-700" },
   EXPIRING_SOON: { text: "Sắp hết hạn", className: "bg-amber-100 text-amber-700" },
   FINISHED: { text: "Đã kết thúc", className: "bg-gray-100 text-gray-600" },
@@ -27,7 +29,7 @@ const STATUS_FILTERS = [
   { value: "TERMINATED", label: "Đã chấm dứt" },
 ];
 
-const ACTION_NEEDED_STATUSES = ["DRAFT", "PENDING_CUSTOMER_SIGNATURE", "PENDING_MANAGER_SIGNATURE"];
+const ACTION_NEEDED_STATUSES = ["DRAFT", "PENDING_CUSTOMER_SIGNATURE", "PENDING_MANAGER_SIGNATURE", "PENDING_FIRST_PAYMENT"];
 
 function FilterDropdown({ options, value, onChange, icon: Icon, placeholder, align = "right" }) {
   const [open, setOpen] = useState(false);
