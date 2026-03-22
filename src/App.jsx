@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
+import ChatbotWidget from "./components/chatbot/ChatbotWidget";
 import HomePage from "./pages/HomePage";
 import AuthPage from "./pages/auth/AuthPage";
 import BuildingDetailPage from "./pages/BuildingDetailPage";
@@ -21,8 +22,9 @@ function BuildingRoomsRedirect() {
 
 function App() {
   return (
+    <>
     <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<><HomePage /><ChatbotWidget /></>} />
       <Route path="/login" element={<AuthPage />} />
       <Route path="/rooms" element={<RoomsPage />} />
       <Route path="/buildings/:buildingId" element={<BuildingDetailPage />} />
@@ -40,6 +42,7 @@ function App() {
       <Route path="*" element={<Navigate to="/" replace />} />
       <Route path="/verify-otp" element={<VerifyOtp />} />
     </Routes>
+    </>
   );
 }
 
