@@ -5,10 +5,22 @@ import { LocationsProvider } from "@/contexts/LocationsContext";
 
 function PaymentResultContent() {
   const [searchParams] = useSearchParams();
-  const code = searchParams.get("vnp_ResponseCode") || searchParams.get("code");
+
+  // Hỗ trợ cả VNPay (vnp_ResponseCode) và PayOS (code + status)
+  const vnpCode = searchParams.get("vnp_ResponseCode");
+  const payosCode = searchParams.get("code");
+  const payosStatus = searchParams.get("status");
+  const cancel = searchParams.get("cancel");
+
+  const isSuccess = vnpCode
+    ? vnpCode === "00"
+    : payosCode === "00" && payosStatus === "PAID";
+  const isCancelled = cancel === "true" || payosStatus === "CANCELLED";
+
+  // Detect invoice payment: VNPay dùng vnp_OrderInfo bắt đầu bằng "INV", PayOS dùng query param type
   const orderInfo = searchParams.get("vnp_OrderInfo") || "";
-  const isSuccess = code === "00";
-  const isInvoicePayment = orderInfo.startsWith("INV");
+  const paymentType = searchParams.get("type") || "";
+  const isInvoicePayment = orderInfo.startsWith("INV") || paymentType === "invoice";
 
   return (
     <section className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-6 text-center">
@@ -25,9 +37,13 @@ function PaymentResultContent() {
       ) : (
         <>
           <XCircle className="h-20 w-20 text-red-500" strokeWidth={1.5} />
-          <h1 className="mt-6 text-4xl font-bold text-primary">Thanh toán thất bại</h1>
+          <h1 className="mt-6 text-4xl font-bold text-primary">
+            {isCancelled ? "Đã hủy thanh toán" : "Thanh toán thất bại"}
+          </h1>
           <p className="mt-3 text-secondary">
-            Giao dịch không thành công hoặc đã bị hủy. Vui lòng thử lại.
+            {isCancelled
+              ? "Bạn đã hủy giao dịch. Bạn có thể thử lại bất cứ lúc nào."
+              : "Giao dịch không thành công. Vui lòng thử lại."}
           </p>
         </>
       )}
