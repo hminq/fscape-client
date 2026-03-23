@@ -86,8 +86,7 @@
 /* PayOS embedded checkout — force iframe to be visible */
 .payos-embed-container iframe {
   width: 100% !important;
-  min-height: 540px !important;
-  height: auto !important;
+  height: 380px !important;
   border: none !important;
 }
 

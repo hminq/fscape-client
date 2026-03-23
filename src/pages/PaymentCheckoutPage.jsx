@@ -116,13 +116,14 @@ function PaymentCheckoutContent() {
           navigate={navigate}
           type={type}
           expiresAt={expiresAt}
+          paymentInfo={paymentInfo}
         />
       )}
     </section>
   );
 }
 
-function EmbeddedCheckout({ checkoutUrl, navigate, type, expiresAt }) {
+function EmbeddedCheckout({ checkoutUrl, navigate, type, expiresAt, paymentInfo }) {
   const isBooking = type === "booking";
 
   // Calculate remaining seconds from real expiry, fallback to default
@@ -194,6 +195,29 @@ function EmbeddedCheckout({ checkoutUrl, navigate, type, expiresAt }) {
           {timeDisplay}
         </span>
       </div>
+
+      {/* Payment info summary */}
+      {paymentInfo && (
+        <div className="mb-4 rounded-2xl border border-muted/20 bg-white p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-secondary">
+                {paymentInfo.description}
+              </p>
+              {paymentInfo.orderCode && (
+                <p className="mt-1 text-xs text-secondary/70">
+                  Mã đơn: <span className="font-mono font-medium text-primary">{paymentInfo.orderCode}</span>
+                </p>
+              )}
+            </div>
+            {paymentInfo.amount != null && (
+              <p className="text-2xl font-bold text-primary">
+                {formatVnd(paymentInfo.amount)}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Payment card */}
       <div className="rounded-2xl border border-muted/20 bg-white p-4">

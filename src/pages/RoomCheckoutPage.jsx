@@ -353,7 +353,15 @@ function RoomCheckoutContent() {
           )}
 
           {step === 3 && checkoutUrl && (
-            <PayOSEmbeddedCheckout checkoutUrl={checkoutUrl} navigate={Navigate} expiresAt={bookingExpiresAt} />
+            <PayOSEmbeddedCheckout
+              checkoutUrl={checkoutUrl}
+              navigate={Navigate}
+              expiresAt={bookingExpiresAt}
+              depositAmount={roomType?.base_price || room?.room_type?.base_price}
+              roomName={roomType?.name || "Phòng"}
+              roomNumber={room.room_number}
+              buildingName={room.building?.name}
+            />
           )}
 
           {step < 3 && (
@@ -449,7 +457,7 @@ function RoomCheckoutContent() {
   );
 }
 
-function PayOSEmbeddedCheckout({ checkoutUrl, navigate, expiresAt }) {
+function PayOSEmbeddedCheckout({ checkoutUrl, navigate, expiresAt, depositAmount, roomName, roomNumber, buildingName }) {
   const { open } = usePayOS({
     RETURN_URL: `${window.location.origin}/payment/result`,
     ELEMENT_ID: "payos-checkout",
@@ -512,6 +520,25 @@ function PayOSEmbeddedCheckout({ checkoutUrl, navigate, expiresAt }) {
         <span className={`rounded-lg px-3 py-1 font-mono text-xl font-bold tabular-nums tracking-wider ${isUrgent ? "bg-red-100 text-red-600" : "bg-primary/10 text-primary"}`}>
           {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
         </span>
+      </div>
+
+      {/* Payment info summary */}
+      <div className="mb-4 rounded-2xl border border-muted/20 bg-white p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-secondary">
+              Đặt cọc phòng
+            </p>
+            <p className="mt-1 text-xs text-secondary/70">
+              {roomName} · Phòng {roomNumber} · {buildingName}
+            </p>
+          </div>
+          {depositAmount != null && (
+            <p className="text-2xl font-bold text-primary">
+              {formatVnd(depositAmount)}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Payment card */}
