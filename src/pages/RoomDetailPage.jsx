@@ -114,6 +114,11 @@ function RoomDetailContent() {
     return [...new Set(list)];
   }, [room]);
 
+  const templateAssets = useMemo(() => {
+    const assets = room?.room_type?.template_assets || roomType?.template_assets || [];
+    return assets.filter((item) => item.asset_type);
+  }, [room, roomType]);
+
   useEffect(() => {
     setMainImage(previewImage);
   }, [previewImage]);
@@ -313,26 +318,45 @@ function RoomDetailContent() {
           </p>
         </div>
         <div>
-          <h2 className="text-4xl font-bold uppercase tracking-wide text-primary">Tiện ích phòng</h2>
-          {buildingFacilities.length === 0 ? (
-            <p className="mt-4 text-lg text-secondary">Hiện chưa có tiện ích nổi bật.</p>
+          <h2 className="text-4xl font-bold uppercase tracking-wide text-primary">Nội thất</h2>
+          {templateAssets.length === 0 ? (
+            <p className="mt-4 text-lg text-secondary">Hiện chưa có thông tin nội thất.</p>
           ) : (
-            <ul className="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 text-lg text-secondary md:grid-cols-2">
-              {buildingFacilities.slice(0, 10).map((feature) => (
-                <li key={feature} className="flex items-start gap-2">
-                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-olive" />
-                  {feature}
+            <ul className="mt-4 flex max-h-[170px] flex-col flex-wrap gap-x-8 gap-y-2 overflow-x-auto text-lg text-secondary">
+              {templateAssets.map((item) => (
+                <li key={item.id} className="flex items-start gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-olive" />
+                  {item.asset_type?.name || "Không xác định"}
+                  {item.quantity > 1 && (
+                    <span className="text-sm text-secondary/60">x{item.quantity}</span>
+                  )}
                 </li>
               ))}
-              {buildingFacilities.length > 10 && (
-                <li className="flex items-start gap-2 font-semibold text-primary">
-                  <span className="mt-1">+</span>
-                  {buildingFacilities.length - 10} tiện ích khác
-                </li>
-              )}
             </ul>
           )}
         </div>
+      </div>
+
+      <div className="mt-12 border-t border-muted/20 pt-10">
+        <h2 className="text-4xl font-bold uppercase tracking-wide text-primary">Tiện ích</h2>
+        {buildingFacilities.length === 0 ? (
+          <p className="mt-4 text-lg text-secondary">Hiện chưa có tiện ích nổi bật.</p>
+        ) : (
+          <ul className="mt-4 grid grid-cols-2 gap-x-8 gap-y-2 text-lg text-secondary md:grid-cols-3 lg:grid-cols-4">
+            {buildingFacilities.slice(0, 10).map((feature) => (
+              <li key={feature} className="flex items-start gap-2">
+                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-olive" />
+                {feature}
+              </li>
+            ))}
+            {buildingFacilities.length > 10 && (
+              <li className="flex items-start gap-2 font-semibold text-primary">
+                <span className="mt-1">+</span>
+                {buildingFacilities.length - 10} tiện ích khác
+              </li>
+            )}
+          </ul>
+        )}
       </div>
 
       {previewState.mode && (
