@@ -1,15 +1,16 @@
-import { useEffect, useRef, useMemo, useState } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { CircleNotch, ArrowLeft, MapPin, Clock, CalendarDots, Bed, Bathtub, Ruler, PenNib, Eye, X, MagnifyingGlass, FunnelSimple, CaretDown, CaretUp, CalendarCheck, CurrencyCircleDollar, Ticket } from "@phosphor-icons/react";
+import { CircleNotch, ArrowLeft, MapPin, Clock, CalendarDots, Bed, Bathtub, Ruler, PenNib, Eye, X, MagnifyingGlass, FunnelSimple, CaretDown, CaretUp, CalendarCheck, CurrencyCircleDollar, Ticket, CreditCard, SortAscending, CaretLeft, CaretRight, HourglassMedium } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
+import { toast } from "@/lib/toast";
 import { formatVnd, formatDisplayDate } from "@/lib/formatters";
 
 const STATUS_CONFIG = {
-  PENDING: { text: "Chờ thanh toán", className: "bg-amber-100 text-amber-700" },
+  PENDING: { text: "Chờ đặt cọc", className: "bg-amber-100 text-amber-700" },
   DEPOSIT_PAID: { text: "Đã đặt cọc", className: "bg-blue-100 text-blue-700" },
   CONVERTED: { text: "Đã tạo hợp đồng", className: "bg-green-100 text-green-700" },
   CANCELLED: { text: "Đã hủy", className: "bg-red-100 text-red-600" },
@@ -22,7 +23,14 @@ const STATUS_FILTERS = [
   { value: "CANCELLED", label: "Đã hủy" },
 ];
 
-const ACTIVE_STATUSES = ["PENDING", "DEPOSIT_PAID"];
+const SORT_OPTIONS = [
+  { value: "createdAt:DESC", label: "Mới nhất" },
+  { value: "createdAt:ASC", label: "Cũ nhất" },
+  { value: "check_in_date:ASC", label: "Nhận phòng gần nhất" },
+  { value: "check_in_date:DESC", label: "Nhận phòng xa nhất" },
+  { value: "room_price_snapshot:DESC", label: "Giá giảm" },
+  { value: "room_price_snapshot:ASC", label: "Giá tăng" },
+];
 
 function timeLeft(expiresAt) {
   if (!expiresAt) return null;
@@ -87,68 +95,148 @@ function FilterDropdown({ options, value, onChange, icon: Icon, placeholder, ali
   );
 }
 
+function ContractButton({ booking }) {
+  const contractStatus = booking.contract?.status;
+
+  if (booking.status !== "DEPOSIT_PAID" || !booking.contract_id) return null;
+
+  if (contractStatus === "PENDING_CUSTOMER_SIGNATURE") {
+    return (
+      <Link
+        to={`/sign?contractId=${booking.contract_id}`}
+        className="inline-flex items-center gap-1.5 rounded-lg bg-olive px-3 py-2 text-sm font-medium text-white hover:bg-olive/90 transition-colors"
+      >
+        <PenNib className="size-4" />
+        Ký hợp đồng
+      </Link>
+    );
+  }
+
+  if (contractStatus === "PENDING_MANAGER_SIGNATURE") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-sm font-medium text-blue-600">
+        <HourglassMedium className="size-4" />
+        Chờ quản lý ký
+      </span>
+    );
+  }
+
+  return null;
+}
+
+function ContractButtonFull({ booking }) {
+  const contractStatus = booking.contract?.status;
+
+  if (booking.status !== "DEPOSIT_PAID" || !booking.contract_id) return null;
+
+  if (contractStatus === "PENDING_CUSTOMER_SIGNATURE") {
+    return (
+      <Link
+        to={`/sign?contractId=${booking.contract_id}`}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-olive py-3 text-sm font-semibold text-white hover:bg-olive/90 transition-colors"
+      >
+        <PenNib className="size-4" />
+        Ký hợp đồng ngay
+      </Link>
+    );
+  }
+
+  if (contractStatus === "PENDING_MANAGER_SIGNATURE") {
+    return (
+      <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-50 border border-blue-200 py-3 text-sm font-semibold text-blue-600">
+        <HourglassMedium className="size-4" />
+        Đang chờ quản lý ký duyệt
+      </div>
+    );
+  }
+
+  return null;
+}
+
 function MyBookingsContent() {
   const navigate = useNavigate();
   const { isLoggedIn } = useAuth();
+
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [detailBooking, setDetailBooking] = useState(null);
 
-  // Filters
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
+
+  // Filters & sort
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sortValue, setSortValue] = useState("createdAt:DESC");
+
+  // Debounced search
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const searchTimer = useRef(null);
+  useEffect(() => {
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(searchTimer.current);
+  }, [searchQuery]);
+
+  // Reset page when filters change
+  useEffect(() => { setPage(1); }, [statusFilter, sortValue]);
+
+  const fetchBookings = useCallback(async () => {
+    if (!isLoggedIn) return;
+    try {
+      setLoading(true);
+      setError("");
+      const [sort_by, sort_order] = sortValue.split(":");
+      const params = new URLSearchParams({ page, limit, sort_by, sort_order });
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
+
+      const res = await api.get(`/api/bookings/my?${params}`);
+      setBookings(res.data || []);
+      setTotal(res.total || 0);
+      setTotalPages(res.total_pages || 1);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [isLoggedIn, page, sortValue, statusFilter, debouncedSearch]);
 
   useEffect(() => {
     if (!isLoggedIn) {
       navigate("/login");
       return;
     }
-    const fetchBookings = async () => {
-      try {
-        const res = await api.get("/api/bookings/my");
-        setBookings(res.data || []);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchBookings();
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, navigate, fetchBookings]);
 
-  const filtered = useMemo(() => {
-    let result = [...bookings];
+  const handlePay = (booking) => {
+    const params = new URLSearchParams({
+      type: "booking",
+      bookingId: booking.id,
+    });
+    if (booking.expires_at) params.set("expiresAt", booking.expires_at);
+    navigate(`/payment/checkout?${params}`);
+  };
 
-    // Search
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter((b) => {
-        const room = b.room;
-        const building = room?.building;
-        const roomType = room?.room_type;
-        return (
-          b.booking_number?.toLowerCase().includes(q) ||
-          room?.room_number?.toLowerCase().includes(q) ||
-          building?.name?.toLowerCase().includes(q) ||
-          roomType?.name?.toLowerCase().includes(q)
-        );
-      });
-    }
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setDebouncedSearch("");
+    setStatusFilter("all");
+    setSortValue("createdAt:DESC");
+    setPage(1);
+  };
 
-    // Status filter
-    if (statusFilter === "active") {
-      result = result.filter((b) => ACTIVE_STATUSES.includes(b.status));
-    } else if (statusFilter !== "all") {
-      result = result.filter((b) => b.status === statusFilter);
-    }
+  const hasFilters = debouncedSearch || statusFilter !== "all";
 
-    return result;
-  }, [bookings, searchQuery, statusFilter]);
-
-  const activeCount = bookings.filter((b) => ACTIVE_STATUSES.includes(b.status)).length;
-
-  if (loading) {
+  if (loading && bookings.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <CircleNotch className="size-8 animate-spin text-primary" />
@@ -171,14 +259,9 @@ function MyBookingsContent() {
         <div>
           <h1 className="text-3xl font-bold text-primary mb-1">Đặt phòng của tôi</h1>
           <p className="text-secondary text-sm">
-            {bookings.length > 0
-              ? `${bookings.length} đơn đặt phòng`
+            {total > 0
+              ? `${total} đơn đặt phòng`
               : "Theo dõi trạng thái các đơn đặt phòng của bạn."}
-            {activeCount > 0 && (
-              <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
-                {activeCount} đang xử lý
-              </span>
-            )}
           </p>
         </div>
       </div>
@@ -189,7 +272,7 @@ function MyBookingsContent() {
         </div>
       )}
 
-      {bookings.length === 0 && !error ? (
+      {total === 0 && !hasFilters && !error ? (
         <div className="text-center py-20">
           <p className="text-lg text-secondary mb-4">Bạn chưa có đơn đặt phòng nào.</p>
           <Link
@@ -209,28 +292,42 @@ function MyBookingsContent() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Tìm theo mã đặt phòng, phòng, tòa nhà..."
+                placeholder="Tìm theo mã đặt phòng..."
                 className="w-full rounded-full border border-muted/30 bg-white py-2 pl-10 pr-4 text-sm text-primary outline-none transition-colors placeholder:text-secondary/40 focus:border-primary hover:border-primary"
               />
             </div>
 
-            <FilterDropdown
-              options={STATUS_FILTERS}
-              value={statusFilter}
-              onChange={setStatusFilter}
-              icon={FunnelSimple}
-              placeholder="Tất cả"
-              align="right"
-            />
+            <div className="flex items-center gap-2 flex-wrap">
+              <FilterDropdown
+                options={STATUS_FILTERS}
+                value={statusFilter}
+                onChange={setStatusFilter}
+                icon={FunnelSimple}
+                placeholder="Tất cả"
+                align="right"
+              />
+              <FilterDropdown
+                options={SORT_OPTIONS}
+                value={sortValue}
+                onChange={setSortValue}
+                icon={SortAscending}
+                placeholder="Sắp xếp"
+                align="right"
+              />
+            </div>
           </div>
 
           {/* Results */}
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <CircleNotch className="size-6 animate-spin text-primary" />
+            </div>
+          ) : bookings.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-secondary">Không tìm thấy đơn đặt phòng phù hợp.</p>
-              {(searchQuery || statusFilter !== "all") && (
+              {hasFilters && (
                 <button
-                  onClick={() => { setSearchQuery(""); setStatusFilter("all"); }}
+                  onClick={handleClearFilters}
                   className="mt-3 text-sm font-medium text-primary hover:underline"
                 >
                   Xóa bộ lọc
@@ -238,30 +335,58 @@ function MyBookingsContent() {
               )}
             </div>
           ) : (
-            <div className="space-y-4">
-              {filtered.map((b) => (
-                <BookingRow key={b.id} booking={b} onDetail={setDetailBooking} />
-              ))}
-            </div>
+            <>
+              <div className="space-y-4">
+                {bookings.map((b) => (
+                  <BookingRow key={b.id} booking={b} onDetail={setDetailBooking} onPay={handlePay} />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="inline-flex items-center gap-1 rounded-full border border-muted/30 px-3 py-1.5 text-sm font-medium text-secondary transition-colors hover:border-primary hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <CaretLeft className="size-4" />
+                    Trước
+                  </button>
+                  <span className="px-3 text-sm text-secondary">
+                    Trang <span className="font-semibold text-primary">{page}</span> / {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    className="inline-flex items-center gap-1 rounded-full border border-muted/30 px-3 py-1.5 text-sm font-medium text-secondary transition-colors hover:border-primary hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Sau
+                    <CaretRight className="size-4" />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </>
       )}
 
       {/* Detail modal */}
       {detailBooking && (
-        <BookingDetailModal booking={detailBooking} onClose={() => setDetailBooking(null)} />
+        <BookingDetailModal booking={detailBooking} onClose={() => setDetailBooking(null)} onPay={handlePay} />
       )}
     </section>
   );
 }
 
-function BookingRow({ booking, onDetail }) {
+function BookingRow({ booking, onDetail, onPay }) {
   const room = booking.room;
   const building = room?.building;
   const statusInfo = STATUS_CONFIG[booking.status] || STATUS_CONFIG.PENDING;
   const isCancelled = booking.status === "CANCELLED";
   const isPending = booking.status === "PENDING";
-  const isDepositPaid = booking.status === "DEPOSIT_PAID";
 
   return (
     <div className={`flex flex-col sm:flex-row gap-4 rounded-2xl border bg-white p-5 transition-shadow hover:shadow-md ${isCancelled ? "border-gray-100 opacity-70" : isPending ? "border-amber-200 bg-amber-50/30" : "border-gray-200"}`}>
@@ -319,22 +444,23 @@ function BookingRow({ booking, onDetail }) {
             <Eye className="size-4" />
             Xem
           </button>
-          {isDepositPaid && booking.contract_id && (
-            <Link
-              to={`/sign?contractId=${booking.contract_id}`}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-white hover:bg-amber-600 transition-colors"
+          {isPending && (
+            <button
+              onClick={() => onPay(booking)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
             >
-              <PenNib className="size-4" />
-              Ký hợp đồng
-            </Link>
+              <CreditCard className="size-4" />
+              Đặt cọc
+            </button>
           )}
+          <ContractButton booking={booking} />
         </div>
       </div>
     </div>
   );
 }
 
-function BookingDetailModal({ booking, onClose }) {
+function BookingDetailModal({ booking, onClose, onPay }) {
   const room = booking.room;
   const building = room?.building;
   const roomType = room?.room_type;
@@ -435,16 +561,19 @@ function BookingDetailModal({ booking, onClose }) {
             )}
           </div>
 
-          {/* Sign action */}
-          {booking.status === "DEPOSIT_PAID" && booking.contract_id && (
-            <Link
-              to={`/sign?contractId=${booking.contract_id}`}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-semibold text-white hover:bg-amber-600 transition-colors"
+          {/* Pay action */}
+          {isPending && (
+            <button
+              onClick={() => onPay(booking)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
             >
-              <PenNib className="size-4" />
-              Ký hợp đồng ngay
-            </Link>
+              <CreditCard className="size-4" />
+              Đặt cọc ngay
+            </button>
           )}
+
+          {/* Contract action */}
+          <ContractButtonFull booking={booking} />
         </div>
       </div>
     </>

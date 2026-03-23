@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { CircleNotch, ArrowLeft, MapPin, CalendarDots, FileText, DownloadSimple, Eye, PenNib, MagnifyingGlass, FunnelSimple, CaretDown, CaretUp } from "@phosphor-icons/react";
+import { CircleNotch, ArrowLeft, MapPin, CalendarDots, FileText, DownloadSimple, Eye, PenNib, MagnifyingGlass, FunnelSimple, CaretDown, CaretUp, SortAscending, CaretLeft, CaretRight, HourglassMedium, Clock } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
@@ -10,12 +10,12 @@ import { formatDisplayDate } from "@/lib/formatters";
 
 const STATUS_CONFIG = {
   DRAFT: { text: "Bản nháp", className: "bg-gray-100 text-gray-600" },
-  PENDING_CUSTOMER_SIGNATURE: { text: "Chờ bạn ký", className: "bg-amber-100 text-amber-700" },
+  PENDING_CUSTOMER_SIGNATURE: { text: "Chờ bạn ký", className: "bg-olive/15 text-olive" },
   PENDING_MANAGER_SIGNATURE: { text: "Chờ quản lý ký", className: "bg-blue-100 text-blue-700" },
-  PENDING_FIRST_PAYMENT: { text: "Chờ thanh toán kỳ đầu", className: "bg-orange-100 text-orange-700" },
-  PENDING_CHECK_IN: { text: "Chờ nhận phòng", className: "bg-cyan-100 text-cyan-700" },
+  PENDING_FIRST_PAYMENT: { text: "Chờ thanh toán kỳ đầu", className: "bg-primary/10 text-primary" },
+  PENDING_CHECK_IN: { text: "Chờ nhận phòng", className: "bg-teal-100 text-teal-700" },
   ACTIVE: { text: "Đang hiệu lực", className: "bg-green-100 text-green-700" },
-  EXPIRING_SOON: { text: "Sắp hết hạn", className: "bg-amber-100 text-amber-700" },
+  EXPIRING_SOON: { text: "Sắp hết hạn", className: "bg-olive/15 text-olive" },
   FINISHED: { text: "Đã kết thúc", className: "bg-gray-100 text-gray-600" },
   TERMINATED: { text: "Đã chấm dứt", className: "bg-red-100 text-red-600" },
 };
@@ -29,7 +29,14 @@ const STATUS_FILTERS = [
   { value: "TERMINATED", label: "Đã chấm dứt" },
 ];
 
-const ACTION_NEEDED_STATUSES = ["DRAFT", "PENDING_CUSTOMER_SIGNATURE", "PENDING_MANAGER_SIGNATURE", "PENDING_FIRST_PAYMENT"];
+const SORT_OPTIONS = [
+  { value: "createdAt:DESC", label: "Mới nhất" },
+  { value: "createdAt:ASC", label: "Cũ nhất" },
+  { value: "start_date:ASC", label: "Bắt đầu gần nhất" },
+  { value: "start_date:DESC", label: "Bắt đầu xa nhất" },
+  { value: "end_date:ASC", label: "Kết thúc gần nhất" },
+  { value: "end_date:DESC", label: "Kết thúc xa nhất" },
+];
 
 function FilterDropdown({ options, value, onChange, icon: Icon, placeholder, align = "right" }) {
   const [open, setOpen] = useState(false);
@@ -86,64 +93,77 @@ function FilterDropdown({ options, value, onChange, icon: Icon, placeholder, ali
 function MyContractsContent() {
   const navigate = useNavigate();
   const { isLoggedIn } = useAuth();
+
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Filters & search
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
+
+  // Filters & sort
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sortValue, setSortValue] = useState("createdAt:DESC");
+
+  // Debounced search
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const searchTimer = useRef(null);
+  useEffect(() => {
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(searchTimer.current);
+  }, [searchQuery]);
+
+  // Reset page when filters change
+  useEffect(() => { setPage(1); }, [statusFilter, sortValue]);
+
+  const fetchContracts = useCallback(async () => {
+    if (!isLoggedIn) return;
+    try {
+      setLoading(true);
+      setError("");
+      const [sort_by, sort_order] = sortValue.split(":");
+      const params = new URLSearchParams({ page, limit, sort_by, sort_order });
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
+
+      const res = await api.get(`/api/contracts/my?${params}`);
+      setContracts(res.data || []);
+      setTotal(res.total || 0);
+      setTotalPages(res.total_pages || 1);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [isLoggedIn, page, sortValue, statusFilter, debouncedSearch]);
 
   useEffect(() => {
     if (!isLoggedIn) {
       navigate("/login");
       return;
     }
-    const fetchContracts = async () => {
-      try {
-        const res = await api.get("/api/contracts/my");
-        setContracts(res.data || []);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchContracts();
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, navigate, fetchContracts]);
 
-  const filtered = useMemo(() => {
-    let result = [...contracts];
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setDebouncedSearch("");
+    setStatusFilter("all");
+    setSortValue("createdAt:DESC");
+    setPage(1);
+  };
 
-    // Search
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter((c) => {
-        const room = c.room;
-        const building = room?.building;
-        const roomType = room?.room_type;
-        return (
-          c.contract_number?.toLowerCase().includes(q) ||
-          room?.room_number?.toLowerCase().includes(q) ||
-          building?.name?.toLowerCase().includes(q) ||
-          roomType?.name?.toLowerCase().includes(q)
-        );
-      });
-    }
+  const hasFilters = debouncedSearch || statusFilter !== "all";
 
-    // Status filter
-    if (statusFilter === "action_needed") {
-      result = result.filter((c) => ACTION_NEEDED_STATUSES.includes(c.status));
-    } else if (statusFilter !== "all") {
-      result = result.filter((c) => c.status === statusFilter);
-    }
-
-    return result;
-  }, [contracts, searchQuery, statusFilter]);
-
-  const actionNeededCount = contracts.filter((c) => ACTION_NEEDED_STATUSES.includes(c.status)).length;
-
-  if (loading) {
+  if (loading && contracts.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <CircleNotch className="size-8 animate-spin text-primary" />
@@ -166,14 +186,9 @@ function MyContractsContent() {
         <div>
           <h1 className="text-3xl font-bold text-primary mb-1">Hợp đồng của tôi</h1>
           <p className="text-secondary text-sm">
-            {contracts.length > 0
-              ? `${contracts.length} hợp đồng`
+            {total > 0
+              ? `${total} hợp đồng`
               : "Xem và quản lý các hợp đồng thuê phòng."}
-            {actionNeededCount > 0 && (
-              <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
-                {actionNeededCount} cần xử lý
-              </span>
-            )}
           </p>
         </div>
       </div>
@@ -184,7 +199,7 @@ function MyContractsContent() {
         </div>
       )}
 
-      {contracts.length === 0 && !error ? (
+      {total === 0 && !hasFilters && !error ? (
         <div className="text-center py-20">
           <p className="text-lg text-secondary mb-4">Bạn chưa có hợp đồng nào.</p>
           <Link
@@ -196,38 +211,50 @@ function MyContractsContent() {
         </div>
       ) : (
         <>
-          {/* Toolbar: Search + Filters + Sort */}
+          {/* Toolbar */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
-            {/* Search */}
             <div className="relative flex-1">
               <MagnifyingGlass className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-secondary/50" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Tìm theo mã hợp đồng, phòng, tòa nhà..."
+                placeholder="Tìm theo mã hợp đồng..."
                 className="w-full rounded-full border border-muted/30 bg-white py-2 pl-10 pr-4 text-sm text-primary outline-none transition-colors placeholder:text-secondary/40 focus:border-primary hover:border-primary"
               />
             </div>
 
-            {/* Status filter */}
-            <FilterDropdown
-              options={STATUS_FILTERS}
-              value={statusFilter}
-              onChange={setStatusFilter}
-              icon={FunnelSimple}
-              placeholder="Tất cả"
-              align="right"
-            />
+            <div className="flex items-center gap-2 flex-wrap">
+              <FilterDropdown
+                options={STATUS_FILTERS}
+                value={statusFilter}
+                onChange={setStatusFilter}
+                icon={FunnelSimple}
+                placeholder="Tất cả"
+                align="right"
+              />
+              <FilterDropdown
+                options={SORT_OPTIONS}
+                value={sortValue}
+                onChange={setSortValue}
+                icon={SortAscending}
+                placeholder="Sắp xếp"
+                align="right"
+              />
+            </div>
           </div>
 
           {/* Results */}
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <CircleNotch className="size-6 animate-spin text-primary" />
+            </div>
+          ) : contracts.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-secondary">Không tìm thấy hợp đồng phù hợp.</p>
-              {(searchQuery || statusFilter !== "all") && (
+              {hasFilters && (
                 <button
-                  onClick={() => { setSearchQuery(""); setStatusFilter("all"); }}
+                  onClick={handleClearFilters}
                   className="mt-3 text-sm font-medium text-primary hover:underline"
                 >
                   Xóa bộ lọc
@@ -235,15 +262,43 @@ function MyContractsContent() {
               )}
             </div>
           ) : (
-            <div className="space-y-4">
-              {filtered.map((c) => (
-                <ContractRow key={c.id} contract={c} />
-              ))}
-            </div>
+            <>
+              <div className="space-y-4">
+                {contracts.map((c) => (
+                  <ContractRow key={c.id} contract={c} />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="inline-flex items-center gap-1 rounded-full border border-muted/30 px-3 py-1.5 text-sm font-medium text-secondary transition-colors hover:border-primary hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <CaretLeft className="size-4" />
+                    Trước
+                  </button>
+                  <span className="px-3 text-sm text-secondary">
+                    Trang <span className="font-semibold text-primary">{page}</span> / {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    className="inline-flex items-center gap-1 rounded-full border border-muted/30 px-3 py-1.5 text-sm font-medium text-secondary transition-colors hover:border-primary hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Sau
+                    <CaretRight className="size-4" />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </>
       )}
-
     </section>
   );
 }
@@ -254,9 +309,16 @@ function ContractRow({ contract }) {
   const statusInfo = STATUS_CONFIG[contract.status] || STATUS_CONFIG.DRAFT;
   const isTerminal = contract.status === "FINISHED" || contract.status === "TERMINATED";
   const needsSign = contract.status === "PENDING_CUSTOMER_SIGNATURE";
+  const waitingManager = contract.status === "PENDING_MANAGER_SIGNATURE";
 
   return (
-    <div className={`flex flex-col sm:flex-row gap-4 rounded-2xl border bg-white p-5 transition-shadow hover:shadow-md ${isTerminal ? "border-gray-100 opacity-70" : needsSign ? "border-amber-200 bg-amber-50/30" : "border-gray-200"}`}>
+    <div className={`flex flex-col sm:flex-row gap-4 rounded-2xl border bg-white p-5 transition-shadow hover:shadow-md ${
+      isTerminal
+        ? "border-gray-100 opacity-70"
+        : needsSign
+          ? "border-olive/30 bg-olive/5"
+          : "border-gray-200"
+    }`}>
       {/* Icon */}
       <div className="hidden sm:flex items-center">
         <FileText className="size-5 text-olive shrink-0" />
@@ -298,11 +360,17 @@ function ContractRow({ contract }) {
         {needsSign && (
           <Link
             to={`/sign?contractId=${contract.id}`}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-white hover:bg-amber-600 transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-olive px-3 py-2 text-sm font-medium text-white hover:bg-olive/90 transition-colors"
           >
             <PenNib className="size-4" />
             Ký hợp đồng
           </Link>
+        )}
+        {waitingManager && (
+          <span className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-sm font-medium text-blue-600">
+            <HourglassMedium className="size-4" />
+            Chờ quản lý ký
+          </span>
         )}
         {contract.pdf_url && (
           <a

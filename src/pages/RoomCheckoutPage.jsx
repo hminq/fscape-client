@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { CircleNotch } from "@phosphor-icons/react";
-import { toast } from "@heroui/react";
+import { toast } from "@/lib/toast";
+import { usePayOS } from "payos-checkout";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 import { api } from "@/lib/api";
@@ -13,11 +14,13 @@ import defaultRoomImg from "@/assets/default_room_img.jpg";
 const STEPS = [
   { id: 1, label: "Thông tin đặt phòng" },
   { id: 2, label: "Điều khoản" },
+  { id: 3, label: "Thanh toán" },
 ];
 
 function RoomCheckoutContent() {
   const { buildingId, roomId } = useParams();
   const [searchParams] = useSearchParams();
+  const Navigate = useNavigate();
   const checkInDate = searchParams.get("checkInDate") || "";
   const rentalTerm = searchParams.get("term") || "";
   const billingCycle = searchParams.get("billingCycle") || "";
@@ -29,6 +32,8 @@ function RoomCheckoutContent() {
   const [error, setError] = useState("");
   const [step, setStep] = useState(1);
   const [agreed, setAgreed] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState("");
+  const [bookingExpiresAt, setBookingExpiresAt] = useState(null);
   const [form, setForm] = useState(() => {
     const u = authUser || {};
     return {
@@ -149,34 +154,43 @@ function RoomCheckoutContent() {
       return;
     }
 
-    // Step 2: đồng ý điều khoản → tạo booking → gọi VNPAY → redirect
-    if (!agreed) {
-      toast({ title: "Thiếu thông tin", description: "Bạn cần đồng ý với điều khoản để tiếp tục.", color: "warning" });
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-
-      // Tạo booking (PENDING) + lấy URL thanh toán VNPAY trong 1 request
-      const res = await api.post("/api/bookings", {
-        roomId,
-        checkInDate,
-        durationMonths: Number(rentalTerm),
-        billingCycle,
-        customerInfo: form,
-      });
-
-      const paymentUrl = res?.data?.payment_url;
-      if (paymentUrl) {
-        window.location.href = paymentUrl;
-      } else {
-        throw new Error("Không nhận được liên kết thanh toán từ máy chủ.");
+    if (step === 2) {
+      if (!agreed) {
+        toast.warning("Bạn cần đồng ý với điều khoản để tiếp tục.");
+        return;
       }
-    } catch (err) {
-      toast({ title: "Lỗi", description: err.message || "Không thể khởi tạo thanh toán.", color: "danger" });
-    } finally {
-      setSubmitting(false);
+
+      try {
+        setSubmitting(true);
+
+        const res = await api.post("/api/bookings", {
+          roomId,
+          checkInDate,
+          durationMonths: Number(rentalTerm),
+          billingCycle,
+          customerInfo: form,
+        });
+
+        // PayOS: nhận checkoutUrl → hiển thị embedded form ở Step 3
+        const url = res?.data?.checkout_url;
+        if (url) {
+          setCheckoutUrl(url);
+          setBookingExpiresAt(res?.data?.expires_at);
+          setStep(3);
+        } else {
+          // Fallback VNPay: redirect
+          const paymentUrl = res?.data?.payment_url;
+          if (paymentUrl) {
+            window.location.href = paymentUrl;
+          } else {
+            throw new Error("Không nhận được liên kết thanh toán từ máy chủ.");
+          }
+        }
+      } catch (err) {
+        toast.error(err.message || "Không thể khởi tạo thanh toán.");
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
 
@@ -338,29 +352,35 @@ function RoomCheckoutContent() {
             </div>
           )}
 
-          <div className="mt-6 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setStep((prev) => Math.max(1, prev - 1))}
-              disabled={step === 1}
-              className={`h-11 rounded-full px-6 text-sm font-semibold ${step === 1 ? "bg-muted/30 text-secondary/50" : "bg-primary/10 text-primary"
-                }`}
-            >
-              Quay lại
-            </button>
-            <button
-              type="button"
-              onClick={handleNext}
-              disabled={submitting || (step === 2 && !agreed)}
-              className={`h-11 rounded-full px-6 text-sm font-semibold flex items-center gap-2 transition-all ${submitting || (step === 2 && !agreed)
-                ? "bg-muted/30 text-secondary/50 cursor-not-allowed"
-                : "bg-primary text-white hover:bg-primary/90"
-                }`}
-            >
-              {submitting && <CircleNotch className="h-4 w-4 animate-spin" />}
-              {step === 2 ? "Thanh toán tiền cọc" : "Tiếp tục"}
-            </button>
-          </div>
+          {step === 3 && checkoutUrl && (
+            <PayOSEmbeddedCheckout checkoutUrl={checkoutUrl} navigate={Navigate} expiresAt={bookingExpiresAt} />
+          )}
+
+          {step < 3 && (
+            <div className="mt-6 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setStep((prev) => Math.max(1, prev - 1))}
+                disabled={step === 1}
+                className={`h-11 rounded-full px-6 text-sm font-semibold ${step === 1 ? "bg-muted/30 text-secondary/50" : "bg-primary/10 text-primary"
+                  }`}
+              >
+                Quay lại
+              </button>
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={submitting || (step === 2 && !agreed)}
+                className={`h-11 rounded-full px-6 text-sm font-semibold flex items-center gap-2 transition-all ${submitting || (step === 2 && !agreed)
+                  ? "bg-muted/30 text-secondary/50 cursor-not-allowed"
+                  : "bg-primary text-white hover:bg-primary/90"
+                  }`}
+              >
+                {submitting && <CircleNotch className="h-4 w-4 animate-spin" />}
+                {step === 2 ? "Thanh toán tiền cọc" : "Tiếp tục"}
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="space-y-5">
@@ -426,6 +446,83 @@ function RoomCheckoutContent() {
         </div>
       </div>
     </section >
+  );
+}
+
+function PayOSEmbeddedCheckout({ checkoutUrl, navigate, expiresAt }) {
+  const { open } = usePayOS({
+    RETURN_URL: `${window.location.origin}/payment/result`,
+    ELEMENT_ID: "payos-checkout",
+    CHECKOUT_URL: checkoutUrl,
+    embedded: true,
+    onSuccess: () => {
+      navigate("/payment/result?code=00&status=PAID");
+    },
+    onCancel: () => {
+      navigate("/payment/result?code=01&status=CANCELLED&cancel=true");
+    },
+  });
+
+  const opened = useRef(false);
+  useEffect(() => {
+    if (checkoutUrl && !opened.current) {
+      opened.current = true;
+      open();
+    }
+  }, [checkoutUrl]);
+
+  // Countdown to real booking expiry
+  const getInitialSeconds = () => {
+    if (expiresAt) {
+      const remaining = Math.floor((new Date(expiresAt) - Date.now()) / 1000);
+      return Math.max(0, remaining);
+    }
+    return 3600;
+  };
+  const [secondsLeft, setSecondsLeft] = useState(getInitialSeconds);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          navigate("/payment/result?code=01&status=CANCELLED&cancel=true");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const minutes = Math.floor(secondsLeft / 60);
+  const seconds = secondsLeft % 60;
+
+  const isUrgent = secondsLeft <= 300;
+
+  return (
+    <div className="mx-auto mt-6 max-w-md">
+      {/* Timer banner */}
+      <div className={`mb-4 flex items-center justify-center gap-3 rounded-2xl py-3 transition-colors ${isUrgent ? "bg-red-50" : "bg-primary/5"}`}>
+        <svg className={`h-5 w-5 ${isUrgent ? "animate-pulse text-red-500" : "text-primary"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
+        </svg>
+        <span className={`text-sm ${isUrgent ? "text-red-500" : "text-secondary"}`}>
+          Đơn đặt cọc sẽ hết hạn sau
+        </span>
+        <span className={`rounded-lg px-3 py-1 font-mono text-xl font-bold tabular-nums tracking-wider ${isUrgent ? "bg-red-100 text-red-600" : "bg-primary/10 text-primary"}`}>
+          {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+        </span>
+      </div>
+
+      {/* Payment card */}
+      <div className="rounded-2xl border border-muted/20 bg-white p-4">
+        <h2 className="text-lg font-bold text-primary">Thanh toán tiền cọc</h2>
+        <p className="mt-1 text-xs text-secondary">
+          Quét mã QR bằng ứng dụng ngân hàng để hoàn tất.
+        </p>
+        <div id="payos-checkout" className="payos-embed-container mt-4" />
+      </div>
+    </div>
   );
 }
 

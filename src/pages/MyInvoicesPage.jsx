@@ -1,13 +1,12 @@
-import { useEffect, useRef, useMemo, useState } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { CircleNotch, ArrowLeft, CalendarDots, Receipt, CreditCard, MagnifyingGlass, FunnelSimple, CaretDown, CaretUp, Tag } from "@phosphor-icons/react";
+import { CircleNotch, ArrowLeft, CalendarDots, Receipt, CreditCard, MagnifyingGlass, FunnelSimple, CaretDown, CaretUp, Tag, SortAscending, CaretLeft, CaretRight } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { formatVnd, formatDisplayDate } from "@/lib/formatters";
-import { toast } from "@heroui/react";
 
 const STATUS_CONFIG = {
   UNPAID: { text: "Chưa thanh toán", className: "bg-amber-100 text-amber-700" },
@@ -28,6 +27,15 @@ const TYPE_FILTERS = [
   { value: "RENT", label: "Tiền thuê" },
   { value: "SERVICE", label: "Dịch vụ" },
   { value: "SETTLEMENT", label: "Thanh toán cuối kỳ" },
+];
+
+const SORT_OPTIONS = [
+  { value: "created_at:DESC", label: "Mới nhất" },
+  { value: "created_at:ASC", label: "Cũ nhất" },
+  { value: "due_date:ASC", label: "Hạn gần nhất" },
+  { value: "due_date:DESC", label: "Hạn xa nhất" },
+  { value: "total_amount:DESC", label: "Số tiền giảm" },
+  { value: "total_amount:ASC", label: "Số tiền tăng" },
 ];
 
 const UNPAID_STATUSES = ["UNPAID", "OVERDUE"];
@@ -89,33 +97,67 @@ function MyInvoicesContent() {
   const [searchParams] = useSearchParams();
   const highlightId = searchParams.get("invoiceId");
   const { isLoggedIn } = useAuth();
+
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [payingId, setPayingId] = useState(null);
 
-  // Filters
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
+
+  // Filters & sort
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [sortValue, setSortValue] = useState("created_at:DESC");
+
+  // Debounced search
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const searchTimer = useRef(null);
+  useEffect(() => {
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(searchTimer.current);
+  }, [searchQuery]);
+
+  // Reset page when filters change
+  useEffect(() => { setPage(1); }, [statusFilter, typeFilter, sortValue]);
+
+  const fetchInvoices = useCallback(async () => {
+    if (!isLoggedIn) return;
+    try {
+      setLoading(true);
+      setError("");
+      const [sort_by, sort_order] = sortValue.split(":");
+      const params = new URLSearchParams({ page, limit, sort_by, sort_order });
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      if (typeFilter !== "all") params.set("invoice_type", typeFilter);
+      if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
+
+      const res = await api.get(`/api/invoices/my?${params}`);
+      setInvoices(res.data || []);
+      setTotal(res.total || 0);
+      setTotalPages(res.total_pages || 1);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [isLoggedIn, page, sortValue, statusFilter, typeFilter, debouncedSearch]);
 
   useEffect(() => {
     if (!isLoggedIn) {
       navigate("/login");
       return;
     }
-    const fetchInvoices = async () => {
-      try {
-        const res = await api.get("/api/invoices/my");
-        setInvoices(res.data || []);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchInvoices();
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, navigate, fetchInvoices]);
 
   // Auto-scroll to highlighted invoice
   useEffect(() => {
@@ -126,57 +168,27 @@ function MyInvoicesContent() {
     }
   }, [highlightId, loading]);
 
-  const handlePay = async (invoiceId) => {
-    try {
-      setPayingId(invoiceId);
-      const res = await api.post("/api/payment/create-invoice-vnpay", { invoiceId });
-      const paymentUrl = res?.payment_url || res?.paymentUrl;
-      if (paymentUrl) {
-        window.location.href = paymentUrl;
-      } else {
-        throw new Error("Không nhận được liên kết thanh toán.");
-      }
-    } catch (err) {
-      toast({ title: "Lỗi", description: err.message || "Không thể tạo thanh toán.", color: "danger" });
-      setPayingId(null);
-    }
+  const handlePay = (invoice) => {
+    const params = new URLSearchParams({
+      type: "invoice",
+      invoiceId: invoice.id,
+    });
+    if (invoice.due_date) params.set("expiresAt", invoice.due_date);
+    navigate(`/payment/checkout?${params}`);
   };
 
-  const filtered = useMemo(() => {
-    let result = [...invoices];
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setDebouncedSearch("");
+    setStatusFilter("all");
+    setTypeFilter("all");
+    setSortValue("created_at:DESC");
+    setPage(1);
+  };
 
-    // Search
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter((inv) => {
-        const room = inv.contract?.room;
-        const building = room?.building;
-        return (
-          inv.invoice_number?.toLowerCase().includes(q) ||
-          room?.room_number?.toLowerCase().includes(q) ||
-          building?.name?.toLowerCase().includes(q)
-        );
-      });
-    }
+  const hasFilters = debouncedSearch || statusFilter !== "all" || typeFilter !== "all";
 
-    // Status filter
-    if (statusFilter === "unpaid") {
-      result = result.filter((inv) => UNPAID_STATUSES.includes(inv.status));
-    } else if (statusFilter !== "all") {
-      result = result.filter((inv) => inv.status === statusFilter);
-    }
-
-    // Type filter
-    if (typeFilter !== "all") {
-      result = result.filter((inv) => inv.invoice_type === typeFilter);
-    }
-
-    return result;
-  }, [invoices, searchQuery, statusFilter, typeFilter]);
-
-  const unpaidCount = invoices.filter((inv) => UNPAID_STATUSES.includes(inv.status)).length;
-
-  if (loading) {
+  if (loading && invoices.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <CircleNotch className="size-8 animate-spin text-primary" />
@@ -199,14 +211,9 @@ function MyInvoicesContent() {
         <div>
           <h1 className="text-3xl font-bold text-primary mb-1">Hóa đơn của tôi</h1>
           <p className="text-secondary text-sm">
-            {invoices.length > 0
-              ? `${invoices.length} hóa đơn`
+            {total > 0
+              ? `${total} hóa đơn`
               : "Theo dõi và thanh toán các hóa đơn thuê phòng."}
-            {unpaidCount > 0 && (
-              <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
-                {unpaidCount} cần thanh toán
-              </span>
-            )}
           </p>
         </div>
       </div>
@@ -217,7 +224,7 @@ function MyInvoicesContent() {
         </div>
       )}
 
-      {invoices.length === 0 && !error ? (
+      {total === 0 && !hasFilters && !error ? (
         <div className="text-center py-20">
           <p className="text-lg text-secondary mb-4">Bạn chưa có hóa đơn nào.</p>
           <Link
@@ -229,7 +236,7 @@ function MyInvoicesContent() {
         </div>
       ) : (
         <>
-          {/* Toolbar: Search + Filters */}
+          {/* Toolbar: Search + Filters + Sort */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
             {/* Search */}
             <div className="relative flex-1">
@@ -238,13 +245,12 @@ function MyInvoicesContent() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Tìm theo mã hóa đơn, phòng, tòa nhà..."
+                placeholder="Tìm theo mã hóa đơn..."
                 className="w-full rounded-full border border-muted/30 bg-white py-2 pl-10 pr-4 text-sm text-primary outline-none transition-colors placeholder:text-secondary/40 focus:border-primary hover:border-primary"
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Status filter */}
+            <div className="flex items-center gap-2 flex-wrap">
               <FilterDropdown
                 options={STATUS_FILTERS}
                 value={statusFilter}
@@ -253,8 +259,6 @@ function MyInvoicesContent() {
                 placeholder="Tất cả"
                 align="right"
               />
-
-              {/* Type filter */}
               <FilterDropdown
                 options={TYPE_FILTERS}
                 value={typeFilter}
@@ -263,16 +267,28 @@ function MyInvoicesContent() {
                 placeholder="Tất cả loại"
                 align="right"
               />
+              <FilterDropdown
+                options={SORT_OPTIONS}
+                value={sortValue}
+                onChange={setSortValue}
+                icon={SortAscending}
+                placeholder="Sắp xếp"
+                align="right"
+              />
             </div>
           </div>
 
           {/* Results */}
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <CircleNotch className="size-6 animate-spin text-primary" />
+            </div>
+          ) : invoices.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-secondary">Không tìm thấy hóa đơn phù hợp.</p>
-              {(searchQuery || statusFilter !== "all" || typeFilter !== "all") && (
+              {hasFilters && (
                 <button
-                  onClick={() => { setSearchQuery(""); setStatusFilter("all"); setTypeFilter("all"); }}
+                  onClick={handleClearFilters}
                   className="mt-3 text-sm font-medium text-primary hover:underline"
                 >
                   Xóa bộ lọc
@@ -280,17 +296,46 @@ function MyInvoicesContent() {
               )}
             </div>
           ) : (
-            <div className="space-y-4">
-              {filtered.map((inv) => (
-                <InvoiceCard
-                  key={inv.id}
-                  invoice={inv}
-                  highlighted={inv.id === highlightId}
-                  onPay={handlePay}
-                  paying={payingId === inv.id}
-                />
-              ))}
-            </div>
+            <>
+              <div className="space-y-4">
+                {invoices.map((inv) => (
+                  <InvoiceCard
+                    key={inv.id}
+                    invoice={inv}
+                    highlighted={inv.id === highlightId}
+                    onPay={handlePay}
+                    paying={false}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="inline-flex items-center gap-1 rounded-full border border-muted/30 px-3 py-1.5 text-sm font-medium text-secondary transition-colors hover:border-primary hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <CaretLeft className="size-4" />
+                    Trước
+                  </button>
+                  <span className="px-3 text-sm text-secondary">
+                    Trang <span className="font-semibold text-primary">{page}</span> / {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    className="inline-flex items-center gap-1 rounded-full border border-muted/30 px-3 py-1.5 text-sm font-medium text-secondary transition-colors hover:border-primary hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Sau
+                    <CaretRight className="size-4" />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </>
       )}
@@ -303,11 +348,10 @@ function InvoiceCard({ invoice, highlighted, onPay, paying }) {
   const contract = invoice.contract;
   const room = contract?.room;
   const building = room?.building;
-  const canPay = invoice.status === "UNPAID" || invoice.status === "OVERDUE";
+  const isPastDue = invoice.due_date && new Date(invoice.due_date) < new Date();
+  const canPay = invoice.status === "UNPAID" && !isPastDue;
 
-  const isOverdue = invoice.status === "OVERDUE" || (
-    invoice.status === "UNPAID" && invoice.due_date && new Date(invoice.due_date) < new Date()
-  );
+  const isOverdue = invoice.status === "OVERDUE" || (invoice.status === "UNPAID" && isPastDue);
 
   const typeLabel = invoice.invoice_type === "SERVICE"
     ? "Dịch vụ"
@@ -386,7 +430,7 @@ function InvoiceCard({ invoice, highlighted, onPay, paying }) {
           <button
             type="button"
             disabled={paying}
-            onClick={() => onPay(invoice.id)}
+            onClick={() => onPay(invoice)}
             className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
               paying
                 ? "bg-muted/30 text-secondary/50 cursor-not-allowed"

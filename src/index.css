@@ -83,6 +83,14 @@
   }
 }
 
+/* PayOS embedded checkout — force iframe to be visible */
+.payos-embed-container iframe {
+  width: 100% !important;
+  min-height: 540px !important;
+  height: auto !important;
+  border: none !important;
+}
+
 /* Hide scrollbar for horizontal scroll containers */
 @utility scrollbar-hide {
   -ms-overflow-style: none;
