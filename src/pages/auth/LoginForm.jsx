@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { Button, Input } from "@heroui/react";
 import { Lock, Envelope, Eye, EyeSlash } from "@phosphor-icons/react";
 import { api } from "@/lib/api";
@@ -93,9 +93,9 @@ export default function LoginForm() {
           <input type="checkbox" className="accent-olive w-4 h-4" />
           Ghi nhớ tôi
         </label>
-        <a href="#" className="font-semibold text-olive hover:text-muted transition-colors">
+        <Link to="/forgot-password" className="font-semibold text-olive hover:text-muted transition-colors">
           Quên mật khẩu?
-        </a>
+        </Link>
       </div>
 
       <Button

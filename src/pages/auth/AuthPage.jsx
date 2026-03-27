@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion as Motion } from "framer-motion";
 import { House, Users, Lock, ArrowLeft } from "@phosphor-icons/react";
@@ -6,6 +6,7 @@ import fscapeLogoFull from "../../assets/fscape-logo-full.svg";
 import loginImg from "../../assets/login_img.jpg";
 import LoginForm from "./LoginForm";
 import SignUpForm from "./SignUpForm";
+import ForgotPasswordForm from "./ForgotPasswordForm";
 
 const features = [
   { icon: House, title: "Quản Lý Phòng Dễ Dàng", desc: "Tìm kiếm, đặt phòng và quản lý nhà ở sinh viên mọi lúc, mọi nơi" },
@@ -48,8 +49,12 @@ const fadeUp = {
   }),
 };
 
-export default function AuthPage() {
-  const [activeTab, setActiveTab] = useState("login");
+export default function AuthPage({ initialTab = "login" }) {
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-primary via-primary/95 to-secondary">
@@ -160,34 +165,40 @@ export default function AuthPage() {
             transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
           >
             <h2 className="text-center text-2xl font-bold text-primary mb-1">
-              {activeTab === "login" ? "Chào mừng trở lại" : "Tạo tài khoản mới"}
+              {activeTab === "login" ? "Chào mừng trở lại" : activeTab === "signup" ? "Tạo tài khoản mới" : "Quên mật khẩu"}
             </h2>
             <p className="text-center text-sm text-muted mb-6">
               {activeTab === "login"
                 ? "Đăng nhập để tiếp tục với FScape"
-                : "Tham gia cộng đồng sinh viên FScape"}
+                : activeTab === "signup"
+                ? "Tham gia cộng đồng sinh viên FScape"
+                : "Nhập email của bạn để khôi phục mật khẩu"}
             </p>
 
             {/* Tab switcher */}
-            <div className="flex bg-primary/5 rounded-xl p-1 gap-1 mb-6">
-              {[
-                { key: "login", label: "Đăng Nhập" },
-                { key: "signup", label: "Đăng Ký" },
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === tab.key
-                      ? "bg-white text-primary shadow-md"
-                      : "text-muted hover:text-secondary"
-                    }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+            {activeTab !== "forgot" && (
+              <div className="flex bg-primary/5 rounded-xl p-1 gap-1 mb-6">
+                {[
+                  { key: "login", label: "Đăng Nhập" },
+                  { key: "signup", label: "Đăng Ký" },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === tab.key
+                        ? "bg-white text-primary shadow-md"
+                        : "text-muted hover:text-secondary"
+                      }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
-            {activeTab === "login" ? <LoginForm /> : <SignUpForm />}
+            {activeTab === "login" && <LoginForm />}
+            {activeTab === "signup" && <SignUpForm />}
+            {activeTab === "forgot" && <ForgotPasswordForm />}
           </Motion.div>
         </div>
       </Motion.div>

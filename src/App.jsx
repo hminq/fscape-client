@@ -26,7 +26,8 @@ function App() {
     <>
     <Routes>
       <Route path="/" element={<><HomePage /><ChatbotWidget /></>} />
-      <Route path="/login" element={<AuthPage />} />
+      <Route path="/login" element={<AuthPage initialTab="login" />} />
+      <Route path="/forgot-password" element={<AuthPage initialTab="forgot" />} />
       <Route path="/rooms" element={<RoomsPage />} />
       <Route path="/buildings/:buildingId" element={<BuildingDetailPage />} />
       <Route path="/buildings/:buildingId/rooms" element={<BuildingRoomsRedirect />} />
