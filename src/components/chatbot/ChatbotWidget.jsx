@@ -155,7 +155,7 @@ export default function ChatbotWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 flex size-14 items-center justify-center rounded-full bg-olive text-primary shadow-lg hover:bg-olive/90 hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer animate-[fadeIn_0.3s_ease-out]"
+          className="fscape-chatbot-widget fixed bottom-6 right-6 z-50 flex size-14 items-center justify-center rounded-full bg-olive text-primary shadow-lg hover:bg-olive/90 hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer animate-[fadeIn_0.3s_ease-out]"
           aria-label="Mở chatbot"
         >
           <ChatCircleDots size={28} weight="fill" />
@@ -164,7 +164,7 @@ export default function ChatbotWidget() {
 
       {/* Chat panel — bottom right */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col w-[360px] h-[520px] max-h-[80vh] rounded-2xl bg-white shadow-2xl border border-muted/20 overflow-hidden sm:w-[400px] animate-[slideUp_0.25s_ease-out]">
+        <div className="fscape-chatbot-widget fixed bottom-6 right-6 z-50 flex flex-col w-[360px] h-[520px] max-h-[80vh] rounded-2xl bg-white shadow-2xl border border-muted/20 overflow-hidden sm:w-[400px] animate-[slideUp_0.25s_ease-out]">
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 bg-primary text-white shrink-0">
             <div className="flex size-9 items-center justify-center rounded-full bg-olive/20">

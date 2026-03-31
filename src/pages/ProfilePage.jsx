@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Input, Select, SelectItem } from "@heroui/react";
-import { Camera, CircleNotch, ArrowLeft } from "@phosphor-icons/react";
+import { Camera, CircleNotch, ArrowLeft, User, IdentificationCard, Phone, CalendarDots, MapPinLine, UsersThree } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
@@ -14,6 +14,18 @@ const GENDER_OPTIONS = [
   { key: "FEMALE", label: "Nữ" },
   { key: "OTHER", label: "Khác" },
 ];
+const PHONE_REGEX = /^[0-9+ ]{8,20}$/;
+const NAME_REGEX = /^[\p{L}\s]+$/u;
+const FIELD_NAME_MAP = {
+  first_name: "firstName",
+  last_name: "lastName",
+  phone: "phone",
+  gender: "gender",
+  date_of_birth: "dateOfBirth",
+  permanent_address: "permanentAddress",
+  emergency_contact_name: "emergencyContactName",
+  emergency_contact_phone: "emergencyContactPhone",
+};
 
 function ProfileContent() {
   const navigate = useNavigate();
@@ -26,6 +38,7 @@ function ProfileContent() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [formErrors, setFormErrors] = useState({});
 
   // User fields
   const [firstName, setFirstName] = useState("");
@@ -39,6 +52,15 @@ function ProfileContent() {
   const [permanentAddress, setPermanentAddress] = useState("");
   const [emergencyContactName, setEmergencyContactName] = useState("");
   const [emergencyContactPhone, setEmergencyContactPhone] = useState("");
+
+  const clearFieldError = (field) => {
+    setFormErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!isLoggedIn) navigate("/login");
@@ -95,6 +117,7 @@ function ProfileContent() {
       setAvatarUrl(url);
 
       const updateRes = await api.put("/api/user-profile/me", { avatar_url: url });
+      setProfile(updateRes.data);
       login(token, { ...user, ...updateRes.data });
       setSuccess("Cập nhật ảnh đại diện thành công");
       setTimeout(() => setSuccess(""), 3000);
@@ -107,26 +130,80 @@ function ProfileContent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const newErrors = {};
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
+    const trimmedPhone = phone.trim();
+    const trimmedPermanentAddress = permanentAddress.trim();
+    const trimmedEmergencyContactName = emergencyContactName.trim();
+    const trimmedEmergencyContactPhone = emergencyContactPhone.trim();
+
+    if (trimmedFirstName && !NAME_REGEX.test(trimmedFirstName)) {
+      newErrors.firstName = "Tên chỉ được chứa chữ cái và khoảng trắng";
+    }
+    if (trimmedLastName && !NAME_REGEX.test(trimmedLastName)) {
+      newErrors.lastName = "Họ chỉ được chứa chữ cái và khoảng trắng";
+    }
+    if (trimmedPhone && !PHONE_REGEX.test(trimmedPhone)) {
+      newErrors.phone = "Số điện thoại không hợp lệ";
+    }
+    if (dateOfBirth && new Date(dateOfBirth) >= new Date(new Date().toDateString())) {
+      newErrors.dateOfBirth = "Ngày sinh phải là ngày trong quá khứ";
+    }
+    if (trimmedPermanentAddress.length > 500) {
+      newErrors.permanentAddress = "Địa chỉ thường trú tối đa 500 ký tự";
+    }
+    if (trimmedEmergencyContactName && !NAME_REGEX.test(trimmedEmergencyContactName)) {
+      newErrors.emergencyContactName = "Tên liên hệ chỉ được chứa chữ cái và khoảng trắng";
+    }
+    if (trimmedEmergencyContactName.length > 255) {
+      newErrors.emergencyContactName = "Tên liên hệ khẩn cấp tối đa 255 ký tự";
+    }
+    if (trimmedEmergencyContactPhone && !PHONE_REGEX.test(trimmedEmergencyContactPhone)) {
+      newErrors.emergencyContactPhone = "SĐT khẩn cấp không hợp lệ";
+    }
+
+    setFormErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      setError("");
+      setSuccess("");
+      return;
+    }
+
     setSaving(true);
     setError("");
     setSuccess("");
 
     try {
       const payload = {
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        phone: phone.trim(),
+        first_name: trimmedFirstName,
+        last_name: trimmedLastName,
+        phone: trimmedPhone,
         gender: gender || null,
         date_of_birth: dateOfBirth || null,
-        permanent_address: permanentAddress.trim() || null,
-        emergency_contact_name: emergencyContactName.trim() || null,
-        emergency_contact_phone: emergencyContactPhone.trim() || null,
+        permanent_address: trimmedPermanentAddress || null,
+        emergency_contact_name: trimmedEmergencyContactName || null,
+        emergency_contact_phone: trimmedEmergencyContactPhone || null,
       };
       const res = await api.put("/api/user-profile/me", payload);
+      setProfile(res.data);
       login(token, { ...user, ...res.data });
+      setFormErrors({});
       setSuccess("Cập nhật hồ sơ thành công");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
+      if (Array.isArray(err.errors) && err.errors.length > 0) {
+        const backendErrors = {};
+        for (const item of err.errors) {
+          const key = FIELD_NAME_MAP[item.path];
+          if (key && !backendErrors[key]) {
+            backendErrors[key] = item.msg;
+          }
+        }
+        if (Object.keys(backendErrors).length > 0) {
+          setFormErrors(backendErrors);
+        }
+      }
       setError(err.message);
     } finally {
       setSaving(false);
@@ -142,187 +219,260 @@ function ProfileContent() {
   }
 
   return (
-    <section className="max-w-2xl mx-auto px-6 py-12">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-1.5 text-sm text-secondary hover:text-primary transition-colors mb-8"
-      >
-        <ArrowLeft className="size-4" />
-        Quay lại
-      </button>
+    <section className="relative overflow-hidden bg-gradient-to-b from-primary/[0.03] to-white">
+      <div className="mx-auto max-w-6xl px-6 py-10 md:py-12">
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-6 flex items-center gap-1.5 text-sm text-secondary hover:text-primary transition-colors"
+        >
+          <ArrowLeft className="size-4" />
+          Quay lại
+        </button>
 
-      <h1 className="text-3xl font-bold text-primary mb-8">Hồ sơ của tôi</h1>
-
-      {/* Avatar */}
-      <div className="flex items-center gap-6 mb-10">
-        <div className="relative group">
-          <img
-            src={avatarUrl || defaultAvatar}
-            alt="Avatar"
-            className="size-24 rounded-full border-2 border-primary/20 object-cover bg-white"
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-          >
-            {uploading ? (
-              <CircleNotch className="size-6 text-white animate-spin" />
-            ) : (
-              <Camera className="size-6 text-white" />
-            )}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleAvatarUpload}
-            className="hidden"
-          />
+        <div className="mb-8 flex items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-primary">Hồ sơ của tôi</h1>
+            <p className="mt-1 text-sm text-secondary">Quản lý thông tin tài khoản và hồ sơ cá nhân</p>
+          </div>
         </div>
-        <div>
-          <p className="font-semibold text-primary text-lg">
-            {profile?.first_name || profile?.last_name
-              ? `${profile.last_name || ""} ${profile.first_name || ""}`.trim()
-              : "Chưa cập nhật tên"}
-          </p>
-          <p className="text-sm text-secondary">{profile?.email}</p>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="text-sm text-olive hover:underline mt-1"
-          >
-            {uploading ? "Đang tải lên..." : "Thay đổi ảnh đại diện"}
-          </button>
+
+        {/* Messages */}
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+            {success}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <aside className="lg:col-span-4">
+            <div className="sticky top-24 rounded-2xl border border-primary/10 bg-white p-6 shadow-sm">
+              <div className="flex flex-col items-center text-center">
+                <div className="relative group">
+                  <img
+                    src={avatarUrl || defaultAvatar}
+                    alt="Avatar"
+                    className="size-28 rounded-full border-2 border-primary/20 object-cover bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="absolute inset-0 flex items-center justify-center rounded-full bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  >
+                    {uploading ? (
+                      <CircleNotch className="size-6 text-white animate-spin" />
+                    ) : (
+                      <Camera className="size-6 text-white" />
+                    )}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
+                </div>
+                <p className="mt-4 text-lg font-semibold text-primary">
+                  {[lastName, firstName].filter(Boolean).join(" ").trim() || "Chưa cập nhật tên"}
+                </p>
+                <p className="text-sm text-secondary break-all">{profile?.email}</p>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="mt-2 text-sm font-medium text-olive hover:underline"
+                >
+                  {uploading ? "Đang tải lên..." : "Thay đổi ảnh đại diện"}
+                </button>
+              </div>
+
+              <div className="mt-6 border-t border-primary/10 pt-4 text-sm text-secondary space-y-2">
+                <p>Thông tin sẽ được dùng trong đặt phòng và hợp đồng.</p>
+              </div>
+            </div>
+          </aside>
+
+          <form onSubmit={handleSubmit} className="lg:col-span-8 space-y-6">
+            <div className="rounded-2xl border border-primary/10 bg-white p-6 shadow-sm">
+              <div className="mb-5 flex items-center gap-2.5">
+                <div className="flex size-8 items-center justify-center rounded-full bg-primary/8 text-primary">
+                  <IdentificationCard className="size-4.5" />
+                </div>
+                <h2 className="text-lg font-bold text-primary">Thông tin tài khoản</h2>
+              </div>
+
+              <div className="space-y-5">
+                <Input
+                  label="Email"
+                  value={profile?.email || ""}
+                  variant="bordered"
+                  isDisabled
+                  classNames={{ label: "text-secondary" }}
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <Input
+                    label="Họ"
+                    placeholder="Nguyễn"
+                    value={lastName}
+                    onValueChange={(value) => {
+                      setLastName(value);
+                      clearFieldError("lastName");
+                    }}
+                    variant="bordered"
+                    isInvalid={Boolean(formErrors.lastName)}
+                    errorMessage={formErrors.lastName}
+                    classNames={{ label: "text-secondary" }}
+                    startContent={<User className="size-4 text-muted" />}
+                  />
+                  <Input
+                    label="Tên"
+                    placeholder="Văn A"
+                    value={firstName}
+                    onValueChange={(value) => {
+                      setFirstName(value);
+                      clearFieldError("firstName");
+                    }}
+                    variant="bordered"
+                    isInvalid={Boolean(formErrors.firstName)}
+                    errorMessage={formErrors.firstName}
+                    classNames={{ label: "text-secondary" }}
+                    startContent={<User className="size-4 text-muted" />}
+                  />
+                </div>
+                <Input
+                  label="Số điện thoại"
+                  placeholder="0912 345 678"
+                  value={phone}
+                  onValueChange={(value) => {
+                    setPhone(value);
+                    clearFieldError("phone");
+                  }}
+                  variant="bordered"
+                  isInvalid={Boolean(formErrors.phone)}
+                  errorMessage={formErrors.phone}
+                  classNames={{ label: "text-secondary" }}
+                  startContent={<Phone className="size-4 text-muted" />}
+                />
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-primary/10 bg-white p-6 shadow-sm">
+              <div className="mb-5 flex items-center gap-2.5">
+                <div className="flex size-8 items-center justify-center rounded-full bg-primary/8 text-primary">
+                  <CalendarDots className="size-4.5" />
+                </div>
+                <h2 className="text-lg font-bold text-primary">Thông tin cá nhân</h2>
+              </div>
+
+              <div className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <Select
+                    label="Giới tính"
+                    placeholder="Chọn giới tính"
+                    selectedKeys={gender ? [gender] : []}
+                    onSelectionChange={(keys) => {
+                      setGender([...keys][0] || "");
+                      clearFieldError("gender");
+                    }}
+                    variant="bordered"
+                    isInvalid={Boolean(formErrors.gender)}
+                    errorMessage={formErrors.gender}
+                    classNames={{ label: "text-secondary" }}
+                  >
+                    {GENDER_OPTIONS.map((g) => (
+                      <SelectItem key={g.key}>{g.label}</SelectItem>
+                    ))}
+                  </Select>
+                  <Input
+                    label="Ngày sinh"
+                    type="date"
+                    value={dateOfBirth}
+                    onValueChange={(value) => {
+                      setDateOfBirth(value);
+                      clearFieldError("dateOfBirth");
+                    }}
+                    variant="bordered"
+                    isInvalid={Boolean(formErrors.dateOfBirth)}
+                    errorMessage={formErrors.dateOfBirth}
+                    classNames={{ label: "text-secondary" }}
+                  />
+                </div>
+                <Input
+                  label="Địa chỉ thường trú"
+                  placeholder="123 Đường ABC, Quận 1, TP.HCM"
+                  value={permanentAddress}
+                  onValueChange={(value) => {
+                    setPermanentAddress(value);
+                    clearFieldError("permanentAddress");
+                  }}
+                  variant="bordered"
+                  isInvalid={Boolean(formErrors.permanentAddress)}
+                  errorMessage={formErrors.permanentAddress}
+                  classNames={{ label: "text-secondary" }}
+                  startContent={<MapPinLine className="size-4 text-muted" />}
+                />
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-primary/10 bg-white p-6 shadow-sm">
+              <div className="mb-5 flex items-center gap-2.5">
+                <div className="flex size-8 items-center justify-center rounded-full bg-primary/8 text-primary">
+                  <UsersThree className="size-4.5" />
+                </div>
+                <h2 className="text-lg font-bold text-primary">Liên hệ khẩn cấp</h2>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <Input
+                  label="Họ tên người liên hệ"
+                  placeholder="Nguyễn Văn B"
+                  value={emergencyContactName}
+                  onValueChange={(value) => {
+                    setEmergencyContactName(value);
+                    clearFieldError("emergencyContactName");
+                  }}
+                  variant="bordered"
+                  isInvalid={Boolean(formErrors.emergencyContactName)}
+                  errorMessage={formErrors.emergencyContactName}
+                  classNames={{ label: "text-secondary" }}
+                  startContent={<User className="size-4 text-muted" />}
+                />
+                <Input
+                  label="Số điện thoại"
+                  placeholder="0987 654 321"
+                  value={emergencyContactPhone}
+                  onValueChange={(value) => {
+                    setEmergencyContactPhone(value);
+                    clearFieldError("emergencyContactPhone");
+                  }}
+                  variant="bordered"
+                  isInvalid={Boolean(formErrors.emergencyContactPhone)}
+                  errorMessage={formErrors.emergencyContactPhone}
+                  classNames={{ label: "text-secondary" }}
+                  startContent={<Phone className="size-4 text-muted" />}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                radius="full"
+                isLoading={saving}
+                className="bg-primary text-white font-semibold px-8 h-11"
+              >
+                Lưu thay đổi
+              </Button>
+            </div>
+          </form>
         </div>
       </div>
-
-      {/* Messages */}
-      {error && (
-        <div className="mb-6 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="mb-6 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
-          {success}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-10">
-        {/* --- Thông tin tài khoản --- */}
-        <div>
-          <h2 className="text-lg font-bold text-primary mb-5">Thông tin tài khoản</h2>
-          <div className="space-y-5">
-            <Input
-              label="Email"
-              value={profile?.email || ""}
-              variant="bordered"
-              isDisabled
-              classNames={{ label: "text-secondary" }}
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Input
-                label="Họ"
-                placeholder="Nguyễn"
-                value={lastName}
-                onValueChange={setLastName}
-                variant="bordered"
-                classNames={{ label: "text-secondary" }}
-              />
-              <Input
-                label="Tên"
-                placeholder="Văn A"
-                value={firstName}
-                onValueChange={setFirstName}
-                variant="bordered"
-                classNames={{ label: "text-secondary" }}
-              />
-            </div>
-            <Input
-              label="Số điện thoại"
-              placeholder="0912 345 678"
-              value={phone}
-              onValueChange={setPhone}
-              variant="bordered"
-              classNames={{ label: "text-secondary" }}
-            />
-          </div>
-        </div>
-
-        {/* --- Thông tin cá nhân --- */}
-        <div>
-          <h2 className="text-lg font-bold text-primary mb-5">Thông tin cá nhân</h2>
-          <div className="space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Select
-                label="Giới tính"
-                placeholder="Chọn giới tính"
-                selectedKeys={gender ? [gender] : []}
-                onSelectionChange={(keys) => setGender([...keys][0] || "")}
-                variant="bordered"
-                classNames={{ label: "text-secondary" }}
-              >
-                {GENDER_OPTIONS.map((g) => (
-                  <SelectItem key={g.key}>{g.label}</SelectItem>
-                ))}
-              </Select>
-              <Input
-                label="Ngày sinh"
-                type="date"
-                value={dateOfBirth}
-                onValueChange={setDateOfBirth}
-                variant="bordered"
-                classNames={{ label: "text-secondary" }}
-              />
-            </div>
-            <Input
-              label="Địa chỉ thường trú"
-              placeholder="123 Đường ABC, Quận 1, TP.HCM"
-              value={permanentAddress}
-              onValueChange={setPermanentAddress}
-              variant="bordered"
-              classNames={{ label: "text-secondary" }}
-            />
-          </div>
-        </div>
-
-        {/* --- Liên hệ khẩn cấp --- */}
-        <div>
-          <h2 className="text-lg font-bold text-primary mb-5">Liên hệ khẩn cấp</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <Input
-              label="Họ tên người liên hệ"
-              placeholder="Nguyễn Văn B"
-              value={emergencyContactName}
-              onValueChange={setEmergencyContactName}
-              variant="bordered"
-              classNames={{ label: "text-secondary" }}
-            />
-            <Input
-              label="Số điện thoại"
-              placeholder="0987 654 321"
-              value={emergencyContactPhone}
-              onValueChange={setEmergencyContactPhone}
-              variant="bordered"
-              classNames={{ label: "text-secondary" }}
-            />
-          </div>
-        </div>
-
-        <div>
-          <Button
-            type="submit"
-            radius="full"
-            isLoading={saving}
-            className="bg-primary text-white font-semibold px-8 h-11"
-          >
-            Lưu thay đổi
-          </Button>
-        </div>
-      </form>
     </section>
   );
 }

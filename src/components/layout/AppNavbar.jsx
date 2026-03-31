@@ -53,6 +53,13 @@ export default function AppNavbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    document.body.classList.toggle("user-drawer-open", drawerOpen);
+    return () => {
+      document.body.classList.remove("user-drawer-open");
+    };
+  }, [drawerOpen]);
+
   const activeLoc = locations.find((l) => l.id === openLocId);
   const currentBuildingId = useMemo(() => {
     const match = location.pathname.match(/^\/buildings\/([^/]+)/);
