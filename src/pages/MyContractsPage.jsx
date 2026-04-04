@@ -30,8 +30,8 @@ const STATUS_FILTERS = [
 ];
 
 const SORT_OPTIONS = [
-  { value: "createdAt:DESC", label: "Mới nhất" },
-  { value: "createdAt:ASC", label: "Cũ nhất" },
+  { value: "created_at:DESC", label: "Mới nhất" },
+  { value: "created_at:ASC", label: "Cũ nhất" },
   { value: "start_date:ASC", label: "Bắt đầu gần nhất" },
   { value: "start_date:DESC", label: "Bắt đầu xa nhất" },
   { value: "end_date:ASC", label: "Kết thúc gần nhất" },
@@ -107,7 +107,7 @@ function MyContractsContent() {
   // Filters & sort
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sortValue, setSortValue] = useState("createdAt:DESC");
+  const [sortValue, setSortValue] = useState("created_at:DESC");
 
   // Debounced search
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -157,7 +157,7 @@ function MyContractsContent() {
     setSearchQuery("");
     setDebouncedSearch("");
     setStatusFilter("all");
-    setSortValue("createdAt:DESC");
+    setSortValue("created_at:DESC");
     setPage(1);
   };
 
@@ -351,7 +351,7 @@ function ContractRow({ contract }) {
       {/* Right — actions */}
       <div className="flex items-center gap-2 shrink-0 sm:ml-auto">
         <Link
-          to={`/sign?contractId=${contract.id}`}
+          to={`/sign?contract_id=${contract.id}`}
           className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-secondary hover:bg-gray-50 transition-colors"
         >
           <Eye className="size-4" />
@@ -359,7 +359,7 @@ function ContractRow({ contract }) {
         </Link>
         {needsSign && (
           <Link
-            to={`/sign?contractId=${contract.id}`}
+            to={`/sign?contract_id=${contract.id}`}
             className="inline-flex items-center gap-1.5 rounded-lg bg-olive px-3 py-2 text-sm font-medium text-white hover:bg-olive/90 transition-colors"
           >
             <PenNib className="size-4" />

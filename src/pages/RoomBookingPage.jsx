@@ -120,7 +120,7 @@ function RoomBookingContent() {
   const handleProceedDeposit = () => {
     if (!isReadyToDeposit) return;
 
-    const target = `/buildings/${buildingId}/rooms/${roomId}/checkout?checkInDate=${checkInDate}&term=${rentalMonths}&billingCycle=${billingCycle}`;
+    const target = `/buildings/${buildingId}/rooms/${roomId}/checkout?check_in_date=${checkInDate}&term=${rentalMonths}&billing_cycle=${billingCycle}`;
     if (!token) {
       navigate(`/login?returnTo=${encodeURIComponent(target)}`);
       return;

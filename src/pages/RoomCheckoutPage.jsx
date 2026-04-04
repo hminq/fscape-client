@@ -25,9 +25,9 @@ function RoomCheckoutContent() {
   const { buildingId, roomId } = useParams();
   const [searchParams] = useSearchParams();
   const Navigate = useNavigate();
-  const checkInDate = searchParams.get("checkInDate") || "";
+  const checkInDate = searchParams.get("check_in_date") || "";
   const rentalTerm = searchParams.get("term") || "";
-  const billingCycle = searchParams.get("billingCycle") || "";
+  const billingCycle = searchParams.get("billing_cycle") || "";
   const { token, user: authUser } = useAuth();
 
   const [room, setRoom] = useState(null);
@@ -168,11 +168,17 @@ function RoomCheckoutContent() {
         setSubmitting(true);
 
         const res = await api.post("/api/bookings", {
-          roomId,
-          checkInDate,
-          durationMonths: Number(rentalTerm),
-          billingCycle,
-          customerInfo: form,
+          room_id: roomId,
+          check_in_date: checkInDate,
+          duration_months: Number(rentalTerm),
+          billing_cycle: billingCycle,
+          customer_info: {
+            gender: form.gender,
+            date_of_birth: form.dateOfBirth,
+            permanent_address: form.permanentAddress,
+            emergency_contact_name: form.emergencyContactName,
+            emergency_contact_phone: form.emergencyContactPhone,
+          },
         });
 
         const payload = res?.data ?? res;

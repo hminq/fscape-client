@@ -18,9 +18,9 @@ function PaymentCheckoutContent() {
   const { token } = useAuth();
 
   const type = searchParams.get("type"); // "booking" or "invoice"
-  const bookingId = searchParams.get("bookingId");
-  const invoiceId = searchParams.get("invoiceId");
-  const expiresAt = searchParams.get("expiresAt"); // ISO date from booking
+  const bookingId = searchParams.get("booking_id");
+  const invoiceId = searchParams.get("invoice_id");
+  const expiresAt = searchParams.get("expires_at"); // ISO date from booking
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -45,9 +45,9 @@ function PaymentCheckoutContent() {
 
         let res;
         if (type === "booking" && bookingId) {
-          res = await api.post("/api/payment/create-booking-payos", { bookingId });
+          res = await api.post("/api/payment/create-booking-payos", { booking_id: bookingId });
         } else if (type === "invoice" && invoiceId) {
-          res = await api.post("/api/payment/create-invoice-payos", { invoiceId });
+          res = await api.post("/api/payment/create-invoice-payos", { invoice_id: invoiceId });
         } else {
           throw new Error("Thiếu thông tin thanh toán.");
         }

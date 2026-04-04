@@ -27,7 +27,9 @@ const CONTRACT_STYLES = `
 
 function ContractSigningPage() {
   const [searchParams] = useSearchParams();
-  const contractId = searchParams.get("contractId");
+  const contractId = searchParams.get("contract_id")
+    || searchParams.get("contractId")
+    || searchParams.get("contract");
   const { token } = useAuth();
 
   const [contract, setContract] = useState(null);
@@ -55,7 +57,7 @@ function ContractSigningPage() {
   // Fetch contract
   useEffect(() => {
     if (!contractId || !token) {
-      if (!contractId) setError("Link ký hợp đồng không hợp lệ (thiếu contractId).");
+      if (!contractId) setError("Link ký hợp đồng không hợp lệ (thiếu contract_id).");
       setLoading(false);
       return;
     }

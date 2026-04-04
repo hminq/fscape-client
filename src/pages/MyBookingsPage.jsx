@@ -24,8 +24,8 @@ const STATUS_FILTERS = [
 ];
 
 const SORT_OPTIONS = [
-  { value: "createdAt:DESC", label: "Mới nhất" },
-  { value: "createdAt:ASC", label: "Cũ nhất" },
+  { value: "created_at:DESC", label: "Mới nhất" },
+  { value: "created_at:ASC", label: "Cũ nhất" },
   { value: "check_in_date:ASC", label: "Nhận phòng gần nhất" },
   { value: "check_in_date:DESC", label: "Nhận phòng xa nhất" },
   { value: "room_price_snapshot:DESC", label: "Giá giảm" },
@@ -103,7 +103,7 @@ function ContractButton({ booking }) {
   if (contractStatus === "PENDING_CUSTOMER_SIGNATURE") {
     return (
       <Link
-        to={`/sign?contractId=${booking.contract_id}`}
+        to={`/sign?contract_id=${booking.contract_id}`}
         className="inline-flex items-center gap-1.5 rounded-lg bg-olive px-3 py-2 text-sm font-medium text-white hover:bg-olive/90 transition-colors"
       >
         <PenNib className="size-4" />
@@ -132,7 +132,7 @@ function ContractButtonFull({ booking }) {
   if (contractStatus === "PENDING_CUSTOMER_SIGNATURE") {
     return (
       <Link
-        to={`/sign?contractId=${booking.contract_id}`}
+        to={`/sign?contract_id=${booking.contract_id}`}
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-olive py-3 text-sm font-semibold text-white hover:bg-olive/90 transition-colors"
       >
         <PenNib className="size-4" />
@@ -171,7 +171,7 @@ function MyBookingsContent() {
   // Filters & sort
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sortValue, setSortValue] = useState("createdAt:DESC");
+  const [sortValue, setSortValue] = useState("created_at:DESC");
 
   // Debounced search
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -220,9 +220,9 @@ function MyBookingsContent() {
   const handlePay = (booking) => {
     const params = new URLSearchParams({
       type: "booking",
-      bookingId: booking.id,
+      booking_id: booking.id,
     });
-    if (booking.expires_at) params.set("expiresAt", booking.expires_at);
+    if (booking.expires_at) params.set("expires_at", booking.expires_at);
     navigate(`/payment/checkout?${params}`);
   };
 
@@ -230,7 +230,7 @@ function MyBookingsContent() {
     setSearchQuery("");
     setDebouncedSearch("");
     setStatusFilter("all");
-    setSortValue("createdAt:DESC");
+    setSortValue("created_at:DESC");
     setPage(1);
   };
 

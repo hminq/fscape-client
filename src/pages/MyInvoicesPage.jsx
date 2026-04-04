@@ -95,7 +95,7 @@ function FilterDropdown({ options, value, onChange, icon: Icon, placeholder, ali
 function MyInvoicesContent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const highlightId = searchParams.get("invoiceId");
+  const highlightId = searchParams.get("invoice_id");
   const { isLoggedIn } = useAuth();
 
   const [invoices, setInvoices] = useState([]);
@@ -171,9 +171,9 @@ function MyInvoicesContent() {
   const handlePay = (invoice) => {
     const params = new URLSearchParams({
       type: "invoice",
-      invoiceId: invoice.id,
+      invoice_id: invoice.id,
     });
-    if (invoice.due_date) params.set("expiresAt", invoice.due_date);
+    if (invoice.due_date) params.set("expires_at", invoice.due_date);
     navigate(`/payment/checkout?${params}`);
   };
 
