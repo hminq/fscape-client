@@ -6,21 +6,15 @@ import { LocationsProvider } from "@/contexts/LocationsContext";
 function PaymentResultContent() {
   const [searchParams] = useSearchParams();
 
-  // Hỗ trợ cả VNPay (vnp_ResponseCode) và PayOS (code + status)
-  const vnpCode = searchParams.get("vnp_ResponseCode");
   const payosCode = searchParams.get("code");
   const payosStatus = searchParams.get("status");
   const cancel = searchParams.get("cancel");
 
-  const isSuccess = vnpCode
-    ? vnpCode === "00"
-    : payosCode === "00" && payosStatus === "PAID";
+  const isSuccess = payosCode === "00" && payosStatus === "PAID";
   const isCancelled = cancel === "true" || payosStatus === "CANCELLED";
 
-  // Detect invoice payment: VNPay dùng vnp_OrderInfo bắt đầu bằng "INV", PayOS dùng query param type
-  const orderInfo = searchParams.get("vnp_OrderInfo") || "";
   const paymentType = searchParams.get("type") || "";
-  const isInvoicePayment = orderInfo.startsWith("INV") || paymentType === "invoice";
+  const isInvoicePayment = paymentType === "invoice";
 
   return (
     <section className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-6 text-center">

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { CircleNotch } from "@phosphor-icons/react";
 import { toast } from "@/lib/toast";
-import { usePayOS } from "payos-checkout";
+import { usePayOS } from "@payos/payos-checkout";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 import { api } from "@/lib/api";
@@ -171,21 +171,14 @@ function RoomCheckoutContent() {
           customerInfo: form,
         });
 
-        // PayOS: nhận checkoutUrl → hiển thị embedded form ở Step 3
         const url = res?.data?.checkout_url;
-        if (url) {
-          setCheckoutUrl(url);
-          setBookingExpiresAt(res?.data?.expires_at);
-          setStep(3);
-        } else {
-          // Fallback VNPay: redirect
-          const paymentUrl = res?.data?.payment_url;
-          if (paymentUrl) {
-            window.location.href = paymentUrl;
-          } else {
-            throw new Error("Không nhận được liên kết thanh toán từ máy chủ.");
-          }
+        if (!url) {
+          throw new Error("Không nhận được liên kết thanh toán từ máy chủ.");
         }
+
+        setCheckoutUrl(url);
+        setBookingExpiresAt(res?.data?.expires_at);
+        setStep(3);
       } catch (err) {
         toast.error(err.message || "Không thể khởi tạo thanh toán.");
       } finally {

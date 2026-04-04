@@ -218,7 +218,7 @@ function RoomDetailContent() {
               </span>
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/5 px-3 py-1.5 text-sm text-secondary">
                 <Wallet className="h-4 w-4 text-olive" />
-                VNPay
+                PayOS
               </span>
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/5 px-3 py-1.5 text-sm text-secondary">
                 <Landmark className="h-4 w-4 text-olive" />

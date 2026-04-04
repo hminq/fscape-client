@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@heroui/react": "^2.8.10",
+    "@payos/payos-checkout": "^1.0.8",
     "@phosphor-icons/react": "^2.1.10",
     "@react-oauth/google": "^0.13.4",
     "@react-three/drei": "^10.7.7",
@@ -21,7 +22,6 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.35.2",
     "maplibre-gl": "^5.19.0",
-    "payos-checkout": "^1.0.9",
     "radix-ui": "^1.4.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

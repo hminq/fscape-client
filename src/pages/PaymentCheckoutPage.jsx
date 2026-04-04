@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { CircleNotch, ArrowLeft, CreditCard, Receipt, Clock } from "@phosphor-icons/react";
-import { usePayOS } from "payos-checkout";
+import { usePayOS } from "@payos/payos-checkout";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 import { useAuth } from "@/contexts/AuthContext";
