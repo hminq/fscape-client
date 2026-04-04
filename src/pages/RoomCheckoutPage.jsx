@@ -1,14 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { CircleNotch } from "@phosphor-icons/react";
 import { toast } from "@/lib/toast";
-import { usePayOS } from "@payos/payos-checkout";
 import AppNavbar from "@/components/layout/AppNavbar";
+import PaymentCardShell from "@/components/payment/PaymentCardShell";
+import PaymentSummaryCard from "@/components/payment/PaymentSummaryCard";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 import { api } from "@/lib/api";
 import { formatVnd, formatDisplayDate } from "@/lib/formatters";
+import { buildPaymentCancelUrl, buildPaymentSuccessUrl, PAYMENT_TEXT } from "@/lib/payment";
 import { useAuth } from "@/contexts/AuthContext";
 import { BILLING_CYCLE_LABELS, GENDER_LABELS } from "@/lib/constants";
+import { usePayOSEmbeddedCheckout } from "@/hooks/usePayOSEmbeddedCheckout";
+import { usePaymentCountdown } from "@/hooks/usePaymentCountdown";
 import defaultRoomImg from "@/assets/default_room_img.jpg";
 
 const STEPS = [
@@ -171,13 +175,14 @@ function RoomCheckoutContent() {
           customerInfo: form,
         });
 
-        const url = res?.data?.checkout_url;
+        const payload = res?.data ?? res;
+        const url = payload?.checkout_url;
         if (!url) {
-          throw new Error("Không nhận được liên kết thanh toán từ máy chủ.");
+          throw new Error(PAYMENT_TEXT.missingCheckoutUrl);
         }
 
         setCheckoutUrl(url);
-        setBookingExpiresAt(res?.data?.expires_at);
+        setBookingExpiresAt(payload?.expires_at);
         setStep(3);
       } catch (err) {
         toast.error(err.message || "Không thể khởi tạo thanh toán.");
@@ -451,54 +456,24 @@ function RoomCheckoutContent() {
 }
 
 function PayOSEmbeddedCheckout({ checkoutUrl, navigate, expiresAt, depositAmount, roomName, roomNumber, buildingName }) {
-  const { open } = usePayOS({
-    RETURN_URL: `${window.location.origin}/payment/result`,
-    ELEMENT_ID: "payos-checkout",
-    CHECKOUT_URL: checkoutUrl,
-    embedded: true,
+  usePayOSEmbeddedCheckout({
+    checkoutUrl,
+    elementId: "payos-checkout",
     onSuccess: () => {
-      navigate("/payment/result?code=00&status=PAID");
+      navigate(buildPaymentSuccessUrl());
     },
     onCancel: () => {
-      navigate("/payment/result?code=01&status=CANCELLED&cancel=true");
+      navigate(buildPaymentCancelUrl());
     },
   });
 
-  const opened = useRef(false);
-  useEffect(() => {
-    if (checkoutUrl && !opened.current) {
-      opened.current = true;
-      open();
-    }
-  }, [checkoutUrl]);
-
-  // Countdown to real booking expiry
-  const getInitialSeconds = () => {
-    if (expiresAt) {
-      const remaining = Math.floor((new Date(expiresAt) - Date.now()) / 1000);
-      return Math.max(0, remaining);
-    }
-    return 3600;
-  };
-  const [secondsLeft, setSecondsLeft] = useState(getInitialSeconds);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          navigate("/payment/result?code=01&status=CANCELLED&cancel=true");
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const minutes = Math.floor(secondsLeft / 60);
-  const seconds = secondsLeft % 60;
-
-  const isUrgent = secondsLeft <= 300;
+  const { totalMinutes, seconds, isUrgent } = usePaymentCountdown({
+    expiresAt,
+    defaultSeconds: 3600,
+    onExpire: () => {
+      navigate(buildPaymentCancelUrl());
+    },
+  });
 
   return (
     <div className="mx-auto mt-6 max-w-md">
@@ -511,37 +486,19 @@ function PayOSEmbeddedCheckout({ checkoutUrl, navigate, expiresAt, depositAmount
           Đơn đặt cọc sẽ hết hạn sau
         </span>
         <span className={`rounded-lg px-3 py-1 font-mono text-xl font-bold tabular-nums tracking-wider ${isUrgent ? "bg-red-100 text-red-600" : "bg-primary/10 text-primary"}`}>
-          {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+          {String(totalMinutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
         </span>
       </div>
 
-      {/* Payment info summary */}
-      <div className="mb-4 rounded-2xl border border-muted/20 bg-white p-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-secondary">
-              Đặt cọc phòng
-            </p>
-            <p className="mt-1 text-xs text-secondary/70">
-              {roomName} · Phòng {roomNumber} · {buildingName}
-            </p>
-          </div>
-          {depositAmount != null && (
-            <p className="text-2xl font-bold text-primary">
-              {formatVnd(depositAmount)}
-            </p>
-          )}
-        </div>
-      </div>
+      <PaymentSummaryCard
+        title="Đặt cọc phòng"
+        subtitle={`${roomName} · Phòng ${roomNumber} · ${buildingName}`}
+        amount={depositAmount}
+      />
 
-      {/* Payment card */}
-      <div className="rounded-2xl border border-muted/20 bg-white p-4">
-        <h2 className="text-lg font-bold text-primary">Thanh toán tiền cọc</h2>
-        <p className="mt-1 text-xs text-secondary">
-          Quét mã QR bằng ứng dụng ngân hàng để hoàn tất.
-        </p>
+      <PaymentCardShell title="Thanh toán tiền cọc">
         <div id="payos-checkout" className="payos-embed-container mt-4" />
-      </div>
+      </PaymentCardShell>
     </div>
   );
 }

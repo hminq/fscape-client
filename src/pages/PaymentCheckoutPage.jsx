@@ -1,13 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { CircleNotch, ArrowLeft, CreditCard, Receipt, Clock } from "@phosphor-icons/react";
-import { usePayOS } from "@payos/payos-checkout";
 import AppNavbar from "@/components/layout/AppNavbar";
+import PaymentCardShell from "@/components/payment/PaymentCardShell";
+import PaymentSummaryCard from "@/components/payment/PaymentSummaryCard";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
+import { buildPaymentCancelUrl, buildPaymentSuccessUrl, PAYMENT_TEXT } from "@/lib/payment";
 import { toast } from "@/lib/toast";
-import { formatVnd } from "@/lib/formatters";
+import { usePayOSEmbeddedCheckout } from "@/hooks/usePayOSEmbeddedCheckout";
+import { usePaymentCountdown } from "@/hooks/usePaymentCountdown";
 
 function PaymentCheckoutContent() {
   const [searchParams] = useSearchParams();
@@ -49,14 +52,15 @@ function PaymentCheckoutContent() {
           throw new Error("Thiếu thông tin thanh toán.");
         }
 
-        const url = res?.checkout_url;
-        if (!url) throw new Error("Không nhận được liên kết thanh toán từ máy chủ.");
+        const payload = res?.data ?? res;
+        const url = payload?.checkout_url;
+        if (!url) throw new Error(PAYMENT_TEXT.missingCheckoutUrl);
 
         setCheckoutUrl(url);
         setPaymentInfo({
           type,
-          amount: res?.amount,
-          orderCode: res?.order_code,
+          amount: payload?.amount,
+          orderCode: payload?.order_code,
           description: type === "booking" ? "Đặt cọc phòng" : "Thanh toán hóa đơn",
         });
       } catch (err) {
@@ -126,60 +130,25 @@ function PaymentCheckoutContent() {
 function EmbeddedCheckout({ checkoutUrl, navigate, type, expiresAt, paymentInfo }) {
   const isBooking = type === "booking";
 
-  // Calculate remaining seconds from real expiry, fallback to default
-  const getInitialSeconds = () => {
-    if (expiresAt) {
-      const remaining = Math.floor((new Date(expiresAt) - Date.now()) / 1000);
-      return Math.max(0, remaining);
-    }
-    return isBooking ? 3600 : 86400;
-  };
-
-  const { open } = usePayOS({
-    RETURN_URL: `${window.location.origin}/payment/result`,
-    ELEMENT_ID: "payos-checkout-standalone",
-    CHECKOUT_URL: checkoutUrl,
-    embedded: true,
+  usePayOSEmbeddedCheckout({
+    checkoutUrl,
+    elementId: "payos-checkout-standalone",
     onSuccess: () => {
-      navigate(`/payment/result?code=00&status=PAID${type === "invoice" ? "&type=invoice" : ""}`);
+      navigate(buildPaymentSuccessUrl({ type }));
     },
     onCancel: () => {
-      navigate(`/payment/result?code=01&status=CANCELLED&cancel=true${type === "invoice" ? "&type=invoice" : ""}`);
+      navigate(buildPaymentCancelUrl({ type }));
     },
   });
 
-  const opened = useRef(false);
-  useEffect(() => {
-    if (checkoutUrl && !opened.current) {
-      opened.current = true;
-      open();
-    }
-  }, [checkoutUrl]);
-
-  // Countdown timer
-  const [secondsLeft, setSecondsLeft] = useState(getInitialSeconds);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          toast.warning("Giao dịch đã hết hạn.");
-          navigate(type === "invoice" ? "/my-invoices" : "/my-bookings");
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const isUrgent = secondsLeft <= 300;
-  const hours = Math.floor(secondsLeft / 3600);
-  const minutes = Math.floor((secondsLeft % 3600) / 60);
-  const seconds = secondsLeft % 60;
-  const timeDisplay = hours > 0
-    ? `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
-    : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  const { isUrgent, timeDisplay } = usePaymentCountdown({
+    expiresAt,
+    defaultSeconds: isBooking ? 3600 : 86400,
+    onExpire: () => {
+      toast.warning("Giao dịch đã hết hạn.");
+      navigate(type === "invoice" ? "/my-invoices" : "/my-bookings");
+    },
+  });
 
   return (
     <div className="mx-auto mt-6 max-w-md">
@@ -198,37 +167,16 @@ function EmbeddedCheckout({ checkoutUrl, navigate, type, expiresAt, paymentInfo 
 
       {/* Payment info summary */}
       {paymentInfo && (
-        <div className="mb-4 rounded-2xl border border-muted/20 bg-white p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-secondary">
-                {paymentInfo.description}
-              </p>
-              {paymentInfo.orderCode && (
-                <p className="mt-1 text-xs text-secondary/70">
-                  Mã đơn: <span className="font-mono font-medium text-primary">{paymentInfo.orderCode}</span>
-                </p>
-              )}
-            </div>
-            {paymentInfo.amount != null && (
-              <p className="text-2xl font-bold text-primary">
-                {formatVnd(paymentInfo.amount)}
-              </p>
-            )}
-          </div>
-        </div>
+        <PaymentSummaryCard
+          title={paymentInfo.description}
+          orderCode={paymentInfo.orderCode}
+          amount={paymentInfo.amount}
+        />
       )}
 
-      {/* Payment card */}
-      <div className="rounded-2xl border border-muted/20 bg-white p-4">
-        <h2 className="text-lg font-bold text-primary">
-          {isBooking ? "Thanh toán tiền cọc" : "Thanh toán hóa đơn"}
-        </h2>
-        <p className="mt-1 text-xs text-secondary">
-          Quét mã QR bằng ứng dụng ngân hàng để hoàn tất.
-        </p>
+      <PaymentCardShell title={isBooking ? "Thanh toán tiền cọc" : "Thanh toán hóa đơn"}>
         <div id="payos-checkout-standalone" className="payos-embed-container mt-4" />
-      </div>
+      </PaymentCardShell>
     </div>
   );
 }
