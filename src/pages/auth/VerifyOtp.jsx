@@ -37,7 +37,7 @@ export default function VerifyOtp() {
 
                 // verifySignup returns user object (no access_token)
                 // Auto-login after signup by calling appLogin
-                const loginRes = await api.post("/api/auth/app/login", {
+                const loginRes = await api.post("/api/auth/login", {
                     email: signupEmail,
                     password: signupPassword,
                 });

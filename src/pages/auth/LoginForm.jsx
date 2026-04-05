@@ -35,7 +35,7 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      const res = await api.post("/api/auth/app/login", { email, password });
+      const res = await api.post("/api/auth/login", { email, password });
 
       const accessToken = res?.access_token;
       const user = res?.user;
