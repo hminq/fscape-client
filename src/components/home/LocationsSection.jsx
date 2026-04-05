@@ -5,6 +5,7 @@ import { motion as Motion } from "framer-motion";
 import { ArrowRight, CircleNotch } from "@phosphor-icons/react";
 import { useLocations } from "@/contexts/LocationsContext";
 import defaultBuildingImg from "@/assets/default_room_img.jpg";
+import { cdnUrl } from "@/lib/utils";
 
 export default function LocationsSection() {
   const { locations, loading } = useLocations();
@@ -109,7 +110,7 @@ export default function LocationsSection() {
                       onClick={() => navigate(`/buildings/${building.id}`)}
                     >
                       <img
-                        src={building.thumbnail_url || defaultBuildingImg}
+                        src={cdnUrl(building.thumbnail_url) || defaultBuildingImg}
                         alt={building.name}
                         onError={(e) => {
                           e.target.onerror = null;

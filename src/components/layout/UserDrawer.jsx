@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { socials } from "@/components/icons/SocialIcons";
 import fscapeLogoFull from "../../assets/fscape-logo-full.svg";
 import defaultAvatar from "../../assets/default_room_img.jpg";
+import { cdnUrl } from "@/lib/utils";
 
 const navLinks = [
   { label: "Hồ sơ của tôi", path: "/profile" },
@@ -81,7 +82,7 @@ export default function UserDrawer({ open, onClose }) {
         {/* User info */}
         <div className="flex items-center gap-4 px-8 py-5 border-b border-white/10">
           <img
-            src={user?.avatar_url || defaultAvatar}
+            src={cdnUrl(user?.avatar_url) || defaultAvatar}
             alt="Avatar"
             className="size-14 rounded-full border-2 border-olive object-cover bg-white"
           />

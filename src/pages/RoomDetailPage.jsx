@@ -21,6 +21,7 @@ import { api } from "@/lib/api";
 import { formatVnd } from "@/lib/formatters";
 import ModelViewer from "@/components/ui/ModelViewer";
 import defaultRoomImg from "@/assets/default_room_img.jpg";
+import { cdnUrl } from "@/lib/utils";
 
 function RoomDetailContent() {
   const { buildingId, roomId } = useParams();
@@ -104,12 +105,12 @@ function RoomDetailContent() {
   }, [roomId]);
 
   const previewImage = useMemo(
-    () => room?.thumbnail_url || room?.images?.[0]?.image_url || defaultRoomImg,
+    () => cdnUrl(room?.thumbnail_url) || cdnUrl(room?.images?.[0]?.image_url) || defaultRoomImg,
     [room]
   );
 
   const galleryImages = useMemo(() => {
-    const list = [room?.thumbnail_url, ...(room?.images || []).map((img) => img?.image_url)].filter(Boolean);
+    const list = [cdnUrl(room?.thumbnail_url), ...(room?.images || []).map((img) => cdnUrl(img?.image_url))].filter(Boolean);
     if (list.length === 0) return [defaultRoomImg, defaultRoomImg, defaultRoomImg, defaultRoomImg];
     return [...new Set(list)];
   }, [room]);
@@ -242,7 +243,7 @@ function RoomDetailContent() {
           <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-3">
             <button
               type="button"
-              onClick={() => setPreviewState({ mode: "3d", image: room.image_3d_url || null })}
+              onClick={() => setPreviewState({ mode: "3d", image: cdnUrl(room.image_3d_url) || null })}
               className="inline-flex items-center gap-2 rounded-full bg-white/95 px-5 py-2 text-sm font-semibold text-muted transition-colors hover:bg-white"
             >
               <Camera className="h-4 w-4 text-olive" />
@@ -250,7 +251,7 @@ function RoomDetailContent() {
             </button>
             <button
               type="button"
-              onClick={() => setPreviewState({ mode: "blueprint", image: room.blueprint_url || null })}
+              onClick={() => setPreviewState({ mode: "blueprint", image: cdnUrl(room.blueprint_url) || null })}
               className="inline-flex items-center gap-2 rounded-full bg-white/95 px-5 py-2 text-sm font-semibold text-muted transition-colors hover:bg-white"
             >
               <DraftingCompass className="h-4 w-4 text-olive" />

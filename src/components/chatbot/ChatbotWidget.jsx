@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { ChatCircleDots, PaperPlaneTilt, X, Robot, UserCircle, ArrowDown } from "@phosphor-icons/react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
+import { cdnUrl } from "@/lib/utils";
 
 const MAX_MESSAGE_LENGTH = 1000;
 
@@ -274,7 +275,7 @@ function ChatMessage({ message, user }) {
       {!isBot && (
         <div className="flex size-9 shrink-0 items-center justify-center rounded-full overflow-hidden bg-primary/10 mt-0.5">
           {user?.avatar_url ? (
-            <img src={user.avatar_url} alt="" className="size-full object-cover" />
+            <img src={cdnUrl(user.avatar_url)} alt="" className="size-full object-cover" />
           ) : (
             <UserCircle size={20} weight="fill" className="text-primary" />
           )}

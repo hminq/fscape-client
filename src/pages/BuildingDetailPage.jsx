@@ -8,6 +8,7 @@ import { LocationsProvider, useLocations } from "@/contexts/LocationsContext";
 import { api } from "@/lib/api";
 import { formatVnd } from "@/lib/formatters";
 import defaultBuildingImg from "@/assets/default_room_img.jpg";
+import { cdnUrl } from "@/lib/utils";
 
 const DETAIL_TABS = [
   { label: "Thông tin", sectionId: "building-info" },
@@ -18,7 +19,7 @@ const DETAIL_TABS = [
 function BuildingHero({ building, activeTab, onTabChange }) {
   const heroImage = useMemo(() => {
     const galleryImage = (building.images || []).find((item) => item?.image_url)?.image_url;
-    return building.thumbnail_url || galleryImage || defaultBuildingImg;
+    return cdnUrl(building.thumbnail_url) || cdnUrl(galleryImage) || defaultBuildingImg;
   }, [building]);
 
   return (
@@ -511,8 +512,8 @@ function BuildingDetailContent() {
                               <div className="relative overflow-hidden rounded-3xl">
                                 <img
                                   src={
-                                    slide.room.thumbnail_url ||
-                                    slide.room.images?.[0]?.image_url ||
+                                    cdnUrl(slide.room.thumbnail_url) ||
+                                    cdnUrl(slide.room.images?.[0]?.image_url) ||
                                     defaultBuildingImg
                                   }
                                   alt={slide.roomType?.name || slide.room.room_number}

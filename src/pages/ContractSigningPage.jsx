@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { CONTRACT_STATUS_LABELS } from "@/lib/constants";
 import fscapeLogoFull from "@/assets/fscape-logo-full.svg";
+import { cleanContractHtml } from "@/lib/utils";
 
 const STATUS_LABELS = CONTRACT_STATUS_LABELS;
 
@@ -275,7 +276,7 @@ function ContractSigningPage() {
         <div ref={contractRef} className="rounded-xl bg-white p-6 shadow-sm md:p-10">
           <div
             className="contract-render prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: contract.rendered_content || "" }}
+            dangerouslySetInnerHTML={{ __html: cleanContractHtml(contract.rendered_content) }}
           />
         </div>
 

@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import { formatVnd, formatDisplayDate } from "@/lib/formatters";
 import { MY_ROOM_STATUS_LABELS } from "@/lib/constants";
 import defaultRoomImg from "@/assets/default_room_img.jpg";
+import { cdnUrl } from "@/lib/utils";
 
 const STATUS_LABELS = MY_ROOM_STATUS_LABELS;
 
@@ -90,7 +91,7 @@ function MyRoomsContent() {
                 {/* Room image */}
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src={room?.thumbnail_url || defaultRoomImg}
+                    src={cdnUrl(room?.thumbnail_url) || defaultRoomImg}
                     alt={`Phòng ${room?.room_number}`}
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   />

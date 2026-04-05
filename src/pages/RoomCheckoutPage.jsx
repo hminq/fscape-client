@@ -14,6 +14,7 @@ import { BILLING_CYCLE_LABELS, GENDER_LABELS } from "@/lib/constants";
 import { usePayOSEmbeddedCheckout } from "@/hooks/usePayOSEmbeddedCheckout";
 import { usePaymentCountdown } from "@/hooks/usePaymentCountdown";
 import defaultRoomImg from "@/assets/default_room_img.jpg";
+import { cdnUrl } from "@/lib/utils";
 
 const STEPS = [
   { id: 1, label: "Thông tin đặt phòng" },
@@ -121,7 +122,7 @@ function RoomCheckoutContent() {
   }, [roomId]);
 
   const roomImage = useMemo(
-    () => room?.thumbnail_url || room?.images?.[0]?.image_url || defaultRoomImg,
+    () => cdnUrl(room?.thumbnail_url) || cdnUrl(room?.images?.[0]?.image_url) || defaultRoomImg,
     [room]
   );
 

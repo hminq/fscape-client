@@ -7,6 +7,7 @@ import { LocationsProvider, useLocations } from "@/contexts/LocationsContext";
 import { api } from "@/lib/api";
 import { formatVnd } from "@/lib/formatters";
 import defaultRoomImg from "@/assets/default_room_img.jpg";
+import { cdnUrl } from "@/lib/utils";
 
 const PAGE_SIZE = 10;
 
@@ -470,7 +471,7 @@ function RoomsContent() {
                           className="group grid grid-cols-1 overflow-hidden rounded-2xl border border-muted/20 bg-white md:grid-cols-[200px_1fr]"
                         >
                           <img
-                            src={room.thumbnail_url || room.images?.[0]?.image_url || defaultRoomImg}
+                            src={cdnUrl(room.thumbnail_url) || cdnUrl(room.images?.[0]?.image_url) || defaultRoomImg}
                             alt={room.room_type?.name || room.room_number}
                             onError={(e) => {
                               e.target.onerror = null;

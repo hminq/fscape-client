@@ -7,6 +7,7 @@ import { LocationsProvider } from "@/contexts/LocationsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { formatDisplayDate } from "@/lib/formatters";
+import { cdnUrl } from "@/lib/utils";
 
 const STATUS_CONFIG = {
   DRAFT: { text: "Bản nháp", className: "bg-gray-100 text-gray-600" },
@@ -374,7 +375,7 @@ function ContractRow({ contract }) {
         )}
         {contract.pdf_url && (
           <a
-            href={contract.pdf_url}
+            href={cdnUrl(contract.pdf_url)}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
