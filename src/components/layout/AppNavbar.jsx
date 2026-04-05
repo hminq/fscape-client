@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import UserDrawer from "./UserDrawer";
 import fscapeLogoFull from "../../assets/fscape-logo-full.svg";
 import defaultAvatar from "../../assets/default_room_img.jpg";
+import { cdnUrl } from "@/lib/utils";
 
 function TriangleIcon({ up, className }) {
   return (
@@ -147,7 +148,7 @@ export default function AppNavbar() {
                 className="outline-none transition-transform hover:scale-105 active:scale-95 shrink-0"
               >
                 <img
-                  src={user?.avatar_url || defaultAvatar}
+                  src={cdnUrl(user?.avatar_url) || defaultAvatar}
                   alt="Ảnh đại diện"
                   className="size-10 rounded-full border border-white/60 object-cover shadow-sm bg-white"
                 />

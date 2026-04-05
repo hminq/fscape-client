@@ -8,6 +8,7 @@ import { LocationsProvider } from "@/contexts/LocationsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import defaultAvatar from "../assets/default_room_img.jpg";
+import { cdnUrl } from "@/lib/utils";
 
 const GENDER_OPTIONS = [
   { key: "MALE", label: "Nam" },
@@ -254,7 +255,7 @@ function ProfileContent() {
               <div className="flex flex-col items-center text-center">
                 <div className="relative group">
                   <img
-                    src={avatarUrl || defaultAvatar}
+                    src={cdnUrl(avatarUrl) || defaultAvatar}
                     alt="Avatar"
                     className="size-28 rounded-full border-2 border-primary/20 object-cover bg-white"
                   />
