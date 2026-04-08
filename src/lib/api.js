@@ -15,7 +15,7 @@ async function request(endpoint, options = {}) {
   // Kiểm tra nếu biến môi trường chưa được load
   if (!BASE_URL) {
     console.error("VITE_API_BASE_URL is not defined! Check your .env file and restart dev server.");
-    throw new Error("Lỗi cấu hình hệ thống (Thiếu API URL). Vui lòng restart FE.");
+    throw new Error("Không thể kết nối đến máy chủ. Vui lòng thử lại sau.");
   }
 
   // Đảm bảo không bị double slash hoặc thiếu slash
@@ -35,7 +35,10 @@ async function request(endpoint, options = {}) {
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: res.statusText }));
-    const apiError = new Error(error.message || `HTTP ${res.status}`);
+    const fallbackMessage = res.status >= 500
+      ? "Lỗi hệ thống máy chủ. Vui lòng thử lại sau."
+      : "Yêu cầu không thành công. Vui lòng thử lại.";
+    const apiError = new Error(error.message || fallbackMessage);
     apiError.status = res.status;
     apiError.errors = error.errors || [];
     throw apiError;
@@ -54,7 +57,7 @@ async function uploadFile(endpoint, formData) {
   }
 
   if (!BASE_URL) {
-    throw new Error("Lỗi cấu hình hệ thống (Thiếu API URL). Vui lòng restart FE.");
+    throw new Error("Không thể kết nối đến máy chủ. Vui lòng thử lại sau.");
   }
 
   const url = `${BASE_URL.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
@@ -73,7 +76,10 @@ async function uploadFile(endpoint, formData) {
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: res.statusText }));
-    const apiError = new Error(error.message || `HTTP ${res.status}`);
+    const fallbackMessage = res.status >= 500
+      ? "Lỗi hệ thống máy chủ. Vui lòng thử lại sau."
+      : "Yêu cầu không thành công. Vui lòng thử lại.";
+    const apiError = new Error(error.message || fallbackMessage);
     apiError.status = res.status;
     apiError.errors = error.errors || [];
     throw apiError;

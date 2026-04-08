@@ -41,7 +41,7 @@ export default function LoginForm() {
       const user = res?.user;
 
       if (!accessToken) {
-        throw new Error("Phản hồi đăng nhập không có access token.");
+        throw new Error("Đăng nhập thất bại. Vui lòng thử lại.");
       }
 
       login(accessToken, user);

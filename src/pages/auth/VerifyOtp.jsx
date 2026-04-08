@@ -57,7 +57,7 @@ export default function VerifyOtp() {
             const user = res?.user;
 
             if (!accessToken) {
-                throw new Error("Không nhận được access token.");
+                throw new Error("Xác minh thất bại. Vui lòng thử lại.");
             }
 
             if (INTERNAL_ROLES.includes(user?.role)) {
