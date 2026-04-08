@@ -4,6 +4,7 @@ async function request(endpoint, options = {}) {
   const token = localStorage.getItem("token");
   const headers = {
     "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
     ...options.headers,
   };
 
@@ -45,7 +46,9 @@ async function request(endpoint, options = {}) {
 
 async function uploadFile(endpoint, formData) {
   const token = localStorage.getItem("token");
-  const headers = {};
+  const headers = {
+    "ngrok-skip-browser-warning": "true",
+  };
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
