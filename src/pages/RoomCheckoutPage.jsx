@@ -35,6 +35,7 @@ function RoomCheckoutContent() {
   const [roomType, setRoomType] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [paymentError, setPaymentError] = useState("");
   const [step, setStep] = useState(1);
   const [agreed, setAgreed] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState("");
@@ -167,6 +168,7 @@ function RoomCheckoutContent() {
 
       try {
         setSubmitting(true);
+        setPaymentError("");
 
         const res = await api.post("/api/bookings", {
           room_id: roomId,
@@ -192,7 +194,9 @@ function RoomCheckoutContent() {
         setBookingExpiresAt(payload?.expires_at);
         setStep(3);
       } catch (err) {
-        toast.error(err.message || "Không thể khởi tạo thanh toán.");
+        const message = err.message || "Không thể khởi tạo thanh toán.";
+        setPaymentError(message);
+        toast.error(message);
       } finally {
         setSubmitting(false);
       }
@@ -299,6 +303,12 @@ function RoomCheckoutContent() {
           {step === 2 && (
             <div className="mt-8 rounded-3xl border border-muted/20 bg-white p-6">
               <h2 className="text-2xl font-bold text-primary">Bước 2: Điều khoản</h2>
+
+              {paymentError && (
+                <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                  {paymentError}
+                </div>
+              )}
 
               <div className="mt-4 max-h-[40vh] overflow-y-auto rounded-2xl border border-muted/20 bg-primary/[0.02] p-5 text-sm leading-relaxed text-secondary space-y-3">
                 <p className="text-xs font-bold uppercase tracking-wider text-primary">Điều khoản và Điều kiện sử dụng hệ thống Fscape</p>
