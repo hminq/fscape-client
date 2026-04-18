@@ -134,16 +134,21 @@ function RoomCheckoutContent() {
   const [submitting, setSubmitting] = useState(false);
 
   const [errors, setErrors] = useState({});
+  const todayStart = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
 
   const validateStep1 = () => {
     const newErrors = {};
     if (!form.email) newErrors.email = "Email là bắt buộc";
     else if (!/\S+@\S+\.\S+/.test(form.email)) newErrors.email = "Email không hợp lệ";
-
     if (!form.firstName) newErrors.firstName = "Tên là bắt buộc";
     if (!form.lastName) newErrors.lastName = "Họ là bắt buộc";
     if (!form.gender) newErrors.gender = "Vui lòng chọn giới tính";
     if (!form.dateOfBirth) newErrors.dateOfBirth = "Ngày sinh là bắt buộc";
+    else if (new Date(`${form.dateOfBirth}T00:00:00`) >= todayStart) newErrors.dateOfBirth = "Ngày sinh phải là ngày trong quá khứ";
     if (!form.permanentAddress) newErrors.permanentAddress = "Địa chỉ là bắt buộc";
     if (!form.emergencyContactName) newErrors.emergencyContactName = "Tên liên hệ khẩn cấp là bắt buộc";
     if (!form.emergencyContactPhone) newErrors.emergencyContactPhone = "SĐT khẩn cấp là bắt buộc";
@@ -251,11 +256,47 @@ function RoomCheckoutContent() {
             <div className="mt-8 rounded-3xl border border-muted/20 bg-white p-6">
               <h2 className="text-2xl font-bold text-primary">Bước 1: Điền thông tin</h2>
               <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-secondary ml-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    readOnly
+                    aria-readonly="true"
+                    className="h-11 cursor-not-allowed rounded-xl border border-muted/20 bg-muted/20 px-4 text-sm text-primary outline-none"
+                  />
+                  {errors.email && (
+                    <span className="text-[10px] text-red-500 ml-1 font-medium">{errors.email}</span>
+                  )}
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-secondary ml-1">
+                    Giới tính
+                  </label>
+                  <select
+                    value={form.gender}
+                    onChange={(e) => {
+                      setForm((prev) => ({ ...prev, gender: e.target.value }));
+                      if (errors.gender) setErrors((prev) => ({ ...prev, gender: "" }));
+                    }}
+                    className={`h-11 rounded-xl border px-4 text-sm text-primary outline-none focus:border-olive bg-white ${errors.gender ? "border-red-500" : "border-muted/30"}`}
+                  >
+                    <option value="">Chọn giới tính</option>
+                    {["MALE", "FEMALE", "OTHER"].map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt === "MALE" ? "Nam" : opt === "FEMALE" ? "Nữ" : "Khác"}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.gender && (
+                    <span className="text-[10px] text-red-500 ml-1 font-medium">{errors.gender}</span>
+                  )}
+                </div>
                 {[
-                  { key: "email", label: "Email", type: "email" },
-                  { key: "firstName", label: "Tên", type: "text" },
-                  { key: "lastName", label: "Họ", type: "text" },
-                  { key: "gender", label: "Giới tính", type: "select", options: ["MALE", "FEMALE", "OTHER"] },
+                  { key: "firstName", label: "Họ", type: "text" },
+                  { key: "lastName", label: "Tên", type: "text" },
                   { key: "dateOfBirth", label: "Ngày sinh", type: "date" },
                   { key: "permanentAddress", label: "Địa chỉ thường trú", type: "text" },
                   { key: "emergencyContactName", label: "Tên liên hệ khẩn cấp", type: "text" },
@@ -383,12 +424,19 @@ function RoomCheckoutContent() {
             <div className="mt-6 flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setStep((prev) => Math.max(1, prev - 1))}
-                disabled={step === 1}
-                className={`h-11 rounded-full px-6 text-sm font-semibold ${step === 1 ? "bg-muted/30 text-secondary/50" : "bg-primary/10 text-primary"
+                onClick={() => {
+                  if (step === 1) {
+                    navigate(`/buildings/${buildingId}/rooms/${roomId}`);
+                    return;
+                  }
+                  setStep((prev) => Math.max(1, prev - 1));
+                }}
+                className={`h-11 rounded-full px-6 text-sm font-semibold ${step === 1
+                  ? "bg-primary/10 text-primary hover:bg-primary/15"
+                  : "bg-primary/10 text-primary"
                   }`}
               >
-                Quay lại
+                {step === 1 ? "Hủy" : "Quay lại"}
               </button>
               <button
                 type="button"

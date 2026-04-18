@@ -23,7 +23,8 @@ export default function SignUpForm() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -33,7 +34,8 @@ export default function SignUpForm() {
   const [loading, setLoading] = useState(false);
 
   const validate = () => {
-    if (!fullName.trim()) return "Vui lòng nhập họ và tên.";
+    if (!firstName.trim()) return "Vui lòng nhập họ.";
+    if (!lastName.trim()) return "Vui lòng nhập tên.";
     if (!email.trim()) return "Vui lòng nhập email.";
     if (password.length < 6) return "Mật khẩu phải có ít nhất 6 ký tự.";
     if (password !== confirmPassword) return "Mật khẩu xác nhận không khớp.";
@@ -55,7 +57,13 @@ export default function SignUpForm() {
       await api.post("/api/auth/signup", { email, password });
 
       navigate("/verify-otp", {
-        state: { email, password, flow: "signup" },
+        state: {
+          email,
+          password,
+          flow: "signup",
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+        },
       });
     } catch (err) {
       setError(err.message || "Đăng ký thất bại.");
@@ -93,16 +101,28 @@ export default function SignUpForm() {
 
   return (
     <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-      <Input
-        label="Họ và Tên"
-        placeholder="Họ và tên đầy đủ"
-        value={fullName}
-        onValueChange={setFullName}
-        startContent={<User className="size-4 text-muted" />}
-        variant="bordered"
-        classNames={inputClasses}
-        isRequired
-      />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Input
+          label="Họ"
+          placeholder="VD: Nguyễn"
+          value={firstName}
+          onValueChange={setFirstName}
+          startContent={<User className="size-4 text-muted" />}
+          variant="bordered"
+          classNames={inputClasses}
+          isRequired
+        />
+        <Input
+          label="Tên"
+          placeholder="VD: Văn A"
+          value={lastName}
+          onValueChange={setLastName}
+          startContent={<User className="size-4 text-muted" />}
+          variant="bordered"
+          classNames={inputClasses}
+          isRequired
+        />
+      </div>
       <Input
         label="Email"
         placeholder="sinhvien@truonghoc.edu.vn"

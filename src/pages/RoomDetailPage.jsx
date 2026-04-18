@@ -5,13 +5,12 @@ import {
   Camera,
   CaretLeft,
   CaretRight,
-  CreditCard,
   CompassTool as DraftingCompass,
   Bank as Landmark,
   CircleNotch,
+  QrCode,
   Ruler,
   Users,
-  Wallet,
   X,
 } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
@@ -214,12 +213,8 @@ function RoomDetailContent() {
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/5 px-3 py-1.5 text-sm text-secondary">
-                <CreditCard className="h-4 w-4 text-olive" />
-                Visa/Mastercard
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/5 px-3 py-1.5 text-sm text-secondary">
-                <Wallet className="h-4 w-4 text-olive" />
-                PayOS
+                <QrCode className="h-4 w-4 text-olive" />
+                Chuyển khoản QR
               </span>
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/5 px-3 py-1.5 text-sm text-secondary">
                 <Landmark className="h-4 w-4 text-olive" />

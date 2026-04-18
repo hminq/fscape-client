@@ -15,6 +15,8 @@ export default function VerifyOtp() {
     const idToken = location.state?.id_token;
     const signupEmail = location.state?.email;
     const signupPassword = location.state?.password;
+    const signupFirstName = location.state?.first_name;
+    const signupLastName = location.state?.last_name;
 
     const [otp, setOtp] = useState("");
     const [error, setError] = useState("");
@@ -33,6 +35,8 @@ export default function VerifyOtp() {
                     email: signupEmail,
                     password: signupPassword,
                     otp,
+                    first_name: signupFirstName,
+                    last_name: signupLastName,
                 });
 
                 // verifySignup returns user object (no access_token)
