@@ -37,6 +37,7 @@ export default function SignUpForm() {
     if (!firstName.trim()) return "Vui lòng nhập họ.";
     if (!lastName.trim()) return "Vui lòng nhập tên.";
     if (!email.trim()) return "Vui lòng nhập email.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return "Email không hợp lệ.";
     if (password.length < 6) return "Mật khẩu phải có ít nhất 6 ký tự.";
     if (password !== confirmPassword) return "Mật khẩu xác nhận không khớp.";
     return null;
@@ -54,11 +55,11 @@ export default function SignUpForm() {
     setLoading(true);
 
     try {
-      await api.post("/api/auth/signup", { email, password });
+      await api.post("/api/auth/signup", { email: email.trim(), password });
 
       navigate("/verify-otp", {
         state: {
-          email,
+          email: email.trim(),
           password,
           flow: "signup",
           first_name: firstName.trim(),
@@ -100,7 +101,7 @@ export default function SignUpForm() {
   };
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+    <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Input
           label="Họ"
@@ -110,7 +111,6 @@ export default function SignUpForm() {
           startContent={<User className="size-4 text-muted" />}
           variant="bordered"
           classNames={inputClasses}
-          isRequired
         />
         <Input
           label="Tên"
@@ -120,7 +120,6 @@ export default function SignUpForm() {
           startContent={<User className="size-4 text-muted" />}
           variant="bordered"
           classNames={inputClasses}
-          isRequired
         />
       </div>
       <Input
@@ -132,7 +131,6 @@ export default function SignUpForm() {
         startContent={<Envelope className="size-4 text-muted" />}
         variant="bordered"
         classNames={inputClasses}
-        isRequired
       />
       <Input
         label="Mật khẩu"
@@ -148,7 +146,6 @@ export default function SignUpForm() {
         }
         variant="bordered"
         classNames={inputClasses}
-        isRequired
       />
       <Input
         label="Xác nhận mật khẩu"
@@ -164,7 +161,6 @@ export default function SignUpForm() {
         }
         variant="bordered"
         classNames={inputClasses}
-        isRequired
       />
 
       {error && (

@@ -29,13 +29,26 @@ export default function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const validate = () => {
+    if (!email.trim()) return "Vui lòng nhập email hoặc tên đăng nhập.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return "Email không hợp lệ.";
+    if (!password) return "Vui lòng nhập mật khẩu.";
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setError("");
     setLoading(true);
 
     try {
-      const res = await api.post("/api/auth/login", { email, password });
+      const res = await api.post("/api/auth/login", { email: email.trim(), password });
 
       const accessToken = res?.access_token;
       const user = res?.user;
@@ -56,7 +69,7 @@ export default function LoginForm() {
     }
   };
   return (
-    <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+    <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
       <Input
         label="Email / Tên đăng nhập"
         placeholder="sinhvien@truonghoc.edu.vn"
@@ -65,7 +78,6 @@ export default function LoginForm() {
         startContent={<Envelope className="size-4 text-muted" />}
         variant="bordered"
         classNames={inputClasses}
-        isRequired
       />
       <Input
         label="Mật khẩu"
@@ -81,7 +93,6 @@ export default function LoginForm() {
         }
         variant="bordered"
         classNames={inputClasses}
-        isRequired
       />
 
       {error && (
