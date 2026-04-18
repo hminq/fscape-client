@@ -31,23 +31,56 @@ export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [loading, setLoading] = useState(false);
 
   const validate = () => {
-    if (!firstName.trim()) return "Vui lòng nhập họ.";
-    if (!lastName.trim()) return "Vui lòng nhập tên.";
-    if (!email.trim()) return "Vui lòng nhập email.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return "Email không hợp lệ.";
-    if (password.length < 6) return "Mật khẩu phải có ít nhất 6 ký tự.";
-    if (password !== confirmPassword) return "Mật khẩu xác nhận không khớp.";
-    return null;
+    const nextErrors = {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    };
+
+    if (!firstName.trim()) {
+      nextErrors.firstName = "Vui lòng nhập họ.";
+    }
+
+    if (!lastName.trim()) {
+      nextErrors.lastName = "Vui lòng nhập tên.";
+    }
+
+    if (!email.trim()) {
+      nextErrors.email = "Vui lòng nhập email.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      nextErrors.email = "Email không hợp lệ.";
+    }
+
+    if (password.length < 6) {
+      nextErrors.password = "Mật khẩu phải có ít nhất 6 ký tự.";
+    }
+
+    if (password !== confirmPassword) {
+      nextErrors.confirmPassword = "Mật khẩu xác nhận không khớp.";
+    }
+
+    return nextErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
+    const nextFieldErrors = validate();
+    setFieldErrors(nextFieldErrors);
+
+    if (Object.values(nextFieldErrors).some(Boolean)) {
+      setError("");
       return;
     }
 
@@ -107,19 +140,29 @@ export default function SignUpForm() {
           label="Họ"
           placeholder="VD: Nguyễn"
           value={firstName}
-          onValueChange={setFirstName}
+          onValueChange={(value) => {
+            setFirstName(value);
+            setFieldErrors((current) => ({ ...current, firstName: "" }));
+          }}
           startContent={<User className="size-4 text-muted" />}
           variant="bordered"
           classNames={inputClasses}
+          isInvalid={!!fieldErrors.firstName}
+          errorMessage={fieldErrors.firstName}
         />
         <Input
           label="Tên"
           placeholder="VD: Văn A"
           value={lastName}
-          onValueChange={setLastName}
+          onValueChange={(value) => {
+            setLastName(value);
+            setFieldErrors((current) => ({ ...current, lastName: "" }));
+          }}
           startContent={<User className="size-4 text-muted" />}
           variant="bordered"
           classNames={inputClasses}
+          isInvalid={!!fieldErrors.lastName}
+          errorMessage={fieldErrors.lastName}
         />
       </div>
       <Input
@@ -127,17 +170,25 @@ export default function SignUpForm() {
         placeholder="sinhvien@truonghoc.edu.vn"
         type="email"
         value={email}
-        onValueChange={setEmail}
+        onValueChange={(value) => {
+          setEmail(value);
+          setFieldErrors((current) => ({ ...current, email: "" }));
+        }}
         startContent={<Envelope className="size-4 text-muted" />}
         variant="bordered"
         classNames={inputClasses}
+        isInvalid={!!fieldErrors.email}
+        errorMessage={fieldErrors.email}
       />
       <Input
         label="Mật khẩu"
         placeholder="Tạo mật khẩu"
         type={showPassword ? "text" : "password"}
         value={password}
-        onValueChange={setPassword}
+        onValueChange={(value) => {
+          setPassword(value);
+          setFieldErrors((current) => ({ ...current, password: "", confirmPassword: "" }));
+        }}
         startContent={<Lock className="size-4 text-muted" />}
         endContent={
           <button type="button" className="text-muted hover:text-secondary" onClick={() => setShowPassword(!showPassword)}>
@@ -146,13 +197,18 @@ export default function SignUpForm() {
         }
         variant="bordered"
         classNames={inputClasses}
+        isInvalid={!!fieldErrors.password}
+        errorMessage={fieldErrors.password}
       />
       <Input
         label="Xác nhận mật khẩu"
         placeholder="Xác nhận mật khẩu"
         type={showConfirm ? "text" : "password"}
         value={confirmPassword}
-        onValueChange={setConfirmPassword}
+        onValueChange={(value) => {
+          setConfirmPassword(value);
+          setFieldErrors((current) => ({ ...current, confirmPassword: "" }));
+        }}
         startContent={<Lock className="size-4 text-muted" />}
         endContent={
           <button type="button" className="text-muted hover:text-secondary" onClick={() => setShowConfirm(!showConfirm)}>
@@ -161,6 +217,8 @@ export default function SignUpForm() {
         }
         variant="bordered"
         classNames={inputClasses}
+        isInvalid={!!fieldErrors.confirmPassword}
+        errorMessage={fieldErrors.confirmPassword}
       />
 
       {error && (

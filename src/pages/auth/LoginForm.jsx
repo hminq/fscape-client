@@ -27,20 +27,32 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
 
   const validate = () => {
-    if (!email.trim()) return "Vui lòng nhập email hoặc tên đăng nhập.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return "Email không hợp lệ.";
-    if (!password) return "Vui lòng nhập mật khẩu.";
-    return null;
+    const nextErrors = { email: "", password: "" };
+
+    if (!email.trim()) {
+      nextErrors.email = "Vui lòng nhập email hoặc tên đăng nhập.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      nextErrors.email = "Email không hợp lệ.";
+    }
+
+    if (!password) {
+      nextErrors.password = "Vui lòng nhập mật khẩu.";
+    }
+
+    return nextErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
+    const nextFieldErrors = validate();
+    setFieldErrors(nextFieldErrors);
+
+    if (nextFieldErrors.email || nextFieldErrors.password) {
+      setError("");
       return;
     }
 
@@ -74,16 +86,24 @@ export default function LoginForm() {
         label="Email / Tên đăng nhập"
         placeholder="sinhvien@truonghoc.edu.vn"
         value={email}
-        onValueChange={setEmail}
+        onValueChange={(value) => {
+          setEmail(value);
+          setFieldErrors((current) => ({ ...current, email: "" }));
+        }}
         startContent={<Envelope className="size-4 text-muted" />}
         variant="bordered"
         classNames={inputClasses}
+        isInvalid={!!fieldErrors.email}
+        errorMessage={fieldErrors.email}
       />
       <Input
         label="Mật khẩu"
         placeholder="Nhập mật khẩu"
         value={password}
-        onValueChange={setPassword}
+        onValueChange={(value) => {
+          setPassword(value);
+          setFieldErrors((current) => ({ ...current, password: "" }));
+        }}
         type={showPassword ? "text" : "password"}
         startContent={<Lock className="size-4 text-muted" />}
         endContent={
@@ -93,6 +113,8 @@ export default function LoginForm() {
         }
         variant="bordered"
         classNames={inputClasses}
+        isInvalid={!!fieldErrors.password}
+        errorMessage={fieldErrors.password}
       />
 
       {error && (
