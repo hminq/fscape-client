@@ -58,10 +58,10 @@ function PaymentResultContent() {
           </Link>
         ) : (
           <Link
-            to="/rooms"
+            to="/my-bookings"
             className="h-11 rounded-full bg-primary px-6 text-sm font-semibold leading-[2.75rem] text-white"
           >
-            Xem phòng
+            Đơn đặt phòng của tôi
           </Link>
         )}
       </div>
