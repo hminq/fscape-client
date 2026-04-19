@@ -20,7 +20,18 @@ export function usePayOSEmbeddedCheckout({
   const openedCheckoutUrl = useRef("");
   useEffect(() => {
     if (!checkoutUrl || openedCheckoutUrl.current === checkoutUrl) return;
+
+    const container = document.getElementById(elementId);
+    if (!container) return;
+
+    if (container.dataset.payosCheckoutUrl === checkoutUrl && container.childElementCount > 0) {
+      openedCheckoutUrl.current = checkoutUrl;
+      return;
+    }
+
+    container.innerHTML = "";
+    container.dataset.payosCheckoutUrl = checkoutUrl;
     openedCheckoutUrl.current = checkoutUrl;
     open();
-  }, [checkoutUrl, open]);
+  }, [checkoutUrl, elementId, open]);
 }

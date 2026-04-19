@@ -295,7 +295,7 @@ function ContractSigningPage() {
           <div className="mt-8 rounded-xl bg-white p-6 shadow-sm">
             <h2 className="text-lg font-bold text-primary">Ký tên của bạn</h2>
             <p className="mt-1 text-sm text-secondary">
-              Vui lòng ký tên vào ô bên dưới bằng chuột hoặc ngón tay (trên điện thoại).
+              Vui lòng ký xác nhận trong ô bên dưới để tiếp tục.
             </p>
 
             <div className="relative mt-4">

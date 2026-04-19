@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { CircleNotch, ArrowLeft, MapPin, CalendarDots, FileText, DownloadSimple, Eye, PenNib, MagnifyingGlass, FunnelSimple, CaretDown, CaretUp, SortAscending, CaretLeft, CaretRight, HourglassMedium, Clock } from "@phosphor-icons/react";
+import { CircleNotch, ArrowLeft, MapPin, CalendarDots, FileText, DownloadSimple, Eye, PenNib, MagnifyingGlass, FunnelSimple, CaretDown, CaretUp, SortAscending, CaretLeft, CaretRight, HourglassMedium, Clock, ArrowsClockwise } from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
@@ -311,6 +311,7 @@ function ContractRow({ contract }) {
   const isTerminal = contract.status === "FINISHED" || contract.status === "TERMINATED";
   const needsSign = contract.status === "PENDING_CUSTOMER_SIGNATURE";
   const waitingManager = contract.status === "PENDING_MANAGER_SIGNATURE";
+  const canRenew = contract.status === "ACTIVE" || contract.status === "EXPIRING_SOON";
 
   return (
     <div className={`flex flex-col sm:flex-row gap-4 rounded-2xl border bg-white p-5 transition-shadow hover:shadow-md ${
@@ -350,7 +351,7 @@ function ContractRow({ contract }) {
       </div>
 
       {/* Right — actions */}
-      <div className="flex items-center gap-2 shrink-0 sm:ml-auto">
+      <div className="flex items-center gap-2 shrink-0 sm:ml-auto flex-wrap">
         <Link
           to={`/sign?contract_id=${contract.id}`}
           className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-secondary hover:bg-gray-50 transition-colors"
@@ -372,6 +373,15 @@ function ContractRow({ contract }) {
             <HourglassMedium className="size-4" />
             Chờ quản lý ký
           </span>
+        )}
+        {canRenew && (
+          <Link
+            to={`/renew?contract_id=${contract.id}`}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-olive px-3 py-2 text-sm font-medium text-white hover:bg-olive/90 transition-colors"
+          >
+            <ArrowsClockwise className="size-4" />
+            Gia hạn
+          </Link>
         )}
         {contract.pdf_url && (
           <a

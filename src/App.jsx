@@ -10,6 +10,7 @@ import PaymentResultPage from "./pages/PaymentResultPage";
 import PaymentCheckoutPage from "./pages/PaymentCheckoutPage";
 import RoomsPage from "./pages/RoomsPage";
 import ContractSigningPage from "./pages/ContractSigningPage";
+import ContractRenewalPage from "./pages/ContractRenewalPage";
 import ProfilePage from "./pages/ProfilePage";
 import MyRoomsPage from "./pages/MyRoomsPage";
 import MyBookingsPage from "./pages/MyBookingsPage";
@@ -37,6 +38,7 @@ function App() {
       <Route path="/payment/checkout" element={<PaymentCheckoutPage />} />
       <Route path="/payment/result" element={<PaymentResultPage />} />
       <Route path="/sign" element={<ContractSigningPage />} />
+      <Route path="/renew" element={<ContractRenewalPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/my-rooms" element={<MyRoomsPage />} />
       <Route path="/my-bookings" element={<MyBookingsPage />} />
