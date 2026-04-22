@@ -349,7 +349,7 @@ function InvoiceCard({ invoice, highlighted, onPay, paying }) {
   const room = contract?.room;
   const building = room?.building;
   const isPastDue = invoice.due_date && new Date(invoice.due_date) < new Date();
-  const canPay = invoice.status === "UNPAID" && !isPastDue;
+  const canPay = invoice.status === "UNPAID" || invoice.status === "OVERDUE";
 
   const isOverdue = invoice.status === "OVERDUE" || (invoice.status === "UNPAID" && isPastDue);
 

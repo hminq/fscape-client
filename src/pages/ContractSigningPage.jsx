@@ -58,7 +58,7 @@ function ContractSigningPage() {
   // Fetch contract
   useEffect(() => {
     if (!contractId || !token) {
-      if (!contractId) setError("Link ký hợp đồng không hợp lệ (thiếu contract_id).");
+      if (!contractId) setError("Link ký hợp đồng không hợp lệ.");
       setLoading(false);
       return;
     }
