@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { MagnifyingGlass, CheckCircle, ArrowRight, GraduationCap, Buildings, NavigationArrow, Clock } from "@phosphor-icons/react";
 import { useLocations } from "@/contexts/LocationsContext";
 import { findNearestBuilding } from "@/lib/geo";
@@ -15,9 +15,11 @@ const CAPACITY_OPTIONS = [
 
 export default function DiscoverSection() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { locations, loading } = useLocations();
 
   const [selectedUniversity, setSelectedUniversity] = useState(null);
+  const [dismissedPrefill, setDismissedPrefill] = useState(false);
   const [selectedCapacity, setSelectedCapacity] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeLocationIndex, setActiveLocationIndex] = useState(0);
@@ -42,15 +44,42 @@ export default function DiscoverSection() {
     return allUniversities.filter((u) => u.name.toLowerCase().includes(q));
   }, [searchQuery, allUniversities]);
 
+  const prefilledUniversity = useMemo(() => {
+    if (loading || locations.length === 0 || dismissedPrefill) return null;
+
+    const params = new URLSearchParams(location.search);
+    const locationId = params.get("location_id");
+    const universityId = params.get("university_id");
+
+    if (!locationId || !universityId) return null;
+
+    const matchedLocation = locations.find((loc) => String(loc.id) === String(locationId));
+    if (!matchedLocation) return null;
+
+    const matchedUniversity = (matchedLocation.universities || []).find(
+      (uni) => String(uni.id) === String(universityId)
+    );
+
+    if (!matchedUniversity) return null;
+
+    return {
+      ...matchedUniversity,
+      locationId: matchedLocation.id,
+      locationName: matchedLocation.name,
+    };
+  }, [location.search, loading, locations, dismissedPrefill]);
+
+  const effectiveSelectedUniversity = selectedUniversity || prefilledUniversity;
+
   const nearestBuilding = useMemo(() => {
-    if (!selectedUniversity) return null;
-    return findNearestBuilding(selectedUniversity, allBuildings);
-  }, [selectedUniversity, allBuildings]);
+    if (!effectiveSelectedUniversity) return null;
+    return findNearestBuilding(effectiveSelectedUniversity, allBuildings);
+  }, [effectiveSelectedUniversity, allBuildings]);
 
   const [distance, setDistance] = useState(null);
 
   useEffect(() => {
-    const uni = selectedUniversity;
+    const uni = effectiveSelectedUniversity;
     const bld = nearestBuilding;
     if (!uni?.latitude || !uni?.longitude || !bld?.latitude || !bld?.longitude) return;
 
@@ -62,24 +91,26 @@ export default function DiscoverSection() {
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [selectedUniversity, nearestBuilding]);
+  }, [effectiveSelectedUniversity, nearestBuilding]);
 
   const activeLocation = locations[activeLocationIndex];
   const tabUniversities = activeLocation?.universities || [];
 
   const handleSelectUniversity = (uni) => {
+    setDismissedPrefill(true);
     setSelectedUniversity(uni);
     setSearchQuery("");
   };
 
   const handleClearUniversity = () => {
+    setDismissedPrefill(true);
     setSelectedUniversity(null);
     setSelectedCapacity(null);
     setDistance(null);
   };
 
   const handleSubmit = () => {
-    if (!selectedUniversity || !selectedCapacity) return;
+    if (!effectiveSelectedUniversity || !selectedCapacity) return;
     const params = new URLSearchParams();
     if (nearestBuilding) params.set("building_id", nearestBuilding.id);
     params.set("capacity", String(selectedCapacity));
@@ -92,6 +123,17 @@ export default function DiscoverSection() {
       handleSelectUniversity(searchResults[0]);
     }
   };
+
+  useEffect(() => {
+    if (location.hash === "#discover-section") {
+      requestAnimationFrame(() => {
+        const section = document.getElementById("discover-section");
+        if (section) {
+          section.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    }
+  }, [location.hash]);
 
   if (loading) {
     return (
@@ -119,20 +161,20 @@ export default function DiscoverSection() {
               <MagnifyingGlass className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <input
                 type="text"
-                value={selectedUniversity ? selectedUniversity.name : searchQuery}
+                value={effectiveSelectedUniversity ? effectiveSelectedUniversity.name : searchQuery}
                 onChange={(e) => {
-                  if (selectedUniversity) handleClearUniversity();
+                  if (effectiveSelectedUniversity) handleClearUniversity();
                   setSearchQuery(e.target.value);
                 }}
                 onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
                 placeholder="Nhập tên trường để tìm phòng phù hợp nhất..."
                 className={`w-full rounded-full border py-3 pl-10 pr-4 text-sm outline-none transition-colors ${
-                  selectedUniversity
+                  effectiveSelectedUniversity
                     ? "border-olive bg-olive/5 font-semibold text-primary"
                     : "border-muted/30 bg-white text-secondary focus:border-primary"
                 }`}
               />
-              {selectedUniversity && (
+              {effectiveSelectedUniversity && (
                 <CheckCircle className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-olive" weight="fill" />
               )}
             </div>
@@ -147,7 +189,7 @@ export default function DiscoverSection() {
         </div>
 
         {/* Location tabs + university list (hidden when university selected) */}
-        {!selectedUniversity && (
+        {!effectiveSelectedUniversity && (
           <div className="mt-10">
             {searchResults ? (
               <div>
@@ -224,7 +266,7 @@ export default function DiscoverSection() {
         )}
 
         {/* ── Nearest building + map (shown when university selected) ── */}
-        {selectedUniversity && nearestBuilding && (
+        {effectiveSelectedUniversity && nearestBuilding && (
           <>
             <div className="my-12 border-t border-muted/15" />
 
@@ -251,20 +293,20 @@ export default function DiscoverSection() {
 
             {/* Map */}
             {nearestBuilding.latitude && nearestBuilding.longitude &&
-             selectedUniversity.latitude && selectedUniversity.longitude && (
-              <div className="mx-auto mt-8 max-w-2xl overflow-hidden rounded-2xl border border-muted/20">
+             effectiveSelectedUniversity?.latitude && effectiveSelectedUniversity?.longitude && (
+             <div className="mx-auto mt-8 max-w-2xl overflow-hidden rounded-2xl border border-muted/20">
                 <MapView
                   center={[
-                    (Number(selectedUniversity.longitude) + Number(nearestBuilding.longitude)) / 2,
-                    (Number(selectedUniversity.latitude) + Number(nearestBuilding.latitude)) / 2,
+                    (Number(effectiveSelectedUniversity.longitude) + Number(nearestBuilding.longitude)) / 2,
+                    (Number(effectiveSelectedUniversity.latitude) + Number(nearestBuilding.latitude)) / 2,
                   ]}
                   zoom={13}
                   className="h-[280px] w-full"
                   theme="light"
                 >
                   <MapMarker
-                    longitude={Number(selectedUniversity.longitude)}
-                    latitude={Number(selectedUniversity.latitude)}
+                    longitude={Number(effectiveSelectedUniversity.longitude)}
+                    latitude={Number(effectiveSelectedUniversity.latitude)}
                   >
                     <MarkerContent>
                       <div className="flex items-center justify-center">
@@ -291,7 +333,7 @@ export default function DiscoverSection() {
 
                   <MapRoute
                     coordinates={[
-                      [Number(selectedUniversity.longitude), Number(selectedUniversity.latitude)],
+                      [Number(effectiveSelectedUniversity.longitude), Number(effectiveSelectedUniversity.latitude)],
                       [Number(nearestBuilding.longitude), Number(nearestBuilding.latitude)],
                     ]}
                     color="#9FC490"
@@ -307,7 +349,7 @@ export default function DiscoverSection() {
                     <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary">
                       <GraduationCap className="h-3 w-3 text-white" weight="fill" />
                     </span>
-                    <span className="font-medium">{selectedUniversity.name}</span>
+                    <span className="font-medium">{effectiveSelectedUniversity.name}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-secondary">
                     <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-olive">
@@ -362,7 +404,7 @@ export default function DiscoverSection() {
         )}
 
         {/* ── Blurred capacity placeholder (when no university selected) ── */}
-        {!selectedUniversity && (
+        {!effectiveSelectedUniversity && (
           <>
             <div className="my-12 border-t border-muted/15" />
             <div className="pointer-events-none text-center opacity-30 blur-[2px]">

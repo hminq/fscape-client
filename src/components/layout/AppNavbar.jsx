@@ -25,7 +25,7 @@ function TriangleIcon({ up, className }) {
 
 export default function AppNavbar() {
   const { locations } = useLocations();
-  const { isLoggedIn, logout, user } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const [openLocId, setOpenLocId] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -79,6 +79,23 @@ export default function AppNavbar() {
   const handleBuildingSelect = (buildingId) => {
     setOpenLocId(null);
     navigate(`/buildings/${buildingId}`);
+  };
+
+  const handleUniversitySelect = (universityId, locationId) => {
+    setOpenLocId(null);
+
+    if (location.pathname === "/") {
+      navigate(`/?location_id=${locationId}&university_id=${universityId}#discover-section`);
+      requestAnimationFrame(() => {
+        const section = document.getElementById("discover-section");
+        if (section) {
+          section.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+      return;
+    }
+
+    navigate(`/?location_id=${locationId}&university_id=${universityId}#discover-section`);
   };
 
   return (
@@ -214,13 +231,14 @@ export default function AppNavbar() {
                 </p>
                 <div className="flex flex-col gap-3">
                   {(activeLoc.universities || []).slice(0, 5).map((u) => (
-                    <a
+                    <button
                       key={u.id}
-                      href="#"
-                      className="text-white/75 hover:text-white text-sm transition-colors"
+                      type="button"
+                      onClick={() => handleUniversitySelect(u.id, activeLoc.id)}
+                      className="w-fit text-left text-white/75 hover:text-white text-sm transition-colors"
                     >
                       {u.name}
-                    </a>
+                    </button>
                   ))}
                 </div>
               </div>

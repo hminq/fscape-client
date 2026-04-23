@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { cdnUrl } from "@/lib/utils";
 
 const MAX_MESSAGE_LENGTH = 1000;
+export const CHATBOT_PREFILL_EVENT = "fscape:chatbot-prefill";
 
 /**
  * Lightweight markdown → HTML for chatbot messages.
@@ -95,6 +96,28 @@ export default function ChatbotWidget() {
       setTimeout(() => inputRef.current?.focus(), 300);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    const nextHeight = Math.min(textarea.scrollHeight, 96);
+    textarea.style.height = `${nextHeight}px`;
+    textarea.style.overflowY = textarea.scrollHeight > 96 ? "auto" : "hidden";
+  }, [input, isOpen]);
+
+  useEffect(() => {
+    const handlePrefill = (event) => {
+      const prompt = String(event?.detail?.prompt ?? "").trim();
+      if (!prompt) return;
+      setIsOpen(true);
+      setInput(prompt);
+    };
+
+    window.addEventListener(CHATBOT_PREFILL_EVENT, handlePrefill);
+    return () => window.removeEventListener(CHATBOT_PREFILL_EVENT, handlePrefill);
+  }, []);
 
   const handleScroll = () => {
     const el = messagesContainerRef.current;
@@ -221,7 +244,7 @@ export default function ChatbotWidget() {
                 rows={1}
                 maxLength={MAX_MESSAGE_LENGTH}
                 className="flex-1 resize-none rounded-xl border border-muted/25 bg-gray-50 px-3 py-2 text-sm text-primary outline-none placeholder:text-muted/50 focus:border-olive/50 focus:ring-1 focus:ring-olive/20 transition-colors max-h-24"
-                style={{ fieldSizing: "content" }}
+                style={{ height: "40px", overflowY: "hidden" }}
               />
               <button
                 onClick={sendMessage}
