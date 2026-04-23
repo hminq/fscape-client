@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 
 const inputClasses = { inputWrapper: "border-muted/30 hover:border-muted focus-within:border-olive" };
+const OTP_REGEX = /^[0-9]{6}$/;
 
 export default function ForgotPasswordForm() {
   const navigate = useNavigate();
@@ -16,6 +17,29 @@ export default function ForgotPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({
+    otp: "",
+    newPassword: "",
+  });
+
+  const validateResetForm = () => {
+    const nextErrors = {
+      otp: "",
+      newPassword: "",
+    };
+
+    if (!otp.trim()) {
+      nextErrors.otp = "Vui lòng nhập mã OTP.";
+    } else if (!OTP_REGEX.test(otp.trim())) {
+      nextErrors.otp = "OTP phải gồm đúng 6 chữ số.";
+    }
+
+    if (newPassword.length < 6) {
+      nextErrors.newPassword = "Mật khẩu mới phải có ít nhất 6 ký tự.";
+    }
+
+    return nextErrors;
+  };
 
   const handleRequestOtp = async (e) => {
     e.preventDefault();
@@ -35,11 +59,18 @@ export default function ForgotPasswordForm() {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
+    const nextFieldErrors = validateResetForm();
+    setFieldErrors(nextFieldErrors);
     setError("");
     setMessage("");
+
+    if (Object.values(nextFieldErrors).some(Boolean)) {
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await api.post("/api/auth/reset-password", { email, otp, new_password: newPassword });
+      const res = await api.post("/api/auth/reset-password", { email, otp: otp.trim(), new_password: newPassword });
       setMessage(res.message || "Đã cập nhật mật khẩu");
       setTimeout(() => {
         navigate("/login");
@@ -106,17 +137,25 @@ export default function ForgotPasswordForm() {
             label="Mã OTP"
             placeholder="Nhập mã OTP"
             value={otp}
-            onValueChange={setOtp}
+            onValueChange={(value) => {
+              setOtp(value);
+              setFieldErrors((current) => ({ ...current, otp: "" }));
+            }}
             startContent={<Ticket className="size-4 text-muted" />}
             variant="bordered"
             classNames={inputClasses}
             isRequired
+            isInvalid={!!fieldErrors.otp}
+            errorMessage={fieldErrors.otp}
           />
           <Input
             label="Mật khẩu mới"
             placeholder="Nhập mật khẩu mới"
             value={newPassword}
-            onValueChange={setNewPassword}
+            onValueChange={(value) => {
+              setNewPassword(value);
+              setFieldErrors((current) => ({ ...current, newPassword: "" }));
+            }}
             type={showPassword ? "text" : "password"}
             startContent={<Lock className="size-4 text-muted" />}
             endContent={
@@ -127,6 +166,8 @@ export default function ForgotPasswordForm() {
             variant="bordered"
             classNames={inputClasses}
             isRequired
+            isInvalid={!!fieldErrors.newPassword}
+            errorMessage={fieldErrors.newPassword}
           />
           <Button
             type="submit"

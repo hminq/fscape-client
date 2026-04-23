@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 
 const INTERNAL_ROLES = ["ADMIN", "BUILDING_MANAGER", "STAFF"];
+const OTP_REGEX = /^[0-9]{6}$/;
 
 export default function VerifyOtp() {
     const navigate = useNavigate();
@@ -19,12 +20,27 @@ export default function VerifyOtp() {
     const signupLastName = location.state?.last_name;
 
     const [otp, setOtp] = useState("");
+    const [otpError, setOtpError] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const validateOtp = (value) => {
+        if (!value.trim()) return "Vui lòng nhập mã OTP.";
+        if (!OTP_REGEX.test(value.trim())) return "OTP phải gồm đúng 6 chữ số.";
+        return "";
+    };
+
     const handleVerify = async (e) => {
         e.preventDefault();
+        const normalizedOtp = otp.trim();
+        const nextOtpError = validateOtp(normalizedOtp);
+        setOtpError(nextOtpError);
         setError("");
+
+        if (nextOtpError) {
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -34,7 +50,7 @@ export default function VerifyOtp() {
                 res = await api.post("/api/auth/signup/verify", {
                     email: signupEmail,
                     password: signupPassword,
-                    otp,
+                    otp: normalizedOtp,
                     first_name: signupFirstName,
                     last_name: signupLastName,
                 });
@@ -54,7 +70,7 @@ export default function VerifyOtp() {
             // Google flow
             res = await api.post("/api/auth/google/verify", {
                 id_token: idToken,
-                otp,
+                otp: normalizedOtp,
             });
 
             const accessToken = res?.access_token;
@@ -99,9 +115,16 @@ export default function VerifyOtp() {
                     label="Mã OTP"
                     placeholder="Nhập mã OTP"
                     value={otp}
-                    onValueChange={setOtp}
+                    onValueChange={(value) => {
+                        setOtp(value);
+                        if (otpError) {
+                            setOtpError(validateOtp(value));
+                        }
+                    }}
                     variant="bordered"
                     isRequired
+                    isInvalid={!!otpError}
+                    errorMessage={otpError}
                 />
 
                 {error && (
