@@ -93,7 +93,7 @@ function RoomsContent() {
   const page = Number(searchParams.get("page")) || 1;
 
   const [rooms, setRooms] = useState([]);
-  const [roomTypeDetails, setRoomTypeDetails] = useState({});
+  const [roomTypeFilters, setRoomTypeFilters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [totalPages, setTotalPages] = useState(1);
@@ -132,7 +132,7 @@ function RoomsContent() {
     setSearchParams(next, { replace: true });
   };
 
-  // Fetch rooms when building or page changes
+  // Fetch paginated rooms from API with full filter/sort state
   useEffect(() => {
     let mounted = true;
 
@@ -142,6 +142,11 @@ function RoomsContent() {
         setError("");
         const params = new URLSearchParams({ status: "AVAILABLE", limit: PAGE_SIZE, page });
         if (buildingId) params.set("building_id", buildingId);
+        if (typeIds.length > 0) params.set("room_type_id", typeIds.join(","));
+        if (floorParam) params.set("floor", floorParam);
+        if (capacity > 0) params.set("capacity", String(capacity));
+        params.set("sort_by", "price");
+        params.set("sort_order", sortOrder === "price_desc" ? "DESC" : "ASC");
 
         const res = await api.get(`/api/rooms?${params.toString()}`);
         if (!mounted) return;
@@ -158,31 +163,6 @@ function RoomsContent() {
           setTotalPages(1);
           setTotalRooms(roomList.length);
         }
-
-        // Fetch room type details
-        const uniqueTypeIds = [...new Set(roomList.map((room) => room.room_type?.id).filter(Boolean))];
-        if (uniqueTypeIds.length === 0) {
-          setRoomTypeDetails({});
-          return;
-        }
-
-        const typeEntries = await Promise.all(
-          uniqueTypeIds.map(async (id) => {
-            try {
-              const detailRes = await api.get(`/api/room-types/${id}`);
-              return [id, detailRes?.data || null];
-            } catch {
-              return [id, null];
-            }
-          })
-        );
-
-        if (!mounted) return;
-        const detailMap = typeEntries.reduce((acc, [id, data]) => {
-          if (data) acc[id] = data;
-          return acc;
-        }, {});
-        setRoomTypeDetails(detailMap);
       } catch (err) {
         if (!mounted) return;
         setError(err.message || "Không thể tải danh sách phòng.");
@@ -195,23 +175,34 @@ function RoomsContent() {
     return () => {
       mounted = false;
     };
-  }, [buildingId, page]);
+  }, [buildingId, typeIds, floorParam, capacity, sortOrder, page]);
 
-  // Build room type filter options from fetched rooms
-  const roomTypeFilters = useMemo(() => {
-    const map = new Map();
-    rooms.forEach((room) => {
-      const type = roomTypeDetails[room.room_type?.id] || room.room_type;
-      if (!type?.id) return;
-      const prev = map.get(type.id);
-      map.set(type.id, {
-        id: type.id,
-        name: type.name || "Loại phòng",
-        count: (prev?.count || 0) + 1,
-      });
-    });
-    return Array.from(map.values());
-  }, [rooms, roomTypeDetails]);
+  // Fetch room type counts for sidebar from the filtered dataset, excluding the current room type selection.
+  useEffect(() => {
+    let mounted = true;
+
+    async function fetchRoomTypeFilters() {
+      try {
+        const params = new URLSearchParams({ status: "AVAILABLE" });
+        if (buildingId) params.set("building_id", buildingId);
+        if (floorParam) params.set("floor", floorParam);
+        if (capacity > 0) params.set("capacity", String(capacity));
+
+        const res = await api.get(`/api/rooms/facets?${params.toString()}`);
+        if (!mounted) return;
+
+        setRoomTypeFilters(res?.data?.room_types || []);
+      } catch {
+        if (!mounted) return;
+        setRoomTypeFilters([]);
+      }
+    }
+
+    fetchRoomTypeFilters();
+    return () => {
+      mounted = false;
+    };
+  }, [buildingId, floorParam, capacity]);
 
   // Floor options: 1 through building.total_floors
   const totalFloors = selectedBuilding?.total_floors || 0;
@@ -222,33 +213,6 @@ function RoomsContent() {
     }
     return opts;
   }, [totalFloors]);
-
-  // Apply client-side room type filter + floor filter + sort
-  const filteredRooms = useMemo(() => {
-    let base = rooms;
-
-    if (typeIds.length > 0) {
-      base = base.filter((room) => typeIds.includes(room.room_type?.id));
-    }
-
-    if (floorParam) {
-      const selectedFloor = Number(floorParam);
-      base = base.filter((room) => room.floor === selectedFloor);
-    }
-
-    if (capacity > 0) {
-      base = base.filter((room) => {
-        const capMax = roomTypeDetails[room.room_type?.id]?.capacity_max ?? room.room_type?.capacity_max;
-        return capMax != null && capMax >= capacity;
-      });
-    }
-
-    return [...base].sort((a, b) => {
-      const priceA = Number(a.room_type?.base_price || 0);
-      const priceB = Number(b.room_type?.base_price || 0);
-      return sortOrder === "price_asc" ? priceA - priceB : priceB - priceA;
-    });
-  }, [rooms, typeIds, floorParam, capacity, sortOrder, roomTypeDetails]);
 
   const handleBuildingChange = (newBuildingId) => {
     updateParams({ building_id: newBuildingId, room_type_id: "", floor: "", capacity: "" });
@@ -375,12 +339,12 @@ function RoomsContent() {
                             ? "bg-primary text-white"
                             : "text-secondary hover:bg-primary/5 hover:text-primary"
                         }`}
-                      >
-                        <span className="flex items-center gap-2">
-                          <input type="checkbox" checked={typeIds.length === 0} onChange={() => {}} className="h-3.5 w-3.5" />
+                        >
+                          <span className="flex items-center gap-2">
+                            <input type="checkbox" checked={typeIds.length === 0} onChange={() => {}} className="h-3.5 w-3.5" />
                           Tất cả
                         </span>
-                        <span className="font-semibold">{rooms.length}</span>
+                        <span className="font-semibold">{roomTypeFilters.reduce((sum, type) => sum + type.count, 0)}</span>
                       </button>
                       {roomTypeFilters.map((type) => (
                         <button
@@ -460,11 +424,11 @@ function RoomsContent() {
                     />
                   </div>
 
-                  {filteredRooms.length === 0 ? (
+                  {rooms.length === 0 ? (
                     <p className="py-16 text-center text-secondary">Không có phòng nào phù hợp.</p>
                   ) : (
-                    filteredRooms.map((room) => {
-                      const detailType = roomTypeDetails[room.room_type?.id] || room.room_type || {};
+                    rooms.map((room) => {
+                      const detailType = room.room_type || {};
                       return (
                         <article
                           key={room.id}
