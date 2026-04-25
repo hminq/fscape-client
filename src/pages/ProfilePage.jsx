@@ -1,7 +1,22 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Input, Select, SelectItem } from "@heroui/react";
-import { Camera, CircleNotch, ArrowLeft, User, IdentificationCard, Phone, CalendarDots, MapPinLine, UsersThree } from "@phosphor-icons/react";
+import {
+  Camera,
+  CircleNotch,
+  ArrowLeft,
+  User,
+  IdentificationCard,
+  Phone,
+  CalendarDots,
+  MapPinLine,
+  UsersThree,
+  Bed,
+  Receipt,
+  FileText,
+  HouseLine,
+  SignOut,
+} from "@phosphor-icons/react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider } from "@/contexts/LocationsContext";
@@ -27,10 +42,17 @@ const FIELD_NAME_MAP = {
   emergency_contact_name: "emergencyContactName",
   emergency_contact_phone: "emergencyContactPhone",
 };
+const PROFILE_NAV_LINKS = [
+  { label: "Hồ sơ của tôi", path: "/profile", icon: IdentificationCard },
+  { label: "Phòng của tôi", path: "/my-rooms", icon: HouseLine },
+  { label: "Đơn đặt phòng", path: "/my-bookings", icon: Bed },
+  { label: "Hóa đơn", path: "/my-invoices", icon: Receipt },
+  { label: "Hợp đồng", path: "/my-contracts", icon: FileText },
+];
 
 function ProfileContent() {
   const navigate = useNavigate();
-  const { user, login, token, isLoggedIn } = useAuth();
+  const { user, login, logout, token, isLoggedIn } = useAuth();
   const fileInputRef = useRef(null);
 
   const [profile, setProfile] = useState(null);
@@ -41,13 +63,11 @@ function ProfileContent() {
   const [success, setSuccess] = useState("");
   const [formErrors, setFormErrors] = useState({});
 
-  // User fields
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
 
-  // Customer profile fields
   const [gender, setGender] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [permanentAddress, setPermanentAddress] = useState("");
@@ -78,7 +98,6 @@ function ProfileContent() {
         setLastName(data.last_name || "");
         setPhone(data.phone || "");
         setAvatarUrl(data.avatar_url || "");
-        // Customer profile
         const p = data.profile;
         if (p) {
           setGender(p.gender || "");
@@ -211,6 +230,11 @@ function ProfileContent() {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate("/", { replace: true });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -237,7 +261,6 @@ function ProfileContent() {
           </div>
         </div>
 
-        {/* Messages */}
         {error && (
           <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
@@ -257,7 +280,7 @@ function ProfileContent() {
                   <img
                     src={cdnUrl(avatarUrl) || defaultAvatar}
                     alt="Avatar"
-                    className="size-28 rounded-full border-2 border-primary/20 object-cover bg-white"
+                    className="size-32 rounded-full border-2 border-primary/20 object-cover bg-white"
                   />
                   <button
                     type="button"
@@ -293,8 +316,40 @@ function ProfileContent() {
                 </button>
               </div>
 
-              <div className="mt-6 border-t border-primary/10 pt-4 text-sm text-secondary space-y-2">
-                <p>Thông tin sẽ được dùng trong đặt phòng và hợp đồng.</p>
+              <div className="mt-8 border-t border-primary/10 pt-6">
+                <p className="mb-3 text-sm font-semibold text-primary">Truy cập nhanh</p>
+                <div className="space-y-2">
+                  {PROFILE_NAV_LINKS.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = item.path === "/profile";
+                    return (
+                      <button
+                        key={item.path}
+                        type="button"
+                        onClick={() => navigate(item.path)}
+                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${
+                          isActive
+                            ? "bg-primary text-white"
+                            : "text-secondary hover:bg-primary/6 hover:text-primary"
+                        }`}
+                      >
+                        <Icon className="size-4.5" />
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mt-8 border-t border-primary/10 pt-6">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex w-full items-center justify-center gap-2 rounded-full border border-red-200 px-5 py-3 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+                >
+                  <SignOut className="size-4.5" />
+                  Đăng xuất
+                </button>
               </div>
             </div>
           </aside>

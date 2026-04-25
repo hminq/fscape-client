@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@heroui/react";
 import { useLocations } from "@/contexts/LocationsContext";
 import { useAuth } from "@/contexts/AuthContext";
-import UserDrawer from "./UserDrawer";
 import fscapeLogoFull from "../../assets/fscape-logo-full.svg";
 import defaultAvatar from "../../assets/default_room_img.jpg";
 import { cdnUrl } from "@/lib/utils";
@@ -28,7 +27,6 @@ export default function AppNavbar() {
   const { isLoggedIn, user } = useAuth();
   const [openLocId, setOpenLocId] = useState(null);
   const [scrolled, setScrolled] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const navRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,13 +52,6 @@ export default function AppNavbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    document.body.classList.toggle("user-drawer-open", drawerOpen);
-    return () => {
-      document.body.classList.remove("user-drawer-open");
-    };
-  }, [drawerOpen]);
-
   const activeLoc = locations.find((l) => l.id === openLocId);
   const currentBuildingId = useMemo(() => {
     const match = location.pathname.match(/^\/buildings\/([^/]+)/);
@@ -75,6 +66,27 @@ export default function AppNavbar() {
     }
     return "";
   }, [locations, currentBuildingId]);
+  const [heroPassed, setHeroPassed] = useState(location.pathname !== "/");
+  const isHomeRoute = location.pathname === "/";
+
+  useEffect(() => {
+    if (!isHomeRoute) return;
+
+    const onHeroScroll = () => {
+      const threshold = Math.max(window.innerHeight * 0.72, 520);
+      setHeroPassed(window.scrollY >= threshold);
+    };
+
+    onHeroScroll();
+    window.addEventListener("scroll", onHeroScroll, { passive: true });
+    window.addEventListener("resize", onHeroScroll);
+    return () => {
+      window.removeEventListener("scroll", onHeroScroll);
+      window.removeEventListener("resize", onHeroScroll);
+    };
+  }, [isHomeRoute]);
+
+  const isHomeHeroState = isHomeRoute && !heroPassed;
 
   const handleBuildingSelect = (buildingId) => {
     setOpenLocId(null);
@@ -99,10 +111,22 @@ export default function AppNavbar() {
   };
 
   return (
-    <div ref={navRef} className="sticky top-0 z-50">
-      <nav className="bg-primary">
+    <div
+      ref={navRef}
+      className={`${isHomeRoute ? "fixed inset-x-0 top-0" : "sticky top-0"} z-50 transition-all duration-500 ${isHomeHeroState
+        ? "pointer-events-none -translate-y-full opacity-0"
+        : "pointer-events-auto translate-y-0 opacity-100"
+        }`}
+    >
+      <nav
+        className={`transition-all duration-500 ${isHomeHeroState
+          ? "bg-transparent text-white"
+          : "bg-primary text-white shadow-sm"
+          }`}
+      >
         <div
-          className={`flex items-center px-5 md:px-10 py-3 transition-all duration-500 ${scrolled ? "justify-center" : ""
+          className={`flex items-center border-b px-5 md:px-10 py-3 transition-all duration-500 ${isHomeHeroState ? "border-white/18" : "border-white/8"
+            } ${scrolled ? "justify-center" : ""
             }`}
         >
           {/* Left group */}
@@ -112,7 +136,7 @@ export default function AppNavbar() {
           >
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0">
-              <img src={fscapeLogoFull} alt="FScape" className="h-10" />
+                <img src={fscapeLogoFull} alt="FScape" className="h-10" />
               {scrolled && currentBuildingName && (
                 <>
                   <span className="mx-1 h-5 w-px bg-white/35" />
@@ -161,7 +185,7 @@ export default function AppNavbar() {
           >
             {isLoggedIn ? (
               <button
-                onClick={() => setDrawerOpen(true)}
+                onClick={() => navigate("/profile")}
                 className="outline-none transition-transform hover:scale-105 active:scale-95 shrink-0"
               >
                 <img
@@ -174,7 +198,10 @@ export default function AppNavbar() {
               <>
                 <Button
                   radius="full"
-                  className="bg-olive text-primary font-semibold text-sm px-6 h-10"
+                  className={`${isHomeHeroState
+                    ? "bg-white/10 text-white ring-1 ring-white/30 backdrop-blur-md hover:bg-white/16"
+                    : "bg-olive text-primary"
+                    } font-semibold text-sm px-6 h-10`}
                   onPress={() => {
                     const section = document.getElementById("discover-section");
                     if (section) {
@@ -189,7 +216,10 @@ export default function AppNavbar() {
                 <Button
                   variant="bordered"
                   radius="full"
-                  className="border-white/60 text-white font-semibold text-sm px-6 h-10"
+                  className={`font-semibold text-sm px-6 h-10 ${isHomeHeroState
+                    ? "border-white/35 bg-white/6 text-white backdrop-blur-md hover:bg-white/10"
+                    : "border-white/60 text-white"
+                    }`}
                   onPress={() => navigate("/login")}
                 >
                   Đăng nhập
@@ -202,7 +232,10 @@ export default function AppNavbar() {
 
       {/* Mega-menu */}
       {activeLoc && (
-        <div className="bg-primary border-t border-white/10">
+        <div className={`border-t ${isHomeHeroState
+          ? "bg-primary/92 border-white/12 backdrop-blur-xl"
+          : "bg-primary border-white/10"
+          }`}>
           <div className="max-w-6xl mx-auto px-10 py-10">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {/* Buildings */}
@@ -264,10 +297,6 @@ export default function AppNavbar() {
         </div>
       )}
 
-      {/* User drawer */}
-      {isLoggedIn && (
-        <UserDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-      )}
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import AppNavbar from "../components/layout/AppNavbar";
-import AnnouncementBar from "../components/layout/AnnouncementBar";
 import HeroSection from "../components/home/HeroSection";
 import DiscoverSection from "../components/home/DiscoverSection";
 import LocationsSection from "../components/home/LocationsSection";
@@ -12,7 +11,6 @@ export default function HomePage() {
     <LocationsProvider>
       <div className="min-h-screen">
         <AppNavbar />
-        <AnnouncementBar />
         <HeroSection />
         <div className="relative z-10 bg-white">
           <DiscoverSection />
