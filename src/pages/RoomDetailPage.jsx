@@ -109,7 +109,10 @@ function RoomDetailContent() {
   );
 
   const galleryImages = useMemo(() => {
-    const list = [cdnUrl(room?.thumbnail_url), ...(room?.images || []).map((img) => cdnUrl(img?.image_url))].filter(Boolean);
+    const list = [
+      cdnUrl(room?.thumbnail_url),
+      ...(room?.images || []).map((img) => cdnUrl(typeof img === "string" ? img : img?.image_url)),
+    ].filter(Boolean);
     if (list.length === 0) return [defaultRoomImg, defaultRoomImg, defaultRoomImg, defaultRoomImg];
     return [...new Set(list)];
   }, [room]);
