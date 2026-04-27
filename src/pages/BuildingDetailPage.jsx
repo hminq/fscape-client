@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Bathtub, Bed, CircleNotch, MapPin, Ruler, Users, NavigationArrow } from "@phosphor-icons/react";
-import { Map as MapView, MapMarker, MarkerContent, MapControls } from "@/components/ui/map";
+import { Bathtub, Bed, CircleNotch, MapPin, Ruler, Users, NavigationArrow, Crosshair, WarningCircle } from "@phosphor-icons/react";
+import { Map as MapView, MapMarker, MarkerContent, MapControls, MapRoute } from "@/components/ui/map";
 import AppNavbar from "@/components/layout/AppNavbar";
 import Footer from "@/components/layout/Footer";
 import { LocationsProvider, useLocations } from "@/contexts/LocationsContext";
@@ -101,6 +101,10 @@ function BuildingDetailContent() {
   const roomShowcaseScrollRef = useRef(null);
   const roomTypeTabRefs = useRef({});
   const roomSlideRefs = useRef({});
+  const mapRef = useRef(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState("");
 
   const roomTypeTabs = useMemo(() => {
     const map = new Map();
@@ -136,12 +140,6 @@ function BuildingDetailContent() {
   );
 
   const featuredRoom = roomSlides[activeRoomIndex]?.room || displayedRooms[0];
-  const featuredRoomType =
-    roomSlides[activeRoomIndex]?.roomType ||
-    roomTypeDetails[activeRoomTypeId] ||
-    (featuredRoom?.room_type?.id ? roomTypeDetails[featuredRoom.room_type.id] : null) ||
-    featuredRoom?.room_type;
-
   const handleTabChange = (tabLabel) => {
     setActiveTab(tabLabel);
     const target = sectionRefs.current[tabLabel];
@@ -341,6 +339,46 @@ function BuildingDetailContent() {
     return () => cancelAnimationFrame(raf);
   }, [activeRoomTypeId, roomSlides.length]);
 
+  const handleLocateUser = () => {
+    if (!("geolocation" in navigator)) {
+      setLocationError("Trình duyệt này không hỗ trợ định vị.");
+      return;
+    }
+
+    setLocating(true);
+    setLocationError("");
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const coords = {
+          longitude: position.coords.longitude,
+          latitude: position.coords.latitude,
+        };
+        setUserLocation(coords);
+        setLocating(false);
+
+        const map = mapRef.current;
+        const buildingLng = Number(building?.longitude);
+        const buildingLat = Number(building?.latitude);
+        if (map && Number.isFinite(buildingLng) && Number.isFinite(buildingLat)) {
+          map.flyTo({
+            center: [coords.longitude, coords.latitude],
+            zoom: 16,
+            duration: 1000,
+          });
+        }
+      },
+      () => {
+        setLocating(false);
+        setLocationError("Không thể lấy vị trí hiện tại.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+      }
+    );
+  };
+
   return (
     <div className="min-h-screen bg-primary">
       <AppNavbar />
@@ -395,12 +433,35 @@ function BuildingDetailContent() {
                         {building.description}
                       </p>
                     )}
+                    <div className="md:col-span-2 flex flex-col items-start gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={handleLocateUser}
+                        disabled={locating}
+                        className="inline-flex h-11 items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-5 text-sm font-semibold text-primary transition-colors hover:border-primary hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {locating ? (
+                          <CircleNotch className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Crosshair className="h-4 w-4" />
+                        )}
+                        {userLocation ? "Cập nhật vị trí của tôi" : "Xem vị trí của tôi"}
+                      </button>
+
+                      {locationError && (
+                        <p className="flex items-center gap-2 text-sm text-red-600">
+                          <WarningCircle className="h-4 w-4 shrink-0" />
+                          {locationError}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Map */}
                   {building.latitude && building.longitude && (
                     <div className="aspect-square overflow-hidden rounded-2xl border border-muted/20">
                       <MapView
+                        ref={mapRef}
                         center={[Number(building.longitude), Number(building.latitude)]}
                         zoom={15}
                         className="h-full w-full"
@@ -414,11 +475,42 @@ function BuildingDetailContent() {
                             <div className="flex items-center justify-center">
                               <span className="absolute h-8 w-8 animate-ping rounded-full bg-olive/30" />
                               <span className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-olive shadow-lg">
-                                <NavigationArrow className="h-3 w-3 text-primary" weight="fill" />
+                                <span className="h-2.5 w-2.5 rounded-full bg-white" />
                               </span>
                             </div>
                           </MarkerContent>
                         </MapMarker>
+
+                        {userLocation && (
+                          <>
+                            <MapMarker
+                              longitude={userLocation.longitude}
+                              latitude={userLocation.latitude}
+                            >
+                              <MarkerContent>
+                                <div className="flex items-center justify-center">
+                                  <span className="absolute h-8 w-8 rounded-full bg-white/25" />
+                                  <span className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-white shadow-lg">
+                                    <NavigationArrow className="h-3 w-3 text-primary" weight="fill" />
+                                  </span>
+                                </div>
+                              </MarkerContent>
+                            </MapMarker>
+
+                            <MapRoute
+                              coordinates={[
+                                [Number(building.longitude), Number(building.latitude)],
+                                [userLocation.longitude, userLocation.latitude],
+                              ]}
+                              color="#011936"
+                              width={3}
+                              opacity={0.6}
+                              dashArray={[2, 2]}
+                              interactive={false}
+                            />
+                          </>
+                        )}
+
                         <MapControls position="bottom-right" showZoom />
                       </MapView>
                     </div>
