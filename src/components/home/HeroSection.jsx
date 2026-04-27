@@ -122,13 +122,13 @@ export default function HeroSection() {
         >
           <source src={heroVideoSrc} type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(1,25,54,0.88)_0%,rgba(1,25,54,0.58)_36%,rgba(1,25,54,0.18)_68%,rgba(1,25,54,0.45)_100%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_72%,rgba(159,196,144,0.18),transparent_38%),radial-gradient(circle_at_76%_18%,rgba(192,223,161,0.12),transparent_28%)]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/46 via-transparent to-white/6" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(1,25,54,0.72)_0%,rgba(1,25,54,0.42)_36%,rgba(1,25,54,0.12)_68%,rgba(1,25,54,0.3)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_72%,rgba(159,196,144,0.12),transparent_38%),radial-gradient(circle_at_76%_18%,rgba(192,223,161,0.08),transparent_28%)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/28 via-transparent to-white/4" />
       </div>
 
       <div className="relative z-20 mx-auto w-full max-w-7xl px-6 pt-5 md:px-12 md:pt-6">
-        <div className="rounded-full border border-white/18 bg-white/8 px-4 py-3 shadow-[0_20px_60px_rgba(1,25,54,0.24)] backdrop-blur-xl">
+        <div className="rounded-full border border-white/16 bg-white/[0.05] px-4 py-3 shadow-[0_20px_60px_rgba(1,25,54,0.18)] backdrop-blur-lg">
           <div className="flex items-center justify-between gap-4">
             <Link to="/" className="shrink-0">
               <img src={fscapeLogoFull} alt="FScape" className="h-10 md:h-11" />
@@ -142,7 +142,7 @@ export default function HeroSection() {
                     key={loc.id}
                     type="button"
                     onClick={() => setOpenLocId(isActive ? null : loc.id)}
-                    className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-[0.16em] transition-colors ${isActive ? "bg-white/12 text-white" : "text-white/72 hover:text-white"
+                    className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-[0.16em] transition-colors ${isActive ? "bg-white/10 text-white" : "text-white/72 hover:text-white"
                       }`}
                   >
                     {loc.name}
@@ -169,7 +169,7 @@ export default function HeroSection() {
                 <Button
                   variant="bordered"
                   radius="full"
-                  className="h-10 border-white/32 bg-white/8 px-6 text-sm font-semibold text-white backdrop-blur-md hover:bg-white/12"
+                  className="h-10 border-white/28 bg-white/[0.06] px-6 text-sm font-semibold text-white backdrop-blur-md hover:bg-white/10"
                   onPress={() => navigate("/login")}
                 >
                   Đăng nhập
@@ -180,7 +180,7 @@ export default function HeroSection() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className="flex size-11 items-center justify-center rounded-full border border-white/20 bg-white/8 text-white backdrop-blur-md lg:hidden"
+              className="flex size-11 items-center justify-center rounded-full border border-white/18 bg-white/[0.06] text-white backdrop-blur-md lg:hidden"
               aria-label={mobileMenuOpen ? "Đóng menu" : "Mở menu"}
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <List className="h-5 w-5" />}
@@ -195,7 +195,7 @@ export default function HeroSection() {
                     key={loc.id}
                     type="button"
                     onClick={() => setOpenLocId(openLocId === loc.id ? null : loc.id)}
-                    className="flex items-center justify-between rounded-2xl border border-white/12 bg-white/6 px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.14em] text-white/80"
+                    className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.14em] text-white/80"
                   >
                     {loc.name}
                     <TriangleIcon up={openLocId === loc.id} className="h-2.5 w-2.5 text-tea" />
@@ -204,7 +204,7 @@ export default function HeroSection() {
               </div>
               <Button
                 radius="full"
-                className="h-11 w-full bg-white/10 text-sm font-semibold text-white ring-1 ring-white/28 backdrop-blur-md"
+                className="h-11 w-full bg-white/[0.08] text-sm font-semibold text-white ring-1 ring-white/24 backdrop-blur-md"
                 onPress={() => scrollToSection("discover-section")}
               >
                 Đặt phòng ngay
@@ -215,7 +215,7 @@ export default function HeroSection() {
         </div>
 
         {activeLoc && (
-          <div className="mt-4 rounded-[28px] border border-white/14 bg-primary/58 p-5 shadow-[0_24px_72px_rgba(1,25,54,0.3)] backdrop-blur-xl">
+          <div className="mt-4 rounded-[28px] border border-white/12 bg-primary/44 p-5 shadow-[0_24px_72px_rgba(1,25,54,0.24)] backdrop-blur-lg">
             <div className="grid gap-8 md:grid-cols-3">
               <div className="md:col-span-2">
                 <p className="mb-4 inline-block bg-olive px-2.5 py-1 text-xs font-bold uppercase tracking-[0.22em] text-primary">
@@ -303,7 +303,7 @@ export default function HeroSection() {
                 radius="full"
                 size="lg"
                 endContent={<ArrowRight className="w-5 h-5" />}
-                className="h-12 bg-olive/92 px-9 text-base font-bold text-primary shadow-[0_18px_42px_rgba(1,25,54,0.26)] backdrop-blur-md"
+                className="h-12 bg-olive/88 px-9 text-base font-bold text-primary shadow-[0_18px_42px_rgba(1,25,54,0.22)] backdrop-blur-md"
                 onPress={() => {
                   const section = document.getElementById("discover-section");
                   if (section) section.scrollIntoView({ behavior: "smooth" });
@@ -315,7 +315,7 @@ export default function HeroSection() {
                 radius="full"
                 size="lg"
                 variant="bordered"
-                className="h-12 border-white/28 bg-white/8 px-9 text-base font-semibold text-white backdrop-blur-md hover:bg-white/12"
+                className="h-12 border-white/24 bg-white/[0.06] px-9 text-base font-semibold text-white backdrop-blur-md hover:bg-white/10"
                 onPress={() => {
                   const section = document.getElementById("hero-locations-section");
                   if (section) section.scrollIntoView({ behavior: "smooth" });
